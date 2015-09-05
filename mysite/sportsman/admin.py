@@ -14,6 +14,7 @@ class FactorAdmin(admin.ModelAdmin):
 
 class StudentAdmin(admin.ModelAdmin):
     list_display = ('last_name', 'first_name', 'gender', 'dateOfBirth', 'schoolName', 'className')
+    list_filter = ('gender', 'dateOfBirth', 'schoolName')
 
 class TestRefDataAdmin(admin.ModelAdmin):
     list_display = ('testing_date','testing_number','student')
