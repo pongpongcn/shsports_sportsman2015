@@ -8,10 +8,15 @@ Genders = (
     )
 
 MovementTypes = (
-        ('20m', '20米跑'),
-        ('bal', '后退平衡'),
+        ('20m', '20米冲刺跑'),
+        ('bal', '平衡'),
         ('shh', '侧向跳'),
-        ('rb', '躯体'),
+        ('rb', '直身前驱'),
+        ('ball', '投掷'),
+        ('ls', '俯卧撑'),
+        ('su', '仰卧起坐'),
+        ('sws', '跳远'),
+        ('lauf', '六分跑'),
     )
 
 class Factor(models.Model):
@@ -28,11 +33,9 @@ class Student(models.Model):
     last_name = models.CharField('姓', max_length=5)
     first_name = models.CharField('名', max_length=10)
     gender = models.CharField('性别', max_length=10, choices=Genders)
-    dateOfBirth = models.DateField('出生日期')
-    schoolName = models.CharField('学校名称', max_length=100)
-    className = models.CharField('班级名称', max_length=100)
-    height = models.FloatField('身高')
-    weight = models.FloatField('体重')
+    birth_date = models.DateField('出生日期')
+    school_name = models.CharField('学校名称', max_length=100)
+    class_name = models.CharField('班级名称', max_length=100)
     def __str__(self):
         return self.last_name + ' ' + self.first_name
     
@@ -43,6 +46,8 @@ class TestRefData(models.Model):
     testing_date = models.DateField('测试日期')
     testing_number = models.IntegerField('测试编号')
     student = models.ForeignKey(Student, verbose_name="测试学生")
+    height = models.FloatField('身高')
+    weight = models.FloatField('体重')
     def __str__(self):
         return str(self.testing_date) + '#' + str(self.testing_number)
     
@@ -61,6 +66,8 @@ class TestRefDataItem(models.Model):
 class TestSummaryData(models.Model):
     student = models.ForeignKey(Student)
     testing_date = models.DateField('测试日期')
+    height = models.FloatField('身高')
+    weight = models.FloatField('体重')
     month_age = models.IntegerField('月龄')
     day_age = models.IntegerField('日龄')
     test_ref_data = models.ForeignKey(TestRefData)
@@ -72,8 +79,8 @@ class TestSummaryDataItem(models.Model):
     test_summary_data = models.ForeignKey(TestSummaryData)
     movement_type = models.CharField('测试点', max_length=10, choices=MovementTypes)
     value = models.FloatField('数据值')
-    factor = models.ForeignKey(Factor)
-    probability = models.FloatField('概率')
+    evaluate_date = models.DateTimeField('测试日期')
+    evaluate_value = models.FloatField('概率')
     
     class Meta:
         verbose_name_plural = "测试总结单项数据(TestSummaryDataItem)"

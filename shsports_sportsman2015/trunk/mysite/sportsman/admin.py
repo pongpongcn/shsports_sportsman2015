@@ -13,8 +13,8 @@ class FactorAdmin(admin.ModelAdmin):
     list_display = ('gender', 'month_age', 'movement_type', 'mean', 'standard_deviation')
 
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name', 'gender', 'dateOfBirth', 'schoolName', 'className')
-    list_filter = ('gender', 'dateOfBirth', 'schoolName')
+    list_display = ('last_name', 'first_name', 'gender', 'birth_date', 'school_name', 'class_name')
+    list_filter = ('gender', 'birth_date', 'school_name')
 
 class TestRefDataAdmin(admin.ModelAdmin):
     list_display = ('testing_date','testing_number','student')
