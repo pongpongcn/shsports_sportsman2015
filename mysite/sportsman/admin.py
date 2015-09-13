@@ -91,9 +91,23 @@ class TestRefDataAdmin(admin.ModelAdmin):
 class TestRefDataItemAdmin(admin.ModelAdmin):
     list_display = ('test_ref_data','movement_type','key', 'value')
 
+class TestSummaryDataItemInline(admin.TabularInline):
+    model = TestSummaryDataItem
+
+class TestSummaryDataAdmin(admin.ModelAdmin):
+    list_display = ('testing_date','student', 'month_age', 'school_name')
+    list_filter = ('student__school_name',)
+    inlines = [
+        TestSummaryDataItemInline,
+    ]
+    def school_name(self, obj):
+        return obj.student.school_name
+    school_name.short_description = '学校'
+    school_name.admin_order_field = 'student__school_name'
+
 admin.site.register(Factor,FactorAdmin)
 admin.site.register(Student,StudentAdmin)
 admin.site.register(TestRefData,TestRefDataAdmin)
 admin.site.register(TestRefDataItem,TestRefDataItemAdmin)
-admin.site.register(TestSummaryData)
+admin.site.register(TestSummaryData,TestSummaryDataAdmin)
 admin.site.register(TestSummaryDataItem)

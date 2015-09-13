@@ -82,8 +82,8 @@ class TestSummaryDataItem(models.Model):
     test_summary_data = models.ForeignKey(TestSummaryData)
     movement_type = models.CharField('测试点', max_length=10, choices=MovementTypes)
     value = models.FloatField('数据值')
-    evaluate_date = models.DateTimeField('测试日期')
-    evaluate_value = models.FloatField('概率')
+    evaluate_date = models.DateTimeField('评估时间')
+    evaluate_value = models.FloatField('评估分值')
     
     class Meta:
         verbose_name_plural = "测试总结单项数据(TestSummaryDataItem)"
