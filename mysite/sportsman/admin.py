@@ -4,6 +4,7 @@ from django.db.models.fields import BLANK_CHOICE_DASH
 from import_export import resources
 from import_export import fields
 from import_export.admin import ImportExportModelAdmin
+import calendar
 
 from .models import Factor
 from .models import Student
@@ -77,12 +78,40 @@ class TestRefDataItemInline(admin.TabularInline):
     model = TestRefDataItem
     form = TestRefDataItemForm
 
+def calculate_monthdelta(date1, date2):
+    def is_last_day_of_the_month(date):
+        days_in_month = calendar.monthrange(date.year, date.month)[1]
+        return date.day == days_in_month
+    imaginary_day_2 = 31 if is_last_day_of_the_month(date2) else date2.day
+    monthdelta = (
+        (date2.month - date1.month) +
+        (date2.year - date1.year) * 12 +
+        (-1 if date1.day > imaginary_day_2 else 0)
+        )
+    return monthdelta
+
+def evaluate_for_summary(modeladmin, request, queryset):
+    for testRefData in queryset:
+        testSummaryDataQuery = TestSummaryData.objects.filter(test_ref_data=testRefData)
+        if testSummaryDataQuery.exists():
+            testSummaryData = testSummaryDataQuery[0]
+        else:
+            testSummaryData = TestSummaryData(test_ref_data=testRefData ,student=testRefData.student, testing_date=testRefData.testing_date, height=testRefData.height, weight=testRefData.weight)
+            delta_age = testRefData.testing_date - testRefData.student.birth_date
+            testSummaryData.month_age = calculate_monthdelta(testRefData.student.birth_date, testRefData.testing_date)
+            testSummaryData.day_age = delta_age.days
+            testSummaryData.save()
+        
+    #queryset.update(status='p')
+evaluate_for_summary.short_description = "评估"
+
 class TestRefDataAdmin(admin.ModelAdmin):
     list_display = ('testing_date','testing_number','student', 'school_name')
     list_filter = ('student__school_name',)
     inlines = [
         TestRefDataItemInline,
     ]
+    actions = [evaluate_for_summary]
     def school_name(self, obj):
         return obj.student.school_name
     school_name.short_description = '学校'
