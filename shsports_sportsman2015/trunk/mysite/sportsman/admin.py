@@ -62,26 +62,12 @@ class StudentResource(resources.ModelResource):
         import_id_fields = ('id',)
         fields = ('gender',)
         exclude = ('id')
-    def get_or_init_instance(self, instance_loader, row):
-        #row['dateOfBirth'].pop()
-        return super(StudentResource, self).get_or_init_instance(instance_loader, row)
 
 class StudentAdmin(ImportExportModelAdmin):
     resource_class = StudentResource
     list_display = ('last_name', 'first_name', 'gender', 'birth_date', 'school_name', 'class_name')
     list_filter = ('gender', 'birth_date', 'school_name')
     readonly_fields = ('external_id',)
-
-'''
-class TestRefDataItemForm(forms.ModelForm):
-    class Meta:
-        model = TestRefDataItem
-        fields = ('movement_type', 'key', 'value')
-        widgets = {
-            'key': forms.ChoiceField(choices=BLANK_CHOICE_DASH + list(MovementTypeKeys)),
-            #'key': forms.Textarea(attrs={'placeholder': u'Bla bla'}),
-        }
-'''
 
 class TestRefDataItemForm(forms.ModelForm):
     key = forms.ChoiceField(label='数据项',
@@ -92,10 +78,15 @@ class TestRefDataItemInline(admin.TabularInline):
     form = TestRefDataItemForm
 
 class TestRefDataAdmin(admin.ModelAdmin):
-    list_display = ('testing_date','testing_number','student')
+    list_display = ('testing_date','testing_number','student', 'school_name')
+    list_filter = ('student__school_name',)
     inlines = [
         TestRefDataItemInline,
     ]
+    def school_name(self, obj):
+        return obj.student.school_name
+    school_name.short_description = '学校'
+    school_name.admin_order_field = 'student__school_name'
 
 class TestRefDataItemAdmin(admin.ModelAdmin):
     list_display = ('test_ref_data','movement_type','key', 'value')
