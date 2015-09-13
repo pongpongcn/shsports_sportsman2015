@@ -36,6 +36,7 @@ class Student(models.Model):
     birth_date = models.DateField('出生日期')
     school_name = models.CharField('学校名称', max_length=100)
     class_name = models.CharField('班级名称', max_length=100)
+    external_id = models.CharField('外部标识', max_length=10, null=True, blank=True)
     def __str__(self):
         return self.last_name + ' ' + self.first_name
     
