@@ -1,4 +1,6 @@
 from django.contrib import admin
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
 
 from .models import Factor
 from .models import Student
@@ -9,8 +11,16 @@ from .models import TestSummaryDataItem
 
 # Register your models here.
 
-class FactorAdmin(admin.ModelAdmin):
-    list_display = ('gender', 'month_age', 'movement_type', 'mean', 'standard_deviation')
+class FactorResource(resources.ModelResource):
+    class Meta:
+        model = Factor
+        import_id_fields = ('gender','month_age','movement_type')
+        exclude = ('id')
+
+class FactorAdmin(ImportExportModelAdmin):
+    resource_class = FactorResource
+    list_display = ('movement_type', 'gender', 'month_age', 'mean', 'standard_deviation')
+    list_filter = ('movement_type', 'gender', 'month_age')
 
 class StudentAdmin(admin.ModelAdmin):
     list_display = ('last_name', 'first_name', 'gender', 'birth_date', 'school_name', 'class_name')
