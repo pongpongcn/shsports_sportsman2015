@@ -5,6 +5,9 @@ from import_export import resources
 from import_export import fields
 from import_export.admin import ImportExportModelAdmin
 import calendar
+from django.utils import timezone
+from statistics import mean
+import scipy.stats
 
 from .models import Factor
 from .models import Student
@@ -96,14 +99,31 @@ def evaluate_for_summary(modeladmin, request, queryset):
         if testSummaryDataQuery.exists():
             testSummaryData = testSummaryDataQuery[0]
         else:
-            testSummaryData = TestSummaryData(test_ref_data=testRefData ,student=testRefData.student, testing_date=testRefData.testing_date, height=testRefData.height, weight=testRefData.weight)
+            testSummaryData = TestSummaryData(test_ref_data=testRefData, student=testRefData.student, testing_date=testRefData.testing_date, height=testRefData.height, weight=testRefData.weight)
             delta_age = testRefData.testing_date - testRefData.student.birth_date
             testSummaryData.month_age = calculate_monthdelta(testRefData.student.birth_date, testRefData.testing_date)
             testSummaryData.day_age = delta_age.days
             testSummaryData.save()
+
+        TestSummaryDataItem.objects.filter(test_summary_data=testSummaryData).delete()
+        #20米冲刺跑
+        evaluate_for_summary_item_20m(testSummaryData)
         
-    #queryset.update(status='p')
 evaluate_for_summary.short_description = "评估"
+
+def evaluate_for_summary_item_20m(testSummaryData):
+    movement_type = '20m'
+    testRefData = testSummaryData.test_ref_data
+    testRefDataItems_20m = TestRefDataItem.objects.filter(test_ref_data=testRefData, movement_type=movement_type)
+    factors_20m = Factor.objects.filter(movement_type=movement_type ,gender=testSummaryData.student.gender, month_age=testSummaryData.month_age)
+    if testRefDataItems_20m.exists() and factors_20m.exists():
+        testSummaryDataItem = TestSummaryDataItem(test_summary_data=testSummaryData, movement_type=movement_type)
+        testSummaryDataItem.value = min([testRefDataItems_20m.get(key='20m_1').value, testRefDataItems_20m.get(key='20m_2').value])
+        testSummaryDataItem.evaluate_date = timezone.now()
+        factor_20m = factors_20m[0]
+        testSummaryDataItem.evaluate_value = round(1 - scipy.stats.norm(factor_20m.mean, factor_20m.standard_deviation).cdf(testSummaryDataItem.value), 2)
+        testSummaryDataItem.save()
+    
 
 class TestRefDataAdmin(admin.ModelAdmin):
     list_display = ('testing_date','testing_number','student', 'school_name')
