@@ -108,6 +108,8 @@ def evaluate_for_summary(modeladmin, request, queryset):
         TestSummaryDataItem.objects.filter(test_summary_data=testSummaryData).delete()
         #20米冲刺跑
         evaluate_for_summary_item_20m(testSummaryData)
+        #俯卧撑
+        evaluate_for_summary_item_ls(testSummaryData)
         
 evaluate_for_summary.short_description = "评估"
 
@@ -123,7 +125,19 @@ def evaluate_for_summary_item_20m(testSummaryData):
         factor_20m = factors_20m[0]
         testSummaryDataItem.evaluate_value = round(1 - scipy.stats.norm(factor_20m.mean, factor_20m.standard_deviation).cdf(testSummaryDataItem.value), 2)
         testSummaryDataItem.save()
-    
+
+def evaluate_for_summary_item_ls(testSummaryData):
+    movement_type = 'ls'
+    testRefData = testSummaryData.test_ref_data
+    testRefDataItems_ls = TestRefDataItem.objects.filter(test_ref_data=testRefData, movement_type=movement_type)
+    factors_ls = Factor.objects.filter(movement_type=movement_type ,gender=testSummaryData.student.gender, month_age=testSummaryData.month_age)
+    if testRefDataItems_ls.exists() and factors_ls.exists():
+        testSummaryDataItem = TestSummaryDataItem(test_summary_data=testSummaryData, movement_type=movement_type)
+        testSummaryDataItem.value = testRefDataItems_ls.get(key='ls').value
+        testSummaryDataItem.evaluate_date = timezone.now()
+        factor_ls = factors_ls[0]
+        testSummaryDataItem.evaluate_value = round(scipy.stats.norm(factor_ls.mean, factor_ls.standard_deviation).cdf(testSummaryDataItem.value), 2)
+        testSummaryDataItem.save()    
 
 class TestRefDataAdmin(admin.ModelAdmin):
     list_display = ('testing_date','testing_number','student', 'school_name')
