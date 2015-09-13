@@ -60,6 +60,8 @@ class TestRefDataItem(models.Model):
     movement_type = models.CharField('测试点', max_length=10, choices=MovementTypes)
     key = models.CharField('数据项(第一次, 第二次, ...)', max_length=10)
     value = models.FloatField('数据值')
+    def __str__(self):
+        return str(self.key)
     
     class Meta:
         verbose_name_plural = "测试原始记录单项数据(TestRefDataItem)"
