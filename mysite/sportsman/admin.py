@@ -15,6 +15,8 @@ from .models import TestRefData
 from .models import TestRefDataItem
 from .models import TestSummaryData
 from .models import TestSummaryDataItem
+from .models import School
+from .models import SchoolClass
 
 # Register your models here.
 MovementTypeKeys = (
@@ -69,9 +71,35 @@ class StudentResource(resources.ModelResource):
 
 class StudentAdmin(ImportExportModelAdmin):
     resource_class = StudentResource
-    list_display = ('last_name', 'first_name', 'gender', 'birth_date', 'school_name', 'class_name')
-    list_filter = ('gender', 'birth_date', 'school_name')
+    date_hierarchy = 'dateOfTesting'
+    #fields = ('schoolClass', ('firstName', 'lastName'), ('universalFirstName', 'universalLastName'), 'gender', 'dateOfBirth', ('dateOfTesting', 'number'), 'questionary', ('street', 'housenumber'), 'addition', ('zip', 'city'), 'addressClearance', ('e_20m_1', 'e_20m_2'), ('e_bal30_1', 'e_bal30_2', 'e_bal45_1', 'e_bal45_2', 'e_bal60_1', 'e_bal60_2'), ('e_ball_1', 'e_ball_2', 'e_ball_3'), ('e_lauf_rest', 'e_lauf_runden'), 'e_ls', ('e_rb_1', 'e_rb_2'), ('e_shh_1f', 'e_shh_1s', 'e_shh_2f', 'e_shh_2s'), 'e_slauf_10', 'e_su', ('e_sws_1', 'e_sws_2'), ('weight', 'height'))
+    fieldsets = (
+        (None, {
+            'fields': ('schoolClass', 'firstName', 'lastName', 'universalFirstName', 'universalLastName', 'gender')
+        }),
+        ('地址', {
+            'classes': ('wide',),
+            'description': 'It\' a description.',
+            'fields': (('street', 'housenumber'), 'addition', ('zip', 'city'))
+        })
+    )
+
+    def school(student):
+        return student.schoolClass.school
+    school.short_description = '学校'
+    school.admin_order_field = 'schoolClass__school'
+    
+    list_display = ('lastName', 'firstName', 'dateOfBirth', school, 'schoolClass', 'dateOfTesting', 'number')
+    list_filter = ('dateOfTesting',)
+    ordering = ('dateOfTesting', 'number')
     readonly_fields = ('external_id',)
+    list_select_related = True#性能优化
+
+class SchoolAdmin(admin.ModelAdmin):
+    list_display = ('name', 'universalName')
+
+class SchoolClassAdmin(admin.ModelAdmin):
+    list_display = ('school', 'name', 'universalName')
 
 class TestRefDataItemForm(forms.ModelForm):
     key = forms.ChoiceField(label='数据项',
@@ -168,6 +196,9 @@ class TestSummaryDataAdmin(admin.ModelAdmin):
     school_name.short_description = '学校'
     school_name.admin_order_field = 'student__school_name'
 
+
+admin.site.register(School, SchoolAdmin)
+admin.site.register(SchoolClass, SchoolClassAdmin)
 admin.site.register(Factor,FactorAdmin)
 admin.site.register(Student,StudentAdmin)
 admin.site.register(TestRefData,TestRefDataAdmin)
