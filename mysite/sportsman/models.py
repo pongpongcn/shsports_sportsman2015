@@ -20,6 +20,34 @@ MovementTypes = (
         ('slauf', '星形跑'),
     )
 
+class SequenceNumber(models.Model):
+    code = models.CharField('代码', max_length=100, unique=True)
+    value = models.BigIntegerField('值（当前）')
+    prefix = models.CharField('前缀', max_length=100, null=True, blank=True)
+    suffix = models.CharField('后缀', max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return self.code
+
+    class Meta:
+        verbose_name = "序列编号"
+        verbose_name_plural = "序列编号"
+
+def GetNextSequenceNumber(code):
+    sequenceNumberQuery = SequenceNumber.objects.filter(code=code)
+    if sequenceNumberQuery.exists():
+        sequenceNumber = sequenceNumberQuery[0]
+        sequenceNumber.value += 1
+    else:
+        startValue = 1
+        sequenceNumber = SequenceNumber(code=code, value=startValue)
+    sequenceNumber.save()
+    return sequenceNumber
+
+def GetNextSequenceNumberValue(code):
+    sequenceNumber = GetNextSequenceNumber(code)
+    return sequenceNumber.value
+
 class School(models.Model):
     name = models.CharField('名称', max_length=100)
     universalName = models.CharField('名称（英文）', max_length=100)
@@ -105,6 +133,26 @@ class Student(models.Model):
     external_id = models.CharField('外部标识', max_length=10, null=True, blank=True)
     def __str__(self):
         return self.last_name + ' ' + self.first_name
+
+    def save(self, *args, **kw):
+        dateOfTestingChanged = False
+        if self.pk is not None:
+            orig = Student.objects.get(pk=self.pk)
+            if orig.dateOfTesting != self.dateOfTesting:
+                dateOfTestingChanged = True
+        else:
+            if self.dateOfTesting is not None:
+                dateOfTestingChanged = True
+
+        if dateOfTestingChanged == True:
+            if self.dateOfTesting is not None:
+                sequenceNumberCodeOfNumber = 'NUMBER_DATE_OF_TESTING_' + str(self.dateOfTesting)
+                self.number = GetNextSequenceNumberValue(sequenceNumberCodeOfNumber)
+                print(self.number)
+            else:
+                self.number = None
+
+        super(Student, self).save(*args, **kw)
     
     class Meta:
         verbose_name = "学生"
