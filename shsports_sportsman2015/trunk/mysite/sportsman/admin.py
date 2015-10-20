@@ -17,6 +17,7 @@ from .models import TestSummaryData
 from .models import TestSummaryDataItem
 from .models import School
 from .models import SchoolClass
+from .models import SequenceNumber
 
 # Register your models here.
 MovementTypeKeys = (
@@ -75,24 +76,30 @@ class StudentAdmin(ImportExportModelAdmin):
     #fields = ('schoolClass', ('firstName', 'lastName'), ('universalFirstName', 'universalLastName'), 'gender', 'dateOfBirth', ('dateOfTesting', 'number'), 'questionary', ('street', 'housenumber'), 'addition', ('zip', 'city'), 'addressClearance', ('e_20m_1', 'e_20m_2'), ('e_bal30_1', 'e_bal30_2', 'e_bal45_1', 'e_bal45_2', 'e_bal60_1', 'e_bal60_2'), ('e_ball_1', 'e_ball_2', 'e_ball_3'), ('e_lauf_rest', 'e_lauf_runden'), 'e_ls', ('e_rb_1', 'e_rb_2'), ('e_shh_1f', 'e_shh_1s', 'e_shh_2f', 'e_shh_2s'), 'e_slauf_10', 'e_su', ('e_sws_1', 'e_sws_2'), ('weight', 'height'))
     fieldsets = (
         (None, {
-            'fields': ('schoolClass', 'firstName', 'lastName', 'universalFirstName', 'universalLastName', 'gender')
-        }),
+            'fields': (('school', 'schoolClass'), ('firstName', 'lastName'), ('universalFirstName', 'universalLastName'), 'gender', 'dateOfBirth', ('dateOfTesting', 'number'), 'questionary')
+            }),
         ('地址', {
             'classes': ('wide',),
             'description': 'It\' a description.',
             'fields': (('street', 'housenumber'), 'addition', ('zip', 'city'))
-        })
+            }),
+        (None, {
+            'fields': ('external_id',)
+            })
     )
 
-    def school(student):
-        return student.schoolClass.school
+    def school(self, instance):
+        return instance.schoolClass.school
     school.short_description = '学校'
     school.admin_order_field = 'schoolClass__school'
     
-    list_display = ('lastName', 'firstName', 'dateOfBirth', school, 'schoolClass', 'dateOfTesting', 'number')
-    list_filter = ('dateOfTesting',)
+    list_display = ('lastName', 'firstName', 'gender', 'dateOfBirth', 'school', 'schoolClass', 'dateOfTesting', 'number')
+    list_display_links = ('lastName', 'firstName')
+    list_filter = ('dateOfTesting','schoolClass__school')
     ordering = ('dateOfTesting', 'number')
-    readonly_fields = ('external_id',)
+    readonly_fields = ('external_id', 'school', 'number')
+    search_fields = ('lastName', 'firstName')
+    radio_fields = {"gender": admin.HORIZONTAL}
     list_select_related = True#性能优化
 
 class SchoolAdmin(admin.ModelAdmin):
@@ -100,6 +107,10 @@ class SchoolAdmin(admin.ModelAdmin):
 
 class SchoolClassAdmin(admin.ModelAdmin):
     list_display = ('school', 'name', 'universalName')
+
+class SequenceNumberAdmin(admin.ModelAdmin):
+    list_display = ('code', 'value', 'prefix', 'suffix')
+    ordering = ('code',)
 
 class TestRefDataItemForm(forms.ModelForm):
     key = forms.ChoiceField(label='数据项',
@@ -197,6 +208,7 @@ class TestSummaryDataAdmin(admin.ModelAdmin):
     school_name.admin_order_field = 'student__school_name'
 
 
+admin.site.register(SequenceNumber, SequenceNumberAdmin)
 admin.site.register(School, SchoolAdmin)
 admin.site.register(SchoolClass, SchoolClassAdmin)
 admin.site.register(Factor,FactorAdmin)
