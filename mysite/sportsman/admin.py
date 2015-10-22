@@ -1,13 +1,26 @@
 from django.contrib import admin
 from django import forms
+from django.conf.urls import url
+from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models.fields import BLANK_CHOICE_DASH
 from import_export import resources
 from import_export import fields
 from import_export.admin import ImportExportModelAdmin
-import calendar
+import calendar, random
 from django.utils import timezone
 from statistics import mean
 import scipy.stats
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics, ttfonts
+from io import BytesIO
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.units import cm, inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Table
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus.tables import TableStyle
+from reportlab.rl_config import defaultPageSize
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.lib import colors
 
 from .models import Factor
 from .models import Student
@@ -18,6 +31,7 @@ from .models import TestSummaryDataItem
 from .models import School
 from .models import SchoolClass
 from .models import SequenceNumber
+from .models import Genders
 
 # Register your models here.
 MovementTypeKeys = (
@@ -105,6 +119,146 @@ class StudentAdmin(ImportExportModelAdmin):
     search_fields = ('lastName', 'firstName')
     radio_fields = {"gender": admin.HORIZONTAL}
     list_select_related = True#性能优化
+
+    def get_urls(self):
+        exists_urls = super(StudentAdmin, self).get_urls()
+        new_urls = [
+            url(r'^(.+)/gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printable))
+        ]
+        #New urls must appear before the exists ones.
+        return new_urls + exists_urls 
+
+    def gen_data_sheet_printable(self, request, object_id):
+
+        student = Student.objects.get(pk=object_id)
+        
+        pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
+
+        filename = 'Data Sheets_' + str(object_id) + '.pdf'
+        
+        # Create the HttpResponse object with the appropriate PDF headers.
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
+
+        buffer = BytesIO()
+
+        # Create the PDF object, using the response object as its "file."
+        pagesize = landscape(A4)
+
+        words = "lorem ipsum dolor sit amet consetetur sadipscing elitr sed diam nonumy eirmod tempor invidunt ut labore et".split()
+
+        styles=getSampleStyleSheet()
+
+        doc = BaseDocTemplate(buffer,showBoundary=1,pagesize=pagesize,leftMargin=1*cm,rightMargin=1*cm,topMargin=1*cm,bottomMargin=1*cm)
+
+        Story = []
+
+        columnWidth = doc.width/2-6
+        #Two Columns
+        frame1 = Frame(doc.leftMargin, doc.bottomMargin, columnWidth, doc.height, id='col1')
+        frame2 = Frame(doc.leftMargin+doc.width/2+6, doc.bottomMargin, columnWidth, doc.height, id='col2')
+
+        #Story.append(Paragraph(" ".join([random.choice(words) for i in range(1000)]),styles['Normal']))
+        doc.addPageTemplates([PageTemplate(id='TwoCol',frames=[frame1,frame2]), ])
+        
+        #c = canvas.Canvas(buffer, pagesize=pagesize)
+
+        #self.gen_data_sheet_printable_single_page(student, c, pagesize)
+
+        styles = getSampleStyleSheet()
+        styles["Normal"].fontName='STSong-Light'
+        styles.add(ParagraphStyle(name='Student-Info', fontName='STSong-Light'))
+        Story.extend(self.gen_data_sheet_printable_single_page(student, styles, columnWidth))
+
+        doc.build(Story)
+        
+        # Close the PDF object cleanly, and we're done.
+        #c.showPage()
+
+        #c.drawString(100, 100, "Page 2")
+        #c.showPage()
+        
+        #c.save()
+        
+        # Get the value of the BytesIO buffer and write it to the response.
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.write(pdf)
+        return response
+
+    def gen_data_sheet_printable_single_page(self, student, styles, available_width):
+        story = []
+
+        studentInfoParagraphs = {}
+        studentInfoParagraphs["title"] = Paragraph('<para alignment="center"><font size=16><b>2015 上海运动机能测试-数据管理表</b></font></para>',styles["Student-Info"])
+        studentInfoParagraphs["name"] = Paragraph('<font size=14><b>姓, 名: </b>'+student.lastName+', '+student.firstName+'</font>',styles["Student-Info"])
+        studentInfoParagraphs["universalName"] = Paragraph('<font size=14>'+student.universalLastName+', '+student.universalFirstName+'</font>',styles["Student-Info"])
+        studentInfoParagraphs["number"] = Paragraph('<font size=14>'+'<b>测试编号: </b>'+str(student.number)+'</font>',styles["Student-Info"])
+        if student.gender:
+            genderString = dict(Genders)[student.gender]
+        else:
+            genderString = ''
+         
+        studentInfoParagraphs["gender"] = Paragraph('<b>性别: </b>'+genderString,styles["Student-Info"])
+        studentInfoParagraphs["dateOfBirth"] = Paragraph('<b>出生年月: </b>'+str(student.dateOfBirth),styles["Student-Info"])
+        studentInfoParagraphs["school"] = Paragraph('<b>出生年月: </b>'+student.schoolClass.school.universalName,styles["Student-Info"])
+        studentInfoParagraphs["class"] = Paragraph('<b>班级: </b>'+str(student.schoolClass),styles["Student-Info"])
+        studentInfoParagraphs["dateOfTesting"] = Paragraph('<b>测试日期: </b>'+str(student.dateOfTesting),styles["Student-Info"])
+        
+        data= [[studentInfoParagraphs["title"]],
+               [studentInfoParagraphs["name"], studentInfoParagraphs["universalName"], studentInfoParagraphs["number"]],
+               [studentInfoParagraphs["gender"], studentInfoParagraphs["dateOfBirth"]],
+               [studentInfoParagraphs["school"]],
+               [studentInfoParagraphs["class"]],
+               [studentInfoParagraphs["dateOfTesting"]]]
+        t=Table(data)
+        t.setStyle(TableStyle([
+            ('BOX', (0,0),(2,5),1,colors.black),
+            ('SPAN',(0,0),(2,0)),
+            ('SPAN',(0,3),(2,3))
+            ]))
+        t._argW[0]=4.5*cm
+        t._argW[1]=4.5*cm
+        story.append(t)
+        
+        return story
+    
+    def gen_data_sheet_printable_single_page_back(self, student, canvas, pagesize):
+        canvas.saveState()
+        #canvas.setFont("STSong-Light", 14)
+        
+        styleSheet = getSampleStyleSheet()
+        styleSheet.add(ParagraphStyle(name='body', fontName='STSong-Light'))
+        P=Paragraph('<para>This is a very silly example 中文</para>',styleSheet["body"])
+        
+        aW = 12.1*cm # available width and height
+        aH = 5.8*cm
+        w,h = P.wrap(aW, aH) # find required space
+        P.drawOn(canvas,2.4*cm,pagesize[1]-1.5*cm)
+        aH = aH - h # reduce the available height
+
+        base_info_part_width = 12.1*cm
+        base_info_part_height = 5.8*cm
+        base_info_part_margin_x = 2.4*cm
+        base_info_part_margin_y = pagesize[1]-1.5*cm-base_info_part_height
+        
+        canvas.rect(base_info_part_margin_x, base_info_part_margin_y, base_info_part_width, base_info_part_height)
+
+        title = "2015 上海运动机能测试-数据管理表"
+        title_padding_x = (base_info_part_width-canvas.stringWidth(title))/2
+        if title_padding_x <0:
+            title_padding_x = 0
+        canvas.drawString(base_info_part_margin_x+title_padding_x, base_info_part_margin_y+3.8*cm, title)
+        
+        canvas.drawString(100, 100, "姓, 名: " + student.lastName + ', ' + student.firstName)
+        canvas.drawString(0, 0, str(canvas.stringWidth("xxx")))
+        canvas.rotate(90)
+        # Draw things on the PDF. Here's where the PDF generation happens.
+        # See the ReportLab documentation for the full list of functionality.
+        canvas.drawString(100, -100, "旋转90度")
+        canvas.restoreState()
+
+    change_form_template = 'sportsman/student_change_form.html'
 
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ('name', 'universalName')
