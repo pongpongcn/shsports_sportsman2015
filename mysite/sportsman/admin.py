@@ -186,6 +186,7 @@ class StudentAdmin(ImportExportModelAdmin):
         styles = getSampleStyleSheet()
         styles["Normal"].fontName='STSong-Light'
         styles.add(ParagraphStyle(name='Student-Info', fontName='STSong-Light'))
+        styles.add(ParagraphStyle(name='Data-Info', fontName='STSong-Light'))
 
         for student in students:
             Story.extend(self.gen_data_sheet_printable_single_page(student, styles, columnWidth))
@@ -239,6 +240,7 @@ class StudentAdmin(ImportExportModelAdmin):
         styles = getSampleStyleSheet()
         styles["Normal"].fontName='STSong-Light'
         styles.add(ParagraphStyle(name='Student-Info', fontName='STSong-Light'))
+        styles.add(ParagraphStyle(name='Data-Info', fontName='STSong-Light'))
         Story.extend(self.gen_data_sheet_printable_single_page(student, styles, columnWidth))
 
         doc.build(Story)
@@ -275,7 +277,7 @@ class StudentAdmin(ImportExportModelAdmin):
          
         studentInfoParagraphs["gender"] = Paragraph('<b>性别: </b>'+genderString,styles["Student-Info"])
         studentInfoParagraphs["dateOfBirth"] = Paragraph('<b>出生年月: </b>'+str(student.dateOfBirth),styles["Student-Info"])
-        studentInfoParagraphs["school"] = Paragraph('<b>出生年月: </b>'+student.schoolClass.school.universalName,styles["Student-Info"])
+        studentInfoParagraphs["school"] = Paragraph('<b>学校: </b>'+student.schoolClass.school.universalName,styles["Student-Info"])
         studentInfoParagraphs["class"] = Paragraph('<b>班级: </b>'+str(student.schoolClass),styles["Student-Info"])
         studentInfoParagraphs["dateOfTesting"] = Paragraph('<b>测试日期: </b>'+str(student.dateOfTesting),styles["Student-Info"])
         
@@ -294,6 +296,12 @@ class StudentAdmin(ImportExportModelAdmin):
         t._argW[0]=4.5*cm
         t._argW[1]=4.5*cm
         story.append(t)
+
+        story.append(Paragraph('测试日期&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;身高□□□厘米&nbsp;体重□□.□公斤&nbsp;号码□□□', styles["Data-Info"]))
+        story.append(Paragraph('测试1: 20米跑',styles["Data-Info"]))
+        story.append(Paragraph('第一次跑□.□□秒&nbsp;&nbsp;&nbsp;&nbsp;第二次跑□.□□秒',styles["Data-Info"]))
+        story.append(Paragraph('测试2: 后退平衡',styles["Data-Info"]))
+        story.append(Paragraph('1.&nbsp;6.0厘米&nbsp;最多8步&nbsp;&nbsp;第一次□ 第二次□',styles["Data-Info"]))
         
         return story
     
