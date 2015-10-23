@@ -1,0 +1,8 @@
+{% extends "admin/import_export/change_list_import_export.html" %}
+{% load i18n %}
+{% block object-tools-items %}
+	<li>
+        <a href="gen_data_sheet_printable/{{ cl.get_query_string }}" class="historylink">生成成绩登记表</a>
+    </li>
+	{{ block.super }}
+{% endblock %}
