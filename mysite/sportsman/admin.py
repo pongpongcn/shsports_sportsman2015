@@ -121,13 +121,84 @@ class StudentAdmin(ImportExportModelAdmin):
     list_select_related = True#性能优化
 
     def get_urls(self):
-        exists_urls = super(StudentAdmin, self).get_urls()
-        new_urls = [
-            url(r'^(.+)/gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printable))
+        urls = super(StudentAdmin, self).get_urls()
+        my_urls = [
+            url(r'^(.+)/gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printable)),
+            url(r'^gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printables)),
         ]
         #New urls must appear before the exists ones.
-        return new_urls + exists_urls 
+        
+        return my_urls + urls 
 
+    def get_student_queryset(self, request):
+        """
+        Returns export queryset.
+
+        Default implementation respects applied search and filters.
+        """
+        # copied from django/contrib/admin/options.py
+        list_display = self.get_list_display(request)
+        list_display_links = self.get_list_display_links(request, list_display)
+
+        ChangeList = self.get_changelist(request)
+        cl = ChangeList(request, self.model, list_display,
+                        list_display_links, self.list_filter,
+                        self.date_hierarchy, self.search_fields,
+                        self.list_select_related, self.list_per_page,
+                        self.list_max_show_all, self.list_editable,
+                        self)
+
+        # query_set has been renamed to queryset in Django 1.8
+        try:
+            return cl.queryset
+        except AttributeError:
+            return cl.query_set
+
+    def gen_data_sheet_printables(self, request, *args, **kwargs):
+        students = self.get_student_queryset(request)
+        
+        pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
+
+        filename = 'Data Sheets' + '.pdf'
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
+
+        buffer = BytesIO()
+
+        # Create the PDF object, using the response object as its "file."
+        pagesize = landscape(A4)
+
+        styles=getSampleStyleSheet()
+
+        doc = BaseDocTemplate(buffer,pagesize=pagesize,leftMargin=1*cm,rightMargin=1*cm,topMargin=1*cm,bottomMargin=1*cm)
+
+        Story = []
+
+        columnWidth = doc.width/2-6
+        #Two Columns
+        frame1 = Frame(doc.leftMargin, doc.bottomMargin, columnWidth, doc.height, id='col1')
+        frame2 = Frame(doc.leftMargin+doc.width/2+6, doc.bottomMargin, columnWidth, doc.height, id='col2')
+
+        #Story.append(Paragraph(" ".join([random.choice(words) for i in range(1000)]),styles['Normal']))
+        doc.addPageTemplates([PageTemplate(id='TwoCol',frames=[frame1,frame2]), ])
+        
+        styles = getSampleStyleSheet()
+        styles["Normal"].fontName='STSong-Light'
+        styles.add(ParagraphStyle(name='Student-Info', fontName='STSong-Light'))
+
+        for student in students:
+            Story.extend(self.gen_data_sheet_printable_single_page(student, styles, columnWidth))
+            Story.append(PageBreak())
+
+        doc.build(Story)
+
+        # Get the value of the BytesIO buffer and write it to the response.
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.write(pdf)
+        return response
+    
     def gen_data_sheet_printable(self, request, object_id):
 
         student = Student.objects.get(pk=object_id)
@@ -192,7 +263,10 @@ class StudentAdmin(ImportExportModelAdmin):
         studentInfoParagraphs = {}
         studentInfoParagraphs["title"] = Paragraph('<para alignment="center"><font size=16><b>2015 上海运动机能测试-数据管理表</b></font></para>',styles["Student-Info"])
         studentInfoParagraphs["name"] = Paragraph('<font size=14><b>姓, 名: </b>'+student.lastName+', '+student.firstName+'</font>',styles["Student-Info"])
-        studentInfoParagraphs["universalName"] = Paragraph('<font size=14>'+student.universalLastName+', '+student.universalFirstName+'</font>',styles["Student-Info"])
+        if student.universalLastName and student.universalFirstName:
+            studentInfoParagraphs["universalName"] = Paragraph('<font size=14>'+student.universalLastName+', '+student.universalFirstName+'</font>',styles["Student-Info"])
+        else:
+            studentInfoParagraphs["universalName"] = None
         studentInfoParagraphs["number"] = Paragraph('<font size=14>'+'<b>测试编号: </b>'+str(student.number)+'</font>',styles["Student-Info"])
         if student.gender:
             genderString = dict(Genders)[student.gender]
@@ -259,6 +333,7 @@ class StudentAdmin(ImportExportModelAdmin):
         canvas.restoreState()
 
     change_form_template = 'sportsman/student_change_form.html'
+    change_list_template = 'sportsman/student_list.html'
 
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ('name', 'universalName')
