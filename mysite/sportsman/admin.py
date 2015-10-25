@@ -13,7 +13,7 @@ import scipy.stats
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics, ttfonts
 from io import BytesIO
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import A4, landscape, letter
 from reportlab.lib.units import cm, inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Table
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -21,6 +21,7 @@ from reportlab.platypus.tables import TableStyle
 from reportlab.rl_config import defaultPageSize
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.lib import colors
+from PyPDF2 import PdfFileWriter, PdfFileReader
 
 from .models import Factor
 from .models import Student
@@ -291,63 +292,50 @@ class StudentAdmin(ImportExportModelAdmin):
         return response
     
     def gen_data_sheet_printable(self, request, object_id):
-
         student = Student.objects.get(pk=object_id)
         
-        pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
+        return self.gen_data_sheet_printable_response((student,))
 
-        filename = 'Data Sheets_' + str(object_id) + '.pdf'
+    def gen_data_sheet_printable_response(self, students):
+        pdfmetrics.registerFont(ttfonts.TTFont("simsun", "simsun.ttc"))
+        pagesize = landscape(A4)
+        fontName = 'simsun'
+
+        output = PdfFileWriter()
         
-        # Create the HttpResponse object with the appropriate PDF headers.
+        for student in students:
+            # create a new PDF with Reportlab
+            buffer = BytesIO()
+            p = canvas.Canvas(buffer, pagesize=pagesize)
+            p.setFont("simsun", 14)
+            p.drawString(0, 0, '%s, %s' % (student.lastName, student.firstName))
+            p.save()
+            buffer.seek(0)
+            new_pdf = PdfFileReader(buffer)
+            # read your existing PDF
+            existing_pdf = PdfFileReader(open("test.pdf", "rb"))
+            # add the "watermark" (which is the new pdf) on the existing page
+            
+            page = existing_pdf.getPage(0)
+            page.mergePage(new_pdf.getPage(0))
+            output.addPage(page)
+
+        if len(students) == 1:
+            student = students[0]
+            if student.dateOfTesting and student.number:
+                filename = 'Data Sheet %s %s.pdf' % (student.dateOfTesting, student.number)
+            else:
+                filename = 'Data Sheet.pdf'
+        else:
+            filename = 'Data Sheet.pdf'
+
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
+            
+        # finally, write "output" to a real file(response)
+        output.write(response)
 
-        buffer = BytesIO()
-
-        # Create the PDF object, using the response object as its "file."
-        pagesize = landscape(A4)
-
-        words = "lorem ipsum dolor sit amet consetetur sadipscing elitr sed diam nonumy eirmod tempor invidunt ut labore et".split()
-
-        styles=getSampleStyleSheet()
-
-        doc = BaseDocTemplate(buffer,showBoundary=1,pagesize=pagesize,leftMargin=1*cm,rightMargin=1*cm,topMargin=1*cm,bottomMargin=1*cm)
-
-        Story = []
-
-        columnWidth = doc.width/2-6
-        #Two Columns
-        frame1 = Frame(doc.leftMargin, doc.bottomMargin, columnWidth, doc.height, id='col1')
-        frame2 = Frame(doc.leftMargin+doc.width/2+6, doc.bottomMargin, columnWidth, doc.height, id='col2')
-
-        #Story.append(Paragraph(" ".join([random.choice(words) for i in range(1000)]),styles['Normal']))
-        doc.addPageTemplates([PageTemplate(id='TwoCol',frames=[frame1,frame2]), ])
-        
-        #c = canvas.Canvas(buffer, pagesize=pagesize)
-
-        #self.gen_data_sheet_printable_single_page(student, c, pagesize)
-
-        styles = getSampleStyleSheet()
-        styles["Normal"].fontName='STSong-Light'
-        styles.add(ParagraphStyle(name='Student-Info', fontName='STSong-Light'))
-        styles.add(ParagraphStyle(name='Data-Info', fontName='STSong-Light'))
-        Story.extend(self.gen_data_sheet_printable_single_page(student, styles, columnWidth))
-
-        doc.build(Story)
-        
-        # Close the PDF object cleanly, and we're done.
-        #c.showPage()
-
-        #c.drawString(100, 100, "Page 2")
-        #c.showPage()
-        
-        #c.save()
-        
-        # Get the value of the BytesIO buffer and write it to the response.
-        pdf = buffer.getvalue()
-        buffer.close()
-        response.write(pdf)
-        return response
+        return response    
 
     def gen_data_sheet_printable_single_page(self, student, styles, available_width):
         story = []
