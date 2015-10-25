@@ -7,7 +7,7 @@ from django.db.models.fields import BLANK_CHOICE_DASH
 from import_export import resources
 from import_export import fields
 from import_export.admin import ImportExportModelAdmin
-import calendar, random, time
+import calendar, os
 from django.utils import timezone
 from statistics import mean
 import scipy.stats
@@ -267,6 +267,7 @@ class StudentAdmin(ImportExportModelAdmin):
 
         buffers = []
         existing_pdf_files = []
+        templateFilePath = os.path.join(os.path.dirname(__file__), 'storage/DataSheetTemplate.pdf')
         for student in students:
             # create a new PDF with Reportlab
             buffer = BytesIO()
@@ -289,7 +290,7 @@ class StudentAdmin(ImportExportModelAdmin):
             buffer.seek(0)
             new_pdf = PdfFileReader(buffer)
             # read your existing PDF
-            existing_pdf_file = open("storage/sportsman/DataSheetTemplate.pdf", "rb")
+            existing_pdf_file = open(templateFilePath, "rb")
             existing_pdf_files.append(existing_pdf_file)
             existing_pdf = PdfFileReader(existing_pdf_file)
             # add the "watermark" (which is the new pdf) on the existing page
