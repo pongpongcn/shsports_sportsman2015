@@ -6,7 +6,7 @@ from django.db.models.fields import BLANK_CHOICE_DASH
 from import_export import resources
 from import_export import fields
 from import_export.admin import ImportExportModelAdmin
-import calendar, random
+import calendar, random, time
 from django.utils import timezone
 from statistics import mean
 import scipy.stats
@@ -248,48 +248,7 @@ class StudentAdmin(ImportExportModelAdmin):
     def gen_data_sheet_printables(self, request, *args, **kwargs):
         students = self.get_student_queryset(request)
         
-        pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
-
-        filename = 'Data Sheets' + '.pdf'
-
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
-
-        buffer = BytesIO()
-
-        # Create the PDF object, using the response object as its "file."
-        pagesize = landscape(A4)
-
-        styles=getSampleStyleSheet()
-
-        doc = BaseDocTemplate(buffer,pagesize=pagesize,leftMargin=1*cm,rightMargin=1*cm,topMargin=1*cm,bottomMargin=1*cm)
-
-        Story = []
-
-        columnWidth = doc.width/2-6
-        #Two Columns
-        frame1 = Frame(doc.leftMargin, doc.bottomMargin, columnWidth, doc.height, id='col1')
-        frame2 = Frame(doc.leftMargin+doc.width/2+6, doc.bottomMargin, columnWidth, doc.height, id='col2')
-
-        #Story.append(Paragraph(" ".join([random.choice(words) for i in range(1000)]),styles['Normal']))
-        doc.addPageTemplates([PageTemplate(id='TwoCol',frames=[frame1,frame2]), ])
-        
-        styles = getSampleStyleSheet()
-        styles["Normal"].fontName='STSong-Light'
-        styles.add(ParagraphStyle(name='Student-Info', fontName='STSong-Light'))
-        styles.add(ParagraphStyle(name='Data-Info', fontName='STSong-Light'))
-
-        for student in students:
-            Story.extend(self.gen_data_sheet_printable_single_page(student, styles, columnWidth))
-            Story.append(PageBreak())
-
-        doc.build(Story)
-
-        # Get the value of the BytesIO buffer and write it to the response.
-        pdf = buffer.getvalue()
-        buffer.close()
-        response.write(pdf)
-        return response
+        return self.gen_data_sheet_printable_response(students)
     
     def gen_data_sheet_printable(self, request, object_id):
         student = Student.objects.get(pk=object_id)
@@ -302,20 +261,37 @@ class StudentAdmin(ImportExportModelAdmin):
         fontName = 'simsun'
 
         output = PdfFileWriter()
-        
+
+        dictGenders = dict(Genders)
+
+        buffers = []
+        existing_pdf_files = []
         for student in students:
             # create a new PDF with Reportlab
             buffer = BytesIO()
+            buffers.append(buffer)
+            
             p = canvas.Canvas(buffer, pagesize=pagesize)
             p.setFont("simsun", 14)
-            p.drawString(0, 0, '%s, %s' % (student.lastName, student.firstName))
+            p.drawString(4*cm, pagesize[1]-3.5*cm, '%s, %s' % (student.lastName, student.firstName))
+            if student.universalLastName and student.universalFirstName:
+                p.drawString(7.5*cm, pagesize[1]-3.5*cm, '%s, %s' % (student.universalFirstName, student.universalLastName))
+            p.drawString(13*cm, pagesize[1]-3.5*cm, str(student.number))
+            p.setFont("simsun", 12)
+            if student.gender:
+                p.drawString(3.5*cm, pagesize[1]-4.5*cm, dictGenders[student.gender])
+            p.drawString(4.5*cm, pagesize[1]-5.2*cm, str(student.dateOfBirth))
+            p.drawString(7.2*cm, pagesize[1]-5.2*cm, student.schoolClass.school.universalName)
+            p.drawString(3.5*cm, pagesize[1]-6.1*cm, str(student.schoolClass))
+            p.drawString(4.5*cm, pagesize[1]-7*cm, str(student.dateOfTesting))
             p.save()
             buffer.seek(0)
             new_pdf = PdfFileReader(buffer)
             # read your existing PDF
-            existing_pdf = PdfFileReader(open("test.pdf", "rb"))
+            existing_pdf_file = open("DataSheetTemplate.pdf", "rb")
+            existing_pdf_files.append(existing_pdf_file)
+            existing_pdf = PdfFileReader(existing_pdf_file)
             # add the "watermark" (which is the new pdf) on the existing page
-            
             page = existing_pdf.getPage(0)
             page.mergePage(new_pdf.getPage(0))
             output.addPage(page)
@@ -331,92 +307,21 @@ class StudentAdmin(ImportExportModelAdmin):
 
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
-            
+
         # finally, write "output" to a real file(response)
-        output.write(response)
+        outputBuff = BytesIO()
+        output.write(outputBuff)
 
-        return response    
+        for buffer in buffers:
+            buffer.close()
+        for existing_pdf_file in existing_pdf_files:
+            existing_pdf_file.close()
+        
+        outputData = outputBuff.getvalue()
+        outputBuff.close()
+        response.write(outputData)
 
-    def gen_data_sheet_printable_single_page(self, student, styles, available_width):
-        story = []
-
-        studentInfoParagraphs = {}
-        studentInfoParagraphs["title"] = Paragraph('<para alignment="center"><font size=16><b>2015 上海运动机能测试-数据管理表</b></font></para>',styles["Student-Info"])
-        studentInfoParagraphs["name"] = Paragraph('<font size=14><b>姓, 名: </b>'+student.lastName+', '+student.firstName+'</font>',styles["Student-Info"])
-        if student.universalLastName and student.universalFirstName:
-            studentInfoParagraphs["universalName"] = Paragraph('<font size=14>'+student.universalLastName+', '+student.universalFirstName+'</font>',styles["Student-Info"])
-        else:
-            studentInfoParagraphs["universalName"] = None
-        studentInfoParagraphs["number"] = Paragraph('<font size=14>'+'<b>测试编号: </b>'+str(student.number)+'</font>',styles["Student-Info"])
-        if student.gender:
-            genderString = dict(Genders)[student.gender]
-        else:
-            genderString = ''
-         
-        studentInfoParagraphs["gender"] = Paragraph('<b>性别: </b>'+genderString,styles["Student-Info"])
-        studentInfoParagraphs["dateOfBirth"] = Paragraph('<b>出生年月: </b>'+str(student.dateOfBirth),styles["Student-Info"])
-        studentInfoParagraphs["school"] = Paragraph('<b>学校: </b>'+student.schoolClass.school.universalName,styles["Student-Info"])
-        studentInfoParagraphs["class"] = Paragraph('<b>班级: </b>'+str(student.schoolClass),styles["Student-Info"])
-        studentInfoParagraphs["dateOfTesting"] = Paragraph('<b>测试日期: </b>'+str(student.dateOfTesting),styles["Student-Info"])
-        
-        data= [[studentInfoParagraphs["title"]],
-               [studentInfoParagraphs["name"], studentInfoParagraphs["universalName"], studentInfoParagraphs["number"]],
-               [studentInfoParagraphs["gender"], studentInfoParagraphs["dateOfBirth"]],
-               [studentInfoParagraphs["school"]],
-               [studentInfoParagraphs["class"]],
-               [studentInfoParagraphs["dateOfTesting"]]]
-        t=Table(data)
-        t.setStyle(TableStyle([
-            ('BOX', (0,0),(2,5),1,colors.black),
-            ('SPAN',(0,0),(2,0)),
-            ('SPAN',(0,3),(2,3))
-            ]))
-        t._argW[0]=4.5*cm
-        t._argW[1]=4.5*cm
-        story.append(t)
-
-        story.append(Paragraph('测试日期&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;身高□□□厘米&nbsp;体重□□.□公斤&nbsp;号码□□□', styles["Data-Info"]))
-        story.append(Paragraph('测试1: 20米跑',styles["Data-Info"]))
-        story.append(Paragraph('第一次跑□.□□秒&nbsp;&nbsp;&nbsp;&nbsp;第二次跑□.□□秒',styles["Data-Info"]))
-        story.append(Paragraph('测试2: 后退平衡',styles["Data-Info"]))
-        story.append(Paragraph('1.&nbsp;6.0厘米&nbsp;最多8步&nbsp;&nbsp;第一次□ 第二次□',styles["Data-Info"]))
-        
-        return story
-    
-    def gen_data_sheet_printable_single_page_back(self, student, canvas, pagesize):
-        canvas.saveState()
-        #canvas.setFont("STSong-Light", 14)
-        
-        styleSheet = getSampleStyleSheet()
-        styleSheet.add(ParagraphStyle(name='body', fontName='STSong-Light'))
-        P=Paragraph('<para>This is a very silly example 中文</para>',styleSheet["body"])
-        
-        aW = 12.1*cm # available width and height
-        aH = 5.8*cm
-        w,h = P.wrap(aW, aH) # find required space
-        P.drawOn(canvas,2.4*cm,pagesize[1]-1.5*cm)
-        aH = aH - h # reduce the available height
-
-        base_info_part_width = 12.1*cm
-        base_info_part_height = 5.8*cm
-        base_info_part_margin_x = 2.4*cm
-        base_info_part_margin_y = pagesize[1]-1.5*cm-base_info_part_height
-        
-        canvas.rect(base_info_part_margin_x, base_info_part_margin_y, base_info_part_width, base_info_part_height)
-
-        title = "2015 上海运动机能测试-数据管理表"
-        title_padding_x = (base_info_part_width-canvas.stringWidth(title))/2
-        if title_padding_x <0:
-            title_padding_x = 0
-        canvas.drawString(base_info_part_margin_x+title_padding_x, base_info_part_margin_y+3.8*cm, title)
-        
-        canvas.drawString(100, 100, "姓, 名: " + student.lastName + ', ' + student.firstName)
-        canvas.drawString(0, 0, str(canvas.stringWidth("xxx")))
-        canvas.rotate(90)
-        # Draw things on the PDF. Here's where the PDF generation happens.
-        # See the ReportLab documentation for the full list of functionality.
-        canvas.drawString(100, -100, "旋转90度")
-        canvas.restoreState()
+        return response
 
     change_form_template = 'sportsman/student_change_form.html'
     change_list_template = 'sportsman/student_list.html'
