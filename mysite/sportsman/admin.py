@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django import forms
+from django.conf import settings
 from django.conf.urls import url
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models.fields import BLANK_CHOICE_DASH
@@ -288,7 +289,7 @@ class StudentAdmin(ImportExportModelAdmin):
             buffer.seek(0)
             new_pdf = PdfFileReader(buffer)
             # read your existing PDF
-            existing_pdf_file = open("DataSheetTemplate.pdf", "rb")
+            existing_pdf_file = open("storage/sportsman/DataSheetTemplate.pdf", "rb")
             existing_pdf_files.append(existing_pdf_file)
             existing_pdf = PdfFileReader(existing_pdf_file)
             # add the "watermark" (which is the new pdf) on the existing page
