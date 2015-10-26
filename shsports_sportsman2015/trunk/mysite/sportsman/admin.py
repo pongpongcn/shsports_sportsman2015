@@ -16,7 +16,7 @@ from reportlab.pdfbase import pdfmetrics, ttfonts
 from io import BytesIO
 from reportlab.lib.pagesizes import A4, landscape, letter
 from reportlab.lib.units import cm, inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Table
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Table, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus.tables import TableStyle
 from reportlab.rl_config import defaultPageSize
@@ -265,15 +265,13 @@ class StudentAdmin(ImportExportModelAdmin):
 
         dictGenders = dict(Genders)
 
-        buffers = []
-        existing_pdf_files = []
-        templateFilePath = os.path.join(os.path.dirname(__file__), 'storage/DataSheetTemplate.pdf')
+        templateImagePath = os.path.join(os.path.dirname(__file__), 'storage/DataSheetTemplate.jpg')
+        templateImage = Image(templateImagePath, width=29.7*cm, height=21*cm)
+        
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=pagesize)
         for student in students:
-            # create a new PDF with Reportlab
-            buffer = BytesIO()
-            buffers.append(buffer)
-            
-            p = canvas.Canvas(buffer, pagesize=pagesize)
+            templateImage.drawOn(p, 0, 0)
             p.setFont("simsun", 12)
             p.drawString(4.5*cm, pagesize[1]-2.78*cm, '%s, %s' % (student.lastName, student.firstName))
             if student.universalLastName and student.universalFirstName:
@@ -285,18 +283,10 @@ class StudentAdmin(ImportExportModelAdmin):
             p.drawString(4*cm, pagesize[1]-4.45*cm, student.schoolClass.school.universalName)
             p.drawString(4*cm, pagesize[1]-5*cm, str(student.schoolClass))
             p.drawString(4.8*cm, pagesize[1]-5.55*cm, str(student.dateOfTesting))
-            p.save()
-            buffer.seek(0)
-            new_pdf = PdfFileReader(buffer)
-            # read your existing PDF
-            existing_pdf_file = open(templateFilePath, "rb")
-            existing_pdf_files.append(existing_pdf_file)
-            existing_pdf = PdfFileReader(existing_pdf_file)
-            # add the "watermark" (which is the new pdf) on the existing page
-            page = existing_pdf.getPage(0)
-            page.mergePage(new_pdf.getPage(0))
-            output.addPage(page)
-
+            p.showPage()
+            
+        p.save()
+        
         if len(students) == 1:
             student = students[0]
             if student.dateOfTesting and student.number:
@@ -309,18 +299,9 @@ class StudentAdmin(ImportExportModelAdmin):
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
 
-        # finally, write "output" to a real file(response)
-        outputBuff = BytesIO()
-        output.write(outputBuff)
-
-        for buffer in buffers:
-            buffer.close()
-        for existing_pdf_file in existing_pdf_files:
-            existing_pdf_file.close()
-        
-        outputData = outputBuff.getvalue()
-        outputBuff.close()
-        response.write(outputData)
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.write(pdf)
 
         return response
 
