@@ -274,18 +274,17 @@ class StudentAdmin(ImportExportModelAdmin):
             buffers.append(buffer)
             
             p = canvas.Canvas(buffer, pagesize=pagesize)
-            p.setFont("simsun", 14)
-            p.drawString(4*cm, pagesize[1]-3.5*cm, '%s, %s' % (student.lastName, student.firstName))
-            if student.universalLastName and student.universalFirstName:
-                p.drawString(7.5*cm, pagesize[1]-3.5*cm, '%s, %s' % (student.universalFirstName, student.universalLastName))
-            p.drawString(13*cm, pagesize[1]-3.5*cm, str(student.number))
             p.setFont("simsun", 12)
+            p.drawString(4.5*cm, pagesize[1]-2.78*cm, '%s, %s' % (student.lastName, student.firstName))
+            if student.universalLastName and student.universalFirstName:
+                p.drawString(7*cm, pagesize[1]-2.78*cm, '%s, %s' % (student.universalFirstName, student.universalLastName))
+            p.drawString(11.8*cm, pagesize[1]-2.78*cm, str(student.number))
             if student.gender:
-                p.drawString(3.5*cm, pagesize[1]-4.5*cm, dictGenders[student.gender])
-            p.drawString(4.5*cm, pagesize[1]-5.2*cm, str(student.dateOfBirth))
-            p.drawString(7.2*cm, pagesize[1]-5.2*cm, student.schoolClass.school.universalName)
-            p.drawString(3.5*cm, pagesize[1]-6.1*cm, str(student.schoolClass))
-            p.drawString(4.5*cm, pagesize[1]-7*cm, str(student.dateOfTesting))
+                p.drawString(4*cm, pagesize[1]-3.31*cm, dictGenders[student.gender])
+            p.drawString(4.8*cm, pagesize[1]-3.9*cm, str(student.dateOfBirth))
+            p.drawString(4*cm, pagesize[1]-4.45*cm, student.schoolClass.school.universalName)
+            p.drawString(4*cm, pagesize[1]-5*cm, str(student.schoolClass))
+            p.drawString(4.8*cm, pagesize[1]-5.55*cm, str(student.dateOfTesting))
             p.save()
             buffer.seek(0)
             new_pdf = PdfFileReader(buffer)
