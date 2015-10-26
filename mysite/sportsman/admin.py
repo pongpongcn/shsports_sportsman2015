@@ -4,10 +4,10 @@ from django.conf import settings
 from django.conf.urls import url
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models.fields import BLANK_CHOICE_DASH
-from import_export import resources
-from import_export import fields
+from import_export import resources, fields
 from import_export.admin import ImportExportModelAdmin
-import calendar, os
+from import_export.instance_loaders import ModelInstanceLoader
+import calendar, os, pinyin
 from django.utils import timezone
 from statistics import mean
 import scipy.stats
@@ -72,6 +72,76 @@ class FactorAdmin(ImportExportModelAdmin):
     resource_class = FactorResource
     list_display = ('movement_type', 'gender', 'month_age', 'mean', 'standard_deviation')
     list_filter = ('movement_type', 'gender', 'month_age')
+
+class StudentImportInstanceLoader(ModelInstanceLoader):
+    def get_instance(self, row):
+        try:
+            params = {}
+            field = self.resource.fields['noOfStudentStatus']
+            params[field.attribute] = row['学籍号']
+            return self.get_queryset().get(**params)
+        except self.resource._meta.model.DoesNotExist:
+            return None
+    
+class StudentImportResource(resources.ModelResource):
+    def before_import(self, dataset, dry_run, **kwargs):
+        schoolClasses = []
+        genders = []
+        universalFirstNames = []
+        universalLastNames = []
+        for row in dataset.dict:
+            schoolClass = self.get_schoolClass(row['学校'], row['班级'])
+            schoolClasses.append(schoolClass)
+            gender = self.get_gender(row['性别'])
+            genders.append(gender)
+            universalFirstNames.append(pinyin.get(row['名']).capitalize())
+            universalLastNames.append(pinyin.get(row['姓']).capitalize())
+        dataset.append_col(schoolClasses, header='schoolClass')
+        dataset.append_col(genders, header='gender')
+        dataset.append_col(universalFirstNames, header='universalFirstName')
+        dataset.append_col(universalLastNames, header='universalLastName')
+    def get_schoolClass(self, schoolName, schoolClassName):
+        schoolQuery = School.objects.filter(name=schoolName)
+        if schoolQuery.exists():
+            school = schoolQuery[0]
+        else:
+            school = School(name=schoolName, universalName='')
+            school.save()
+        schoolClassQuery = SchoolClass.objects.filter(school=school, name=schoolClassName)
+        if schoolClassQuery.exists():
+            schoolClass = schoolClassQuery[0]
+        else:
+            schoolClass = SchoolClass(school=school, name=schoolClassName, universalName='')
+            schoolClass.save()
+        return schoolClass
+    def get_gender(self, genderName):
+        if genderName == '男':
+            return 'MALE'
+        elif genderName == '女':
+            return 'FEMALE'
+        else:
+            return None
+    #def import_obj(self, obj, data, dry_run):
+    #    data['noOfStudentStatus'] = data['学籍号']
+    #    super.import_obj(obj, data, dry_run)
+        #for field in self.get_fields():
+        #    if field.attribute == 'noOfStudentStatus':
+        #        print(field.attribute)
+        #        field.save(obj, data)
+    noOfStudentStatus = fields.Field(attribute='noOfStudentStatus', column_name='学籍号')
+    firstName = fields.Field(attribute='firstName', column_name='名')
+    lastName = fields.Field(attribute='lastName', column_name='姓')
+    dateOfBirth = fields.Field(attribute='dateOfBirth', column_name='出生日期')
+    dateOfTesting = fields.Field(attribute='dateOfTesting', column_name='测试日期')
+    schoolClass = fields.Field(attribute='schoolClass')
+    gender = fields.Field(attribute='gender')
+    universalFirstName = fields.Field(attribute='universalFirstName')
+    universalLastName = fields.Field(attribute='universalLastName')
+    class Meta:
+        model = Student
+        import_id_fields = ('noOfStudentStatus',)
+        fields = ()
+        #instance_loader_class = StudentImportInstanceLoader
 
 class StudentResource(resources.ModelResource):
     numberTalentCheck = fields.Field()
@@ -178,10 +248,13 @@ class StudentResource(resources.ModelResource):
 
 class StudentAdmin(ImportExportModelAdmin):
     resource_class = StudentResource
+    def get_import_resource_class(self):
+        return StudentImportResource
+    
     date_hierarchy = 'dateOfTesting'
     fieldsets = (
         (None, {
-            'fields': (('school', 'schoolClass'), ('firstName', 'lastName'), ('universalFirstName', 'universalLastName'), 'gender', 'dateOfBirth', ('dateOfTesting', 'number'), 'questionary')
+            'fields': ('noOfStudentStatus', ('school', 'schoolClass'), ('firstName', 'lastName'), ('universalFirstName', 'universalLastName'), 'gender', 'dateOfBirth', ('dateOfTesting', 'number'), 'questionary')
             }),
         ('地址', {
             'classes': ('wide',),
@@ -203,12 +276,12 @@ class StudentAdmin(ImportExportModelAdmin):
     school.short_description = '学校'
     school.admin_order_field = 'schoolClass__school'
     
-    list_display = ('lastName', 'firstName', 'gender', 'dateOfBirth', 'school', 'schoolClass', 'dateOfTesting', 'number')
-    list_display_links = ('lastName', 'firstName')
+    list_display = ('noOfStudentStatus', 'lastName', 'firstName', 'gender', 'dateOfBirth', 'school', 'schoolClass', 'dateOfTesting', 'number')
+    list_display_links = ('noOfStudentStatus', 'lastName', 'firstName')
     list_filter = ('dateOfTesting','schoolClass__school')
     ordering = ('dateOfTesting', 'number')
     readonly_fields = ('external_id', 'school', 'number')
-    search_fields = ('lastName', 'firstName')
+    search_fields = ('lastName', 'firstName', '=number', '=noOfStudentStatus')
     radio_fields = {"gender": admin.HORIZONTAL}
     list_select_related = True#性能优化
 

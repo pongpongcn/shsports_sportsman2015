@@ -82,6 +82,7 @@ class Factor(models.Model):
         verbose_name_plural = "分布因素(Factors)"
     
 class Student(models.Model):
+    noOfStudentStatus = models.CharField('学籍号', max_length=255, null=True, blank=True)
     schoolClass = models.ForeignKey(SchoolClass, verbose_name="班级")
     firstName = models.CharField('名', max_length=255)
     lastName = models.CharField('姓', max_length=255)
@@ -125,14 +126,14 @@ class Student(models.Model):
     weight = models.DecimalField('体重（千克）', max_digits=19, decimal_places=2, null=True, blank=True)
     height = models.DecimalField('身高（厘米）', max_digits=19, decimal_places=2, null=True, blank=True)
 
-    last_name = models.CharField('姓', max_length=5)
-    first_name = models.CharField('名', max_length=10)
-    birth_date = models.DateField('出生日期')
-    school_name = models.CharField('学校名称', max_length=100)
-    class_name = models.CharField('班级名称', max_length=100)
+    last_name = models.CharField('姓', max_length=5, null=True, blank=True)
+    first_name = models.CharField('名', max_length=10, null=True, blank=True)
+    birth_date = models.DateField('出生日期', null=True, blank=True)
+    school_name = models.CharField('学校名称', max_length=100, null=True, blank=True)
+    class_name = models.CharField('班级名称', max_length=100, null=True, blank=True)
     external_id = models.CharField('外部标识', max_length=10, null=True, blank=True)
     def __str__(self):
-        return self.last_name + ' ' + self.first_name
+        return self.lastName + ' ' + self.firstName
 
     def save(self, *args, **kw):
         dateOfTestingChanged = False
