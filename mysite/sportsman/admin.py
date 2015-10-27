@@ -5,7 +5,8 @@ from django.conf.urls import url
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models.fields import BLANK_CHOICE_DASH
 from import_export import resources, fields
-from import_export.admin import ImportExportModelAdmin
+from import_export.admin import ImportExportModelAdmin, base_formats
+from import_export.formats.base_formats import TablibFormat
 from import_export.instance_loaders import ModelInstanceLoader
 import calendar, os, pinyin
 from django.utils import timezone
@@ -72,16 +73,6 @@ class FactorAdmin(ImportExportModelAdmin):
     resource_class = FactorResource
     list_display = ('movement_type', 'gender', 'month_age', 'mean', 'standard_deviation')
     list_filter = ('movement_type', 'gender', 'month_age')
-
-class StudentImportInstanceLoader(ModelInstanceLoader):
-    def get_instance(self, row):
-        try:
-            params = {}
-            field = self.resource.fields['noOfStudentStatus']
-            params[field.attribute] = row['学籍号']
-            return self.get_queryset().get(**params)
-        except self.resource._meta.model.DoesNotExist:
-            return None
     
 class StudentImportResource(resources.ModelResource):
     def before_import(self, dataset, dry_run, **kwargs):
@@ -121,13 +112,7 @@ class StudentImportResource(resources.ModelResource):
             return 'FEMALE'
         else:
             return None
-    #def import_obj(self, obj, data, dry_run):
-    #    data['noOfStudentStatus'] = data['学籍号']
-    #    super.import_obj(obj, data, dry_run)
-        #for field in self.get_fields():
-        #    if field.attribute == 'noOfStudentStatus':
-        #        print(field.attribute)
-        #        field.save(obj, data)
+
     noOfStudentStatus = fields.Field(attribute='noOfStudentStatus', column_name='学籍号')
     firstName = fields.Field(attribute='firstName', column_name='名')
     lastName = fields.Field(attribute='lastName', column_name='姓')
@@ -141,7 +126,6 @@ class StudentImportResource(resources.ModelResource):
         model = Student
         import_id_fields = ('noOfStudentStatus',)
         fields = ()
-        #instance_loader_class = StudentImportInstanceLoader
 
 class StudentResource(resources.ModelResource):
     numberTalentCheck = fields.Field()
@@ -216,11 +200,7 @@ class StudentResource(resources.ModelResource):
     
     class Meta:
         model = Student
-        #import_id_fields = ('id',)
         fields = ('id','firstName','lastName','universalFirstName','universalLastName','street','housenumber','addition','zip','city','gender','questionary','number','weight','height','dateOfBirth','dateOfTesting','e_20m_1','e_20m_2','e_bal60_1','e_bal60_2','e_bal45_1','e_bal45_2','e_bal30_1','e_bal30_2','e_shh_1s','e_shh_1f','e_shh_2s','e_shh_2f','e_rb_1','e_rb_2','e_ls','e_su','e_ball_1','e_ball_2','e_ball_3','e_lauf_runden','e_lauf_rest','e_slauf_10')
-        #fields = ('id','firstName','lastName','universalFirstName','universalLastName','street','housenumber','addition','zip','city','gender','questionary','number','numberTalentCheck','weight','height','dateOfBirth','dateOfTesting','dateOfTalentCheck','selectedForTalentCheck','addressClearance','e_20m_1','e_20m_2','e_20m','e_bal60_1','e_bal60_2','e_bal45_1','e_bal45_2','e_bal30_1','e_bal30_2','e_bal','e_shh_1s','e_shh_1f','e_shh_2s','e_shh_2f','e_shh','e_rb_1','e_rb_2','e_rb','e_ls','e_su','e_sws_1','e_sws_2','e_sws','e_ball_1','e_ball_2','e_ball_3','e_ball','e_lauf_runden','e_lauf_rest','e_lauf','comment','e_15m_sw','e_15m_sw_bbs','e_15m_sw_ns','e_10m_ped_1','e_10m_ped_2','e_10m_ped','e_slauf_10','e_tt_15s_1','e_tt_15s_2','e_tt_15s','e_fb_drib_ob_1','e_fb_drib_ob_2','e_fb_drib_ob','e_fb_drib_mb_1','e_fb_drib_mb_2','e_fb_drib_mb','z_20m','z_bal','z_shh','z_rb','z_sws','z_ball','z_lauf','z_ls','z_su','z_10m_ped','z_15m_sw','z_fb_drib_mb','z_fb_drib_ob','z_tt_15s','z_slauf_10','z_height','z_weight','z_bmi','p_20m','p_bal','p_shh','p_rb','p_ls','p_su','p_sws','p_ball','p_lauf','p_height','p_weight','p_bmi','p_10m_ped','p_15m_sw','p_fb_drib_mb','p_fb_drib_ob','p_tt_15s','p_slauf_10',)
-        #exclude = ('id')
-    #'className','universalClassName','schoolName','universalSchoolName',
     def dehydrate_className(self, student):
         if student.schoolClass:
             return student.schoolClass.name
@@ -246,8 +226,23 @@ class StudentResource(resources.ModelResource):
     def dehydrate_addressClearance(self, student):
         return 'true' if student.addressClearance else 'false'
 
+class StudentImportExportFormatCSV(TablibFormat):
+    TABLIB_MODULE = 'sportsman.formats.student_tablib_format_csv'
+    CONTENT_TYPE = 'text/csv'
+
+    def get_read_mode(self):
+        return 'rU' if six.PY3 else 'rb'
+
+    def is_binary(self):
+        return False if six.PY3 else True
+
 class StudentAdmin(ImportExportModelAdmin):
     resource_class = StudentResource
+    formats = (
+        StudentImportExportFormatCSV,
+        base_formats.XLS,
+        base_formats.HTML,
+    )
     def get_import_resource_class(self):
         return StudentImportResource
     
