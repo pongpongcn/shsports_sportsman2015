@@ -257,8 +257,6 @@ class StudentAdmin(ImportExportModelAdmin):
             'fields': (('street', 'housenumber'), 'addition', ('zip', 'city'))
             }),
         ('测试成绩', {
-            'classes': ('collapse',),
-            'description': '正常情况下不要在此处编辑这些数据。',
             'fields': ('addressClearance', ('weight', 'height'), ('e_20m_1', 'e_20m_2'), ('e_bal30_1', 'e_bal30_2', 'e_bal45_1', 'e_bal45_2', 'e_bal60_1', 'e_bal60_2'), ('e_ball_1', 'e_ball_2', 'e_ball_3'), ('e_lauf_rest', 'e_lauf_runden'), 'e_ls', ('e_rb_1', 'e_rb_2'), ('e_shh_1f', 'e_shh_1s', 'e_shh_2f', 'e_shh_2s'), 'e_slauf_10', 'e_su', ('e_sws_1', 'e_sws_2'))
             }),
         ('其它', {
