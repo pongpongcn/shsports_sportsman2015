@@ -250,18 +250,59 @@ class StudentAdmin(ImportExportModelAdmin):
     date_hierarchy = 'dateOfTesting'
     fieldsets = (
         (None, {
-            'fields': ('noOfStudentStatus', ('school', 'schoolClass'), ('firstName', 'lastName'), ('universalFirstName', 'universalLastName'), 'gender', 'dateOfBirth', ('dateOfTesting', 'number'), 'questionary')
+            'fields': ('noOfStudentStatus', ('school', 'schoolClass'), ('firstName', 'lastName'), ('universalFirstName', 'universalLastName'), 'gender', 'dateOfBirth', ('dateOfTesting', 'number'))
             }),
         ('地址', {
             'classes': ('wide',),
             'fields': (('street', 'housenumber'), 'addition', ('zip', 'city'))
             }),
         ('测试成绩', {
-            'fields': ('addressClearance', ('weight', 'height'), ('e_20m_1', 'e_20m_2'), ('e_bal30_1', 'e_bal30_2', 'e_bal45_1', 'e_bal45_2', 'e_bal60_1', 'e_bal60_2'), ('e_ball_1', 'e_ball_2', 'e_ball_3'), ('e_lauf_rest', 'e_lauf_runden'), 'e_ls', ('e_rb_1', 'e_rb_2'), ('e_shh_1f', 'e_shh_1s', 'e_shh_2f', 'e_shh_2s'), 'e_slauf_10', 'e_su', ('e_sws_1', 'e_sws_2'))
+            'classes': ('wide',),
+            'fields': ()
+            }),
+        (None, {
+            'classes': ('wide',),
+            'fields': (('height', 'weight'),)
+            }),
+        ('测试1: 20米跑', {
+            'classes': ('wide',),
+            'fields': (('e_20m_1', 'e_20m_2'),)
+            }),
+        ('测试2: 后退平衡', {
+            'classes': ('wide',),
+            'fields': (('e_bal60_1', 'e_bal60_2'), ('e_bal45_1', 'e_bal45_2'), ('e_bal30_1', 'e_bal30_2'))
+            }),
+        ('测试3: 侧向跳', {
+            'classes': ('wide',),
+            'fields': (('e_shh_1s', 'e_shh_1f', 'e_shh_2s', 'e_shh_2f'),)
+            }),
+        ('测试4: 立位体前屈', {
+            'classes': ('wide',),
+            'fields': (('e_rb_1', 'e_rb_2'),)
+            }),
+        ('测试5: 俯卧撑', {
+            'classes': ('wide',),
+            'fields': ('e_ls',)
+            }),
+        ('测试6: 仰卧起坐', {
+            'classes': ('wide',),
+            'fields': ('e_su',)
+            }),
+        ('测试7: 立定跳远', {
+            'classes': ('wide',),
+            'fields': (('e_sws_1', 'e_sws_2'),)
+            }),
+        ('测试8: 6分钟跑', {
+            'classes': ('wide',),
+            'fields': (('e_lauf_runden', 'e_lauf_rest'),)
+            }),
+        ('测试9: 投掷球', {
+            'classes': ('wide',),
+            'fields': (('e_ball_1', 'e_ball_2', 'e_ball_3'),)
             }),
         ('其它', {
             'classes': ('collapse',),
-            'fields': ('external_id',)
+            'fields': ('questionary', 'addressClearance', 'external_id','e_slauf_10',)
             })
     )
 
@@ -372,8 +413,7 @@ class StudentAdmin(ImportExportModelAdmin):
 
         return response
 
-    change_form_template = 'sportsman/student_change_form.html'
-    change_list_template = 'sportsman/student_list.html'
+    change_list_template = 'admin/sportsman/student/change_list.html'
 
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ('name', 'universalName')
