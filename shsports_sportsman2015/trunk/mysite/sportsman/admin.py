@@ -8,7 +8,7 @@ from import_export import resources, fields
 from import_export.admin import ImportExportModelAdmin, base_formats
 from import_export.formats.base_formats import TablibFormat
 from import_export.instance_loaders import ModelInstanceLoader
-import calendar, os, pinyin
+import calendar, os, pinyin, six
 from django.utils import timezone
 from statistics import mean
 import scipy.stats
