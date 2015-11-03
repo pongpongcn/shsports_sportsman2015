@@ -384,7 +384,7 @@ class StudentAdmin(ImportExportModelAdmin):
             p.drawString(4.5*cm, pagesize[1]-2.78*cm, '%s, %s' % (student.lastName, student.firstName))
             if student.universalLastName and student.universalFirstName:
                 p.drawString(7*cm, pagesize[1]-2.78*cm, '%s, %s' % (student.universalFirstName, student.universalLastName))
-            p.drawString(11.8*cm, pagesize[1]-2.78*cm, str(student.number))
+            p.drawString(13.1*cm, pagesize[1]-2.78*cm, str(student.number))
             if student.gender:
                 p.drawString(4*cm, pagesize[1]-3.31*cm, dictGenders[student.gender])
             p.drawString(4.8*cm, pagesize[1]-3.9*cm, str(student.dateOfBirth))
