@@ -140,8 +140,6 @@ class StudentResource(resources.ModelResource):
     e_bal = fields.Field()
     e_shh = fields.Field()
     e_rb = fields.Field()
-    e_sws_1 = fields.Field()
-    e_sws_2 = fields.Field()
     e_sws = fields.Field()
     e_ball = fields.Field()
     e_lauf = fields.Field()
@@ -201,7 +199,7 @@ class StudentResource(resources.ModelResource):
     class Meta:
         model = Student
         export_order = ('id','firstName','lastName','universalFirstName','universalLastName','street','housenumber','addition','zip','city','gender','questionary','number','numberTalentCheck','weight','height','dateOfBirth','className','universalClassName','schoolName','universalSchoolName','dateOfTesting','dateOfTalentCheck','selectedForTalentCheck','addressClearance','e_20m_1','e_20m_2','e_20m','e_bal60_1','e_bal60_2','e_bal45_1','e_bal45_2','e_bal30_1','e_bal30_2','e_bal','e_shh_1s','e_shh_1f','e_shh_2s','e_shh_2f','e_shh','e_rb_1','e_rb_2','e_rb','e_ls','e_su','e_sws_1','e_sws_2','e_sws','e_ball_1','e_ball_2','e_ball_3','e_ball','e_lauf_runden','e_lauf_rest','e_lauf','comment','e_15m_sw','e_15m_sw_bbs','e_15m_sw_ns','e_10m_ped_1','e_10m_ped_2','e_10m_ped','e_slauf_10','e_tt_15s_1','e_tt_15s_2','e_tt_15s','e_fb_drib_ob_1','e_fb_drib_ob_2','e_fb_drib_ob','e_fb_drib_mb_1','e_fb_drib_mb_2','e_fb_drib_mb','z_20m','z_bal','z_shh','z_rb','z_sws','z_ball','z_lauf','z_ls','z_su','z_10m_ped','z_15m_sw','z_fb_drib_mb','z_fb_drib_ob','z_tt_15s','z_slauf_10','z_height','z_weight','z_bmi','p_20m','p_bal','p_shh','p_rb','p_ls','p_su','p_sws','p_ball','p_lauf','p_height','p_weight','p_bmi','p_10m_ped','p_15m_sw','p_fb_drib_mb','p_fb_drib_ob','p_tt_15s','p_slauf_10')
-        fields = ('id','firstName','lastName','universalFirstName','universalLastName','street','housenumber','addition','zip','city','gender','questionary','number','weight','height','dateOfBirth','dateOfTesting','e_20m_1','e_20m_2','e_bal60_1','e_bal60_2','e_bal45_1','e_bal45_2','e_bal30_1','e_bal30_2','e_shh_1s','e_shh_1f','e_shh_2s','e_shh_2f','e_rb_1','e_rb_2','e_ls','e_su','e_ball_1','e_ball_2','e_ball_3','e_lauf_runden','e_lauf_rest','e_slauf_10')
+        fields = ('id','firstName','lastName','universalFirstName','universalLastName','street','housenumber','addition','zip','city','gender','questionary','number','weight','height','dateOfBirth','dateOfTesting','e_20m_1','e_20m_2','e_bal60_1','e_bal60_2','e_bal45_1','e_bal45_2','e_bal30_1','e_bal30_2','e_shh_1s','e_shh_1f','e_shh_2s','e_shh_2f','e_rb_1','e_rb_2','e_ls','e_su','e_sws_1','e_sws_2','e_ball_1','e_ball_2','e_ball_3','e_lauf_runden','e_lauf_rest','e_slauf_10')
     def dehydrate_className(self, student):
         if student.schoolClass:
             return student.schoolClass.name
@@ -226,6 +224,49 @@ class StudentResource(resources.ModelResource):
         return 'false'
     def dehydrate_addressClearance(self, student):
         return 'true' if student.addressClearance else 'false'
+    def dehydrate_e_20m(self, student):
+        values = (student.e_20m_1, student.e_20m_2)
+        if all(value != None for value in values):
+            return min(values)
+        else:
+            return None
+    def dehydrate_e_bal(self, student):
+        values = (student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2)
+        if all(value != None for value in values):
+            return sum(values)
+        else:
+            return None
+    def dehydrate_e_shh(self, student):
+        values = (student.e_shh_1s, student.e_shh_1f, student.e_shh_2s, student.e_shh_2f)
+        if all(value != None for value in values):
+            return (student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2
+        else:
+            return None
+    def dehydrate_e_rb(self, student):
+        values = (student.e_rb_1, student.e_rb_2)
+        if all(value != None for value in values):
+            return max(values)
+        else:
+            return None
+    def dehydrate_e_sws(self, student):
+        values = (student.e_sws_1, student.e_sws_2)
+        if all(value != None for value in values):
+            return max(values)
+        else:
+            return None
+    def dehydrate_e_ball(self, student):
+        values = (student.e_ball_1, student.e_ball_2, student.e_ball_3)
+        if all(value != None for value in values):
+            return max(values)
+        else:
+            return None
+    def dehydrate_e_lauf(self, student):
+        values = (student.e_lauf_runden, student.e_lauf_rest)
+        if all(value != None for value in values):
+            return student.e_lauf_runden * 54.0 + student.e_lauf_rest
+        else:
+            return None
+            
 
 class StudentImportExportFormatCSV(TablibFormat):
     TABLIB_MODULE = 'sportsman.formats.student_tablib_format_csv'
