@@ -422,16 +422,14 @@ class StudentAdmin(ImportExportModelAdmin):
         for student in students:
             templateImage.drawOn(p, 0, 0)
             p.setFont("simsun", 12)
-            p.drawString(4.5*cm, pagesize[1]-2.78*cm, '%s, %s' % (student.lastName, student.firstName))
-            if student.universalLastName and student.universalFirstName:
-                p.drawString(7*cm, pagesize[1]-2.78*cm, '%s, %s' % (student.universalFirstName, student.universalLastName))
-            p.drawString(13.1*cm, pagesize[1]-2.78*cm, str(student.number))
+            p.drawString(4.4*cm, pagesize[1]-2.93*cm, '%s, %s' % (student.lastName, student.firstName))
+            p.drawString(11.9*cm, pagesize[1]-2.93*cm, str(student.number))
             if student.gender:
-                p.drawString(4*cm, pagesize[1]-3.31*cm, dictGenders[student.gender])
-            p.drawString(4.8*cm, pagesize[1]-3.9*cm, str(student.dateOfBirth))
-            p.drawString(4*cm, pagesize[1]-4.45*cm, student.schoolClass.school.universalName)
-            p.drawString(4*cm, pagesize[1]-5*cm, str(student.schoolClass))
-            p.drawString(4.8*cm, pagesize[1]-5.55*cm, str(student.dateOfTesting))
+                p.drawString(3.9*cm, pagesize[1]-3.63*cm, dictGenders[student.gender])
+            p.drawString(11.9*cm, pagesize[1]-3.63*cm, str(student.dateOfBirth))
+            p.drawString(3.9*cm, pagesize[1]-4.35*cm, student.schoolClass.school.name)
+            p.drawString(11.1*cm, pagesize[1]-4.35*cm, str(student.schoolClass))
+            p.drawString(4.8*cm, pagesize[1]-5.02*cm, str(student.dateOfTesting))
             p.showPage()
             
         p.save()
