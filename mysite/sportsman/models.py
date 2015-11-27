@@ -149,7 +149,6 @@ class Student(models.Model):
             if self.dateOfTesting is not None:
                 sequenceNumberCodeOfNumber = 'NUMBER_DATE_OF_TESTING_' + str(self.dateOfTesting)
                 self.number = GetNextSequenceNumberValue(sequenceNumberCodeOfNumber)
-                print(self.number)
             else:
                 self.number = None
 
