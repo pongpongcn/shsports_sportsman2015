@@ -411,7 +411,7 @@ class StudentResource(resources.ModelResource):
         if not (all(value != None and value >=0 and value <= 60 for value in e_shh_values) and (student.e_shh_1s>=student.e_shh_1f and student.e_shh_2s>=student.e_shh_2f)):
             return '侧向跳'
         e_rb_values = (student.e_rb_1, student.e_rb_2)
-        if not all(value != None for value in e_rb_values):
+        if not all(value != None and value >= -35 and value <= 35 for value in e_rb_values):
             return '立位体前屈'
         if not (student.e_ls != None and student.e_ls >= 0 and student.e_ls <=100):
             return '俯卧撑'
