@@ -25,6 +25,7 @@ from reportlab.rl_config import defaultPageSize
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.lib import colors
 from PyPDF2 import PdfFileWriter, PdfFileReader
+from decimal import Decimal
 
 from .models import Factor
 from .models import Student
@@ -196,11 +197,12 @@ class StudentResource(resources.ModelResource):
     p_fb_drib_ob = fields.Field()
     p_tt_15s = fields.Field()
     p_slauf_10 = fields.Field()
+    error = fields.Field()
     
     class Meta:
         model = Student
-        export_order = ('id','firstName','lastName','universalFirstName','universalLastName','street','housenumber','addition','zip','city','gender','questionary','number','numberTalentCheck','weight','height','dateOfBirth','className','universalClassName','schoolName','universalSchoolName','dateOfTesting','dateOfTalentCheck','selectedForTalentCheck','addressClearance','e_20m_1','e_20m_2','e_20m','e_bal60_1','e_bal60_2','e_bal45_1','e_bal45_2','e_bal30_1','e_bal30_2','e_bal','e_shh_1s','e_shh_1f','e_shh_2s','e_shh_2f','e_shh','e_rb_1','e_rb_2','e_rb','e_ls','e_su','e_sws_1','e_sws_2','e_sws','e_ball_1','e_ball_2','e_ball_3','e_ball','e_lauf_runden','e_lauf_rest','e_lauf','comment','e_15m_sw','e_15m_sw_bbs','e_15m_sw_ns','e_10m_ped_1','e_10m_ped_2','e_10m_ped','e_slauf_10','e_tt_15s_1','e_tt_15s_2','e_tt_15s','e_fb_drib_ob_1','e_fb_drib_ob_2','e_fb_drib_ob','e_fb_drib_mb_1','e_fb_drib_mb_2','e_fb_drib_mb','z_20m','z_bal','z_shh','z_rb','z_sws','z_ball','z_lauf','z_ls','z_su','z_10m_ped','z_15m_sw','z_fb_drib_mb','z_fb_drib_ob','z_tt_15s','z_slauf_10','z_height','z_weight','z_bmi','p_20m','p_bal','p_shh','p_rb','p_ls','p_su','p_sws','p_ball','p_lauf','p_height','p_weight','p_bmi','p_10m_ped','p_15m_sw','p_fb_drib_mb','p_fb_drib_ob','p_tt_15s','p_slauf_10')
-        fields = ('id','firstName','lastName','universalFirstName','universalLastName','street','housenumber','addition','zip','city','gender','questionary','number','weight','height','dateOfBirth','dateOfTesting','e_20m_1','e_20m_2','e_bal60_1','e_bal60_2','e_bal45_1','e_bal45_2','e_bal30_1','e_bal30_2','e_shh_1s','e_shh_1f','e_shh_2s','e_shh_2f','e_rb_1','e_rb_2','e_ls','e_su','e_sws_1','e_sws_2','e_ball_1','e_ball_2','e_ball_3','e_lauf_runden','e_lauf_rest','e_slauf_10')
+        export_order = ('id','firstName','lastName','universalFirstName','universalLastName','street','housenumber','addition','zip','city','gender','questionary','number','numberTalentCheck','weight','height','dateOfBirth','className','universalClassName','schoolName','universalSchoolName','dateOfTesting','dateOfTalentCheck','selectedForTalentCheck','addressClearance','e_20m_1','e_20m_2','e_20m','e_bal60_1','e_bal60_2','e_bal45_1','e_bal45_2','e_bal30_1','e_bal30_2','e_bal','e_shh_1s','e_shh_1f','e_shh_2s','e_shh_2f','e_shh','e_rb_1','e_rb_2','e_rb','e_ls','e_su','e_sws_1','e_sws_2','e_sws','e_ball_1','e_ball_2','e_ball_3','e_ball','e_lauf_runden','e_lauf_rest','e_lauf','comment','e_15m_sw','e_15m_sw_bbs','e_15m_sw_ns','e_10m_ped_1','e_10m_ped_2','e_10m_ped','e_slauf_10','e_tt_15s_1','e_tt_15s_2','e_tt_15s','e_fb_drib_ob_1','e_fb_drib_ob_2','e_fb_drib_ob','e_fb_drib_mb_1','e_fb_drib_mb_2','e_fb_drib_mb','z_20m','z_bal','z_shh','z_rb','z_sws','z_ball','z_lauf','z_ls','z_su','z_10m_ped','z_15m_sw','z_fb_drib_mb','z_fb_drib_ob','z_tt_15s','z_slauf_10','z_height','z_weight','z_bmi','p_20m','p_bal','p_shh','p_rb','p_ls','p_su','p_sws','p_ball','p_lauf','p_height','p_weight','p_bmi','p_10m_ped','p_15m_sw','p_fb_drib_mb','p_fb_drib_ob','p_tt_15s','p_slauf_10','error')
+        fields = ('id','firstName','lastName','universalFirstName','universalLastName','street','housenumber','addition','zip','city','gender','questionary','number','weight','height','dateOfBirth','dateOfTesting','e_20m_1','e_20m_2','e_bal60_1','e_bal60_2','e_bal45_1','e_bal45_2','e_bal30_1','e_bal30_2','e_shh_1s','e_shh_1f','e_shh_2s','e_shh_2f','e_rb_1','e_rb_2','e_ls','e_su','e_sws_1','e_sws_2','e_ball_1','e_ball_2','e_ball_3','e_lauf_runden','e_lauf_rest','e_slauf_10','error')
     def dehydrate_className(self, student):
         if student.schoolClass:
             return student.schoolClass.name
@@ -225,48 +227,205 @@ class StudentResource(resources.ModelResource):
         return 'false'
     def dehydrate_addressClearance(self, student):
         return 'true' if student.addressClearance else 'false'
+
+    def dehydrate_weight(self, student):
+        if student.weight != None:
+            return student.weight
+        else:
+            return Decimal('0.00')
+    def dehydrate_height(self, student):
+        if student.height != None:
+            return round(round(student.height, 0), 2)
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_20m_1(self, student):
+        if student.e_20m_1 != None:
+            return student.e_20m_1
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_20m_2(self, student):
+        if student.e_20m_2 != None:
+            return student.e_20m_2
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_bal60_1(self, student):
+        if student.e_bal60_1 != None:
+            return student.e_bal60_1
+        else:
+            return 0
+    def dehydrate_e_bal60_2(self, student):
+        if student.e_bal60_2 != None:
+            return student.e_bal60_2
+        else:
+            return 0
+    def dehydrate_e_bal45_1(self, student):
+        if student.e_bal45_1 != None:
+            return student.e_bal45_1
+        else:
+            return 0
+    def dehydrate_e_bal45_2(self, student):
+        if student.e_bal45_2 != None:
+            return student.e_bal45_2
+        else:
+            return 0
+    def dehydrate_e_bal30_1(self, student):
+        if student.e_bal30_1 != None:
+            return student.e_bal30_1
+        else:
+            return 0
+    def dehydrate_e_bal30_2(self, student):
+        if student.e_bal30_2 != None:
+            return student.e_bal30_2
+        else:
+            return 0
+    def dehydrate_e_shh_1s(self, student):
+        if student.e_shh_1s != None:
+            return student.e_shh_1s
+        else:
+            return 0
+    def dehydrate_e_shh_1f(self, student):
+        if student.e_shh_1f != None:
+            return student.e_shh_1f
+        else:
+            return 0
+    def dehydrate_e_shh_2s(self, student):
+        if student.e_shh_2s != None:
+            return student.e_shh_2s
+        else:
+            return 0
+    def dehydrate_e_shh_2f(self, student):
+        if student.e_shh_2f != None:
+            return student.e_shh_2f
+        else:
+            return 0
+    def dehydrate_e_rb_1(self, student):
+        if student.e_rb_1 != None:
+            return student.e_rb_1
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_rb_2(self, student):
+        if student.e_rb_2 != None:
+            return student.e_rb_2
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_ls(self, student):
+        if student.e_ls != None:
+            return student.e_ls
+        else:
+            return 0
+    def dehydrate_e_su(self, student):
+        if student.e_su != None:
+            return student.e_su
+        else:
+            return 0
+    def dehydrate_e_sws_1(self, student):
+        if student.e_sws_1 != None:
+            return student.e_sws_1
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_sws_2(self, student):
+        if student.e_sws_2 != None:
+            return student.e_sws_2
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_ball_1(self, student):
+        if student.e_ball_1 != None:
+            return student.e_ball_1
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_ball_2(self, student):
+        if student.e_ball_2 != None:
+            return student.e_ball_2
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_ball_3(self, student):
+        if student.e_ball_3 != None:
+            return student.e_ball_3
+        else:
+            return Decimal('0.00')
+    def dehydrate_e_lauf_runden(self, student):
+        if student.e_lauf_runden != None:
+            return student.e_lauf_runden
+        else:
+            return 0
+    def dehydrate_e_lauf_rest(self, student):
+        if student.e_lauf_rest != None:
+            return student.e_lauf_rest
+        else:
+            return 0
+    
     def dehydrate_e_20m(self, student):
         values = (student.e_20m_1, student.e_20m_2)
         if all(value != None for value in values):
             return min(values)
         else:
-            return None
+            return Decimal('0.00')
     def dehydrate_e_bal(self, student):
         values = (student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2)
         if all(value != None for value in values):
             return sum(values)
         else:
-            return None
+            return 0
     def dehydrate_e_shh(self, student):
         values = (student.e_shh_1s, student.e_shh_1f, student.e_shh_2s, student.e_shh_2f)
         if all(value != None for value in values):
-            return (student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2
+            return round(Decimal((student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2), 2)
         else:
-            return None
+            return Decimal('0.00')
     def dehydrate_e_rb(self, student):
         values = (student.e_rb_1, student.e_rb_2)
         if all(value != None for value in values):
             return max(values)
         else:
-            return None
+            return Decimal('0.00')
     def dehydrate_e_sws(self, student):
         values = (student.e_sws_1, student.e_sws_2)
         if all(value != None for value in values):
             return max(values)
         else:
-            return None
+            return Decimal('0.00')
     def dehydrate_e_ball(self, student):
         values = (student.e_ball_1, student.e_ball_2, student.e_ball_3)
         if all(value != None for value in values):
             return max(values)
         else:
-            return None
+            return Decimal('0.00')
     def dehydrate_e_lauf(self, student):
         values = (student.e_lauf_runden, student.e_lauf_rest)
         if all(value != None for value in values):
-            return student.e_lauf_runden * 54.0 + student.e_lauf_rest
+            return student.e_lauf_runden * 54 + student.e_lauf_rest
         else:
-            return None
+            return 0
+    def dehydrate_error(self, student):
+        if student.weight == None:
+            return '体重'
+        if student.height == None:
+            return '身高'
+        e_20m_values = (student.e_20m_1, student.e_20m_2)
+        if not all(value != None and value >=3.00 and value <= 9.00 for value in e_20m_values):
+            return '20米跑'
+        e_bal_values = (student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2)
+        if not all(value != None and value >=0 and value <= 8 for value in e_bal_values):
+            return '后退平衡'
+        e_shh_values = (student.e_shh_1s, student.e_shh_1f, student.e_shh_2s, student.e_shh_2f)
+        if not (all(value != None and value >=0 and value <= 60 for value in e_shh_values) and (student.e_shh_1s>=student.e_shh_1f and student.e_shh_2s>=student.e_shh_2f)):
+            return '侧向跳'
+        e_rb_values = (student.e_rb_1, student.e_rb_2)
+        if not all(value != None for value in e_rb_values):
+            return '立位体前屈'
+        if not (student.e_ls != None and student.e_ls >= 0 and student.e_ls <=100):
+            return '俯卧撑'
+        if not (student.e_su != None and student.e_su >= 0 and student.e_su <=100):
+            return '仰卧起坐'
+        e_sws_values = (student.e_sws_1, student.e_sws_2)
+        if not all(value != None and value >=5 and value <= 200 for value in e_sws_values):
+            return '立定跳远'
+        if not (student.e_lauf_runden != None and student.e_lauf_runden >= 0 and student.e_lauf_runden <= 30 and student.e_lauf_rest != None and student.e_lauf_rest >= 0 and student.e_lauf_rest <= 54):
+            return '6分钟跑'
+        e_ball_values = (student.e_ball_1, student.e_ball_2, student.e_ball_3)
+        if not all(value != None and value >=0 and value <= 30 for value in e_ball_values):
+            return '投掷球'
+        return None
             
 
 class StudentImportExportFormatCSV(TablibFormat):
