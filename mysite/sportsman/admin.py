@@ -3,6 +3,7 @@ from django import forms
 from django.conf import settings
 from django.conf.urls import url
 from django.http import HttpResponse, HttpResponseRedirect
+from django.db.models import Q
 from django.db.models.fields import BLANK_CHOICE_DASH
 from import_export import resources, fields
 from import_export.admin import ImportExportModelAdmin, base_formats
@@ -278,6 +279,68 @@ class StudentImportExportFormatCSV(TablibFormat):
     def is_binary(self):
         return False if six.PY3 else True
 
+class StudentDataCompletedListFilter(admin.SimpleListFilter):
+    title = ('数据完整情况')
+    parameter_name = 'dataCompleted'
+    def lookups(self, request, model_admin):
+        return (
+            ('True', '完整'),
+            ('False', '不完整'),
+        )
+    def queryset(self, request, queryset):
+        if self.value() == 'True':
+            return queryset.filter(height__isnull=False,
+                                   weight__isnull=False,
+                                   e_20m_1__isnull=False,
+                                   e_20m_2__isnull=False,
+                                   e_bal60_1__isnull=False,
+                                   e_bal60_2__isnull=False,
+                                   e_bal45_1__isnull=False,
+                                   e_bal45_2__isnull=False,
+                                   e_bal30_1__isnull=False,
+                                   e_bal30_2__isnull=False,
+                                   e_shh_1s__isnull=False,
+                                   e_shh_1f__isnull=False,
+                                   e_shh_2s__isnull=False,
+                                   e_shh_2f__isnull=False,
+                                   e_rb_1__isnull=False,
+                                   e_rb_2__isnull=False,
+                                   e_ls__isnull=False,
+                                   e_su__isnull=False,
+                                   e_sws_1__isnull=False,
+                                   e_sws_2__isnull=False,
+                                   e_lauf_runden__isnull=False,
+                                   e_lauf_rest__isnull=False,
+                                   e_ball_1__isnull=False,
+                                   e_ball_2__isnull=False,
+                                   e_ball_3__isnull=False)
+        if self.value() == 'False':
+            return queryset.filter(Q(height__isnull=True)|
+                                   Q(weight__isnull=True)|
+                                   Q(e_20m_1__isnull=True)|
+                                   Q(e_20m_2__isnull=True)|
+                                   Q(e_bal60_1__isnull=True)|
+                                   Q(e_bal60_2__isnull=True)|
+                                   Q(e_bal45_1__isnull=True)|
+                                   Q(e_bal45_2__isnull=True)|
+                                   Q(e_bal30_1__isnull=True)|
+                                   Q(e_bal30_2__isnull=True)|
+                                   Q(e_shh_1s__isnull=True)|
+                                   Q(e_shh_1f__isnull=True)|
+                                   Q(e_shh_2s__isnull=True)|
+                                   Q(e_shh_2f__isnull=True)|
+                                   Q(e_rb_1__isnull=True)|
+                                   Q(e_rb_2__isnull=True)|
+                                   Q(e_ls__isnull=True)|
+                                   Q(e_su__isnull=True)|
+                                   Q(e_sws_1__isnull=True)|
+                                   Q(e_sws_2__isnull=True)|
+                                   Q(e_lauf_runden__isnull=True)|
+                                   Q(e_lauf_rest__isnull=True)|
+                                   Q(e_ball_1__isnull=True)|
+                                   Q(e_ball_2__isnull=True)|
+                                   Q(e_ball_3__isnull=True))
+
 class StudentAdmin(ImportExportModelAdmin):
     resource_class = StudentResource
     formats = (
@@ -351,10 +414,43 @@ class StudentAdmin(ImportExportModelAdmin):
         return instance.schoolClass.school
     school.short_description = '学校'
     school.admin_order_field = 'schoolClass__school'
+
+    def dataCompleted(self, instance):
+        values = (instance.height,
+                  instance.weight,
+                  instance.e_20m_1,
+                  instance.e_20m_2,
+                  instance.e_bal60_1,
+                  instance.e_bal60_2,
+                  instance.e_bal45_1,
+                  instance.e_bal45_2,
+                  instance.e_bal30_1,
+                  instance.e_bal30_2,
+                  instance.e_shh_1s,
+                  instance.e_shh_1f,
+                  instance.e_shh_2s,
+                  instance.e_shh_2f,
+                  instance.e_rb_1,
+                  instance.e_rb_2,
+                  instance.e_ls,
+                  instance.e_su,
+                  instance.e_sws_1,
+                  instance.e_sws_2,
+                  instance.e_lauf_runden,
+                  instance.e_lauf_rest,
+                  instance.e_ball_1,
+                  instance.e_ball_2,
+                  instance.e_ball_3)
+        if all(value != None for value in values):
+            return True
+        else:
+            return False
+    dataCompleted.short_description = '数据完整'
+    dataCompleted.boolean = True
     
-    list_display = ('noOfStudentStatus', 'lastName', 'firstName', 'gender', 'dateOfBirth', 'school', 'schoolClass', 'dateOfTesting', 'number')
+    list_display = ('noOfStudentStatus', 'lastName', 'firstName', 'gender', 'dateOfBirth', 'school', 'schoolClass', 'dateOfTesting', 'number', 'dataCompleted')
     list_display_links = ('noOfStudentStatus', 'lastName', 'firstName')
-    list_filter = ('dateOfTesting','schoolClass__school')
+    list_filter = ('dateOfTesting','schoolClass__school', StudentDataCompletedListFilter)
     ordering = ('dateOfTesting', 'number')
     readonly_fields = ('external_id', 'school', 'number')
     search_fields = ('lastName', 'firstName', '=number', '=noOfStudentStatus')
