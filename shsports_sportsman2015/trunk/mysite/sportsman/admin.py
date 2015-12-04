@@ -26,6 +26,7 @@ from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.lib import colors
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from decimal import Decimal
+from django.core.validators import *
 
 from .models import Factor
 from .models import Student
@@ -500,7 +501,52 @@ class StudentDataCompletedListFilter(admin.SimpleListFilter):
                                    Q(e_ball_2__isnull=True)|
                                    Q(e_ball_3__isnull=True))
 
+class StudentForm(forms.ModelForm):
+    height = forms.DecimalField(label='身高（厘米）', validators=[MinValueValidator(0)])
+    weight = forms.DecimalField(label='体重（公斤）', validators=[MinValueValidator(0)])
+    e_20m_1 = forms.DecimalField(label='第一次跑（秒）', validators=[MinValueValidator(3.00),MaxValueValidator(9.00)])
+    e_20m_2 = forms.DecimalField(label='第二次跑（秒）', validators=[MinValueValidator(3.00),MaxValueValidator(9.00)])
+    e_bal60_1 = forms.IntegerField(label='6.0厘米 第一次', validators=[MinValueValidator(0),MaxValueValidator(8)])
+    e_bal60_2 = forms.IntegerField(label='6.0厘米 第二次', validators=[MinValueValidator(0),MaxValueValidator(8)])
+    e_bal45_1 = forms.IntegerField(label='4.5厘米 第一次', validators=[MinValueValidator(0),MaxValueValidator(8)])
+    e_bal45_2 = forms.IntegerField(label='4.5厘米 第二次', validators=[MinValueValidator(0),MaxValueValidator(8)])
+    e_bal30_1 = forms.IntegerField(label='3.0厘米 第一次', validators=[MinValueValidator(0),MaxValueValidator(8)])
+    e_bal30_2 = forms.IntegerField(label='3.0厘米 第二次', validators=[MinValueValidator(0),MaxValueValidator(8)])
+    e_shh_1s = forms.IntegerField(label='第一次跳（总次数）', validators=[MinValueValidator(0),MaxValueValidator(60)])
+    e_shh_1f = forms.IntegerField(label='第一次跳（错误次数）', validators=[MinValueValidator(0),MaxValueValidator(60)])
+    e_shh_2s = forms.IntegerField(label='第二次跳（总次数）', validators=[MinValueValidator(0),MaxValueValidator(60)])
+    e_shh_2f = forms.IntegerField(label='第二次跳（错误次数）', validators=[MinValueValidator(0),MaxValueValidator(60)])
+    e_rb_1 = forms.DecimalField(label='第一次（厘米）', validators=[MinValueValidator(-35),MaxValueValidator(35)])
+    e_rb_2 = forms.DecimalField(label='第二次（厘米）', validators=[MinValueValidator(-35),MaxValueValidator(35)])
+    e_ls = forms.IntegerField(label='次数（40秒内）', validators=[MinValueValidator(0),MaxValueValidator(100)])
+    e_su = forms.IntegerField(label='次数（40秒内）', validators=[MinValueValidator(0),MaxValueValidator(100)])
+    e_sws_1 = forms.DecimalField(label='第一次（厘米）', validators=[MinValueValidator(5),MaxValueValidator(200)])
+    e_sws_2 = forms.DecimalField(label='第二次（厘米）', validators=[MinValueValidator(5),MaxValueValidator(200)])
+    e_lauf_runden = forms.IntegerField(label='圈数', validators=[MinValueValidator(0),MaxValueValidator(30)])
+    e_lauf_rest = forms.IntegerField(label='最后未完成的一圈所跑距离（米）', validators=[MinValueValidator(0),MaxValueValidator(54)])
+    e_ball_1 = forms.DecimalField(label='第一次', validators=[MinValueValidator(0),MaxValueValidator(30)])
+    e_ball_2 = forms.DecimalField(label='第二次', validators=[MinValueValidator(0),MaxValueValidator(30)])
+    e_ball_3 = forms.DecimalField(label='第三次', validators=[MinValueValidator(0),MaxValueValidator(30)])
+
+    def clean(self):
+        cleaned_data = super(StudentForm, self).clean()
+        e_shh_1s = cleaned_data.get("e_shh_1s")
+        e_shh_1f = cleaned_data.get("e_shh_1f")
+        e_shh_2s = cleaned_data.get("e_shh_2s")
+        e_shh_2f = cleaned_data.get("e_shh_2f")
+
+        if e_shh_1s and e_shh_1f:
+            if e_shh_1s < e_shh_1f:
+                msg = "错误次数不能超过总次数"
+                self.add_error('e_shh_1f', msg)
+
+        if e_shh_2s and e_shh_2f:
+            if e_shh_2s < e_shh_2f:
+                msg = "错误次数不能超过总次数"
+                self.add_error('e_shh_2f', msg)
+
 class StudentAdmin(ImportExportModelAdmin):
+    form = StudentForm
     resource_class = StudentResource
     formats = (
         StudentImportExportFormatCSV,
@@ -537,7 +583,7 @@ class StudentAdmin(ImportExportModelAdmin):
             }),
         ('测试3: 侧向跳', {
             'classes': ('wide',),
-            'fields': (('e_shh_1s', 'e_shh_1f', 'e_shh_2s', 'e_shh_2f'),)
+            'fields': (('e_shh_1s', 'e_shh_1f'), ('e_shh_2s', 'e_shh_2f'),)
             }),
         ('测试4: 立位体前屈', {
             'classes': ('wide',),
