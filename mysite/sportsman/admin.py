@@ -236,7 +236,7 @@ class StudentResource(resources.ModelResource):
             return Decimal('0.00')
     def dehydrate_height(self, student):
         if student.height != None:
-            return round(round(student.height, 0), 2)
+            return round(Decimal(student.height), 2)
         else:
             return Decimal('0.00')
     def dehydrate_e_20m_1(self, student):
@@ -398,9 +398,9 @@ class StudentResource(resources.ModelResource):
         else:
             return 0
     def dehydrate_error(self, student):
-        if student.weight == None:
+        if not (student.weight != None and student.weight >= 10 and student.weight <= 100):
             return '体重'
-        if student.height == None:
+        if not (student.height != None and student.height >= 80 and student.height <= 210):
             return '身高'
         e_20m_values = (student.e_20m_1, student.e_20m_2)
         if not all(value != None and value >=3.00 and value <= 9.00 for value in e_20m_values):
@@ -408,20 +408,20 @@ class StudentResource(resources.ModelResource):
         e_bal_values = (student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2)
         if not all(value != None and value >=0 and value <= 8 for value in e_bal_values):
             return '后退平衡'
-        e_shh_values = (student.e_shh_1s, student.e_shh_1f, student.e_shh_2s, student.e_shh_2f)
-        if not (all(value != None and value >=0 and value <= 60 for value in e_shh_values) and (student.e_shh_1s>=student.e_shh_1f and student.e_shh_2s>=student.e_shh_2f)):
+        e_shh_values = (student.e_shh_1s, student.e_shh_1f, student.e_shh_2s, student.e_shh_2f)        
+        if not (all(value != None for value in e_shh_values) and (student.e_shh_1s >= 8 and student.e_shh_1s <= 80 and student.e_shh_2s >= 8 and student.e_shh_2s <= 80 and student.e_shh_1f >=0 and student.e_shh_1f <= student.e_shh_1s and student.e_shh_2f >=0 and student.e_shh_2f <= student.e_shh_2s)):
             return '侧向跳'
         e_rb_values = (student.e_rb_1, student.e_rb_2)
         if not all(value != None and value >= -35 and value <= 35 for value in e_rb_values):
             return '立位体前屈'
-        if not (student.e_ls != None and student.e_ls >= 0 and student.e_ls <=100):
+        if not (student.e_ls != None and student.e_ls >= 0 and student.e_ls <=60):
             return '俯卧撑'
-        if not (student.e_su != None and student.e_su >= 0 and student.e_su <=100):
+        if not (student.e_su != None and student.e_su >= 0 and student.e_su <=60):
             return '仰卧起坐'
         e_sws_values = (student.e_sws_1, student.e_sws_2)
-        if not all(value != None and value >=5 and value <= 200 for value in e_sws_values):
+        if not all(value != None and value >=20 and value <= 300 for value in e_sws_values):
             return '立定跳远'
-        if not (student.e_lauf_runden != None and student.e_lauf_runden >= 0 and student.e_lauf_runden <= 30 and student.e_lauf_rest != None and student.e_lauf_rest >= 0 and student.e_lauf_rest <= 54):
+        if not (student.e_lauf_runden != None and student.e_lauf_runden >= 0 and student.e_lauf_runden <= 30 and student.e_lauf_rest != None and student.e_lauf_rest >= 0 and student.e_lauf_rest <= 53):
             return '6分钟跑'
         e_ball_values = (student.e_ball_1, student.e_ball_2, student.e_ball_3)
         if not all(value != None and value >=0 and value <= 30 for value in e_ball_values):
@@ -502,8 +502,8 @@ class StudentDataCompletedListFilter(admin.SimpleListFilter):
                                    Q(e_ball_3__isnull=True))
 
 class StudentForm(forms.ModelForm):
-    height = forms.DecimalField(label='身高（厘米）', validators=[MinValueValidator(0)])
-    weight = forms.DecimalField(label='体重（公斤）', validators=[MinValueValidator(0)])
+    height = forms.IntegerField(label='身高（厘米）', validators=[MinValueValidator(80),MaxValueValidator(210)])
+    weight = forms.DecimalField(label='体重（公斤）', validators=[MinValueValidator(10),MaxValueValidator(100)])
     e_20m_1 = forms.DecimalField(label='第一次跑（秒）', validators=[MinValueValidator(3.00),MaxValueValidator(9.00)])
     e_20m_2 = forms.DecimalField(label='第二次跑（秒）', validators=[MinValueValidator(3.00),MaxValueValidator(9.00)])
     e_bal60_1 = forms.IntegerField(label='6.0厘米 第一次', validators=[MinValueValidator(0),MaxValueValidator(8)])
@@ -512,18 +512,18 @@ class StudentForm(forms.ModelForm):
     e_bal45_2 = forms.IntegerField(label='4.5厘米 第二次', validators=[MinValueValidator(0),MaxValueValidator(8)])
     e_bal30_1 = forms.IntegerField(label='3.0厘米 第一次', validators=[MinValueValidator(0),MaxValueValidator(8)])
     e_bal30_2 = forms.IntegerField(label='3.0厘米 第二次', validators=[MinValueValidator(0),MaxValueValidator(8)])
-    e_shh_1s = forms.IntegerField(label='第一次跳（总次数）', validators=[MinValueValidator(0),MaxValueValidator(60)])
-    e_shh_1f = forms.IntegerField(label='第一次跳（错误次数）', validators=[MinValueValidator(0),MaxValueValidator(60)])
-    e_shh_2s = forms.IntegerField(label='第二次跳（总次数）', validators=[MinValueValidator(0),MaxValueValidator(60)])
-    e_shh_2f = forms.IntegerField(label='第二次跳（错误次数）', validators=[MinValueValidator(0),MaxValueValidator(60)])
+    e_shh_1s = forms.IntegerField(label='第一次跳（总次数）', validators=[MinValueValidator(8),MaxValueValidator(80)])
+    e_shh_1f = forms.IntegerField(label='第一次跳（错误次数）', validators=[MinValueValidator(0)])
+    e_shh_2s = forms.IntegerField(label='第二次跳（总次数）', validators=[MinValueValidator(8),MaxValueValidator(80)])
+    e_shh_2f = forms.IntegerField(label='第二次跳（错误次数）', validators=[MinValueValidator(0)])
     e_rb_1 = forms.DecimalField(label='第一次（厘米）', validators=[MinValueValidator(-35),MaxValueValidator(35)])
     e_rb_2 = forms.DecimalField(label='第二次（厘米）', validators=[MinValueValidator(-35),MaxValueValidator(35)])
-    e_ls = forms.IntegerField(label='次数（40秒内）', validators=[MinValueValidator(0),MaxValueValidator(100)])
-    e_su = forms.IntegerField(label='次数（40秒内）', validators=[MinValueValidator(0),MaxValueValidator(100)])
-    e_sws_1 = forms.DecimalField(label='第一次（厘米）', validators=[MinValueValidator(5),MaxValueValidator(200)])
-    e_sws_2 = forms.DecimalField(label='第二次（厘米）', validators=[MinValueValidator(5),MaxValueValidator(200)])
+    e_ls = forms.IntegerField(label='次数（40秒内）', validators=[MinValueValidator(0),MaxValueValidator(60)])
+    e_su = forms.IntegerField(label='次数（40秒内）', validators=[MinValueValidator(0),MaxValueValidator(60)])
+    e_sws_1 = forms.DecimalField(label='第一次（厘米）', validators=[MinValueValidator(20),MaxValueValidator(300)])
+    e_sws_2 = forms.DecimalField(label='第二次（厘米）', validators=[MinValueValidator(20),MaxValueValidator(300)])
     e_lauf_runden = forms.IntegerField(label='圈数', validators=[MinValueValidator(0),MaxValueValidator(30)])
-    e_lauf_rest = forms.IntegerField(label='最后未完成的一圈所跑距离（米）', validators=[MinValueValidator(0),MaxValueValidator(54)])
+    e_lauf_rest = forms.IntegerField(label='最后未完成的一圈所跑距离（米）', validators=[MinValueValidator(0),MaxValueValidator(53)])
     e_ball_1 = forms.DecimalField(label='第一次', validators=[MinValueValidator(0),MaxValueValidator(30)])
     e_ball_2 = forms.DecimalField(label='第二次', validators=[MinValueValidator(0),MaxValueValidator(30)])
     e_ball_3 = forms.DecimalField(label='第三次', validators=[MinValueValidator(0),MaxValueValidator(30)])

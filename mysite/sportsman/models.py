@@ -124,7 +124,7 @@ class Student(models.Model):
     e_sws_1 = models.DecimalField('立定跳远 第一次（厘米）', max_digits=19, decimal_places=2, null=True, blank=True)
     e_sws_2 = models.DecimalField('立定跳远 第二次（厘米）', max_digits=19, decimal_places=2, null=True, blank=True)
     weight = models.DecimalField('体重（公斤）', max_digits=19, decimal_places=2, null=True, blank=True)
-    height = models.DecimalField('身高（厘米）', max_digits=19, decimal_places=2, null=True, blank=True)
+    height = models.IntegerField('身高（厘米）', null=True, blank=True)
 
     last_name = models.CharField('姓', max_length=5, null=True, blank=True)
     first_name = models.CharField('名', max_length=10, null=True, blank=True)
