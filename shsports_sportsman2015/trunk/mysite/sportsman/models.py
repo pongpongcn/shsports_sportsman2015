@@ -71,6 +71,24 @@ class SchoolClass(models.Model):
         verbose_name = "班级"
         verbose_name_plural = "班级"
 
+class StandardParameter(models.Model):
+    gender = models.CharField('性别', max_length=10, choices=Genders)
+    age = models.IntegerField('年龄')
+    percentile = models.DecimalField('百分位', max_digits=3, decimal_places=1)
+    original_score_20m = models.DecimalField('20米跑', max_digits=3, decimal_places=2)
+    original_score_bal = models.IntegerField('后退平衡')
+    original_score_shh = models.IntegerField('侧向跳')
+    original_score_rb = models.DecimalField('立位体前屈', max_digits=3, decimal_places=1)
+    original_score_ls = models.IntegerField('俯卧撑')
+    original_score_su = models.IntegerField('仰卧起坐')
+    original_score_sws = models.DecimalField('立定跳远', max_digits=4, decimal_places=1)
+    original_score_ball = models.DecimalField('投掷球', max_digits=3, decimal_places=1)
+    original_score_lauf = models.IntegerField('6分钟跑')
+
+    class Meta:
+        verbose_name = "标准值表"
+        verbose_name_plural = "标准值表"
+
 class Factor(models.Model):
     gender = models.CharField('性别', max_length=10, choices=Genders)
     month_age = models.IntegerField('月龄')
