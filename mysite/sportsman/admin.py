@@ -38,6 +38,7 @@ from .models import School
 from .models import SchoolClass
 from .models import SequenceNumber
 from .models import Genders
+from .models import StandardParameter
 
 # Register your models here.
 MovementTypeKeys = (
@@ -66,16 +67,17 @@ MovementTypeKeys = (
         ('lauf_rest', '六分跑 - 剩余距离'),
     )
 
-class FactorResource(resources.ModelResource):
+class StandardParameterResource(resources.ModelResource):
     class Meta:
-        model = Factor
-        import_id_fields = ('gender','month_age','movement_type')
-        exclude = ('id')
+        model = StandardParameter
+        import_id_fields = ('gender','age','percentile')
+        exclude = ('id',)
 
-class FactorAdmin(ImportExportModelAdmin):
-    resource_class = FactorResource
-    list_display = ('movement_type', 'gender', 'month_age', 'mean', 'standard_deviation')
-    list_filter = ('movement_type', 'gender', 'month_age')
+class StandardParameterAdmin(ImportExportModelAdmin):
+    resource_class = StandardParameterResource
+    list_display = ('age', 'gender', 'percentile', 'original_score_20m', 'original_score_bal', 'original_score_shh', 'original_score_rb', 'original_score_ls', 'original_score_su', 'original_score_sws', 'original_score_ball', 'original_score_lauf')
+    list_filter = ('age', 'gender')
+    ordering = ('age', 'gender')
     
 class StudentImportResource(resources.ModelResource):
     def before_import(self, dataset, dry_run, **kwargs):
@@ -667,6 +669,8 @@ class StudentAdmin(ImportExportModelAdmin):
         my_urls = [
             url(r'^(.+)/gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printable)),
             url(r'^gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printables)),
+            url(r'^(.+)/gen_certificate_printable/$', self.admin_site.admin_view(self.gen_certificate_printable)),
+            url(r'^gen_certificate_printable/$', self.admin_site.admin_view(self.gen_certificate_printables)),
         ]
         #New urls must appear before the exists ones.
         
@@ -705,6 +709,16 @@ class StudentAdmin(ImportExportModelAdmin):
         student = Student.objects.get(pk=object_id)
         
         return self.gen_data_sheet_printable_response((student,))
+
+    def gen_certificate_printables(self, request, *args, **kwargs):
+        students = self.get_student_queryset(request)
+        
+        return self.gen_certificate_printable_response(students)
+    
+    def gen_certificate_printable(self, request, object_id):
+        student = Student.objects.get(pk=object_id)
+        
+        return self.gen_certificate_printable_response((student,))
 
     def gen_data_sheet_printable_response(self, students):
         pdfmetrics.registerFont(ttfonts.TTFont("simsun", "simsun.ttc"))
@@ -753,7 +767,122 @@ class StudentAdmin(ImportExportModelAdmin):
 
         return response
 
+    def gen_certificate_printable_response(self, students):
+        pdfmetrics.registerFont(ttfonts.TTFont("simsun", "simsun.ttc"))
+        pagesize = A4
+        fontName = 'simsun'
+
+        output = PdfFileWriter()
+
+        dictGenders = dict(Genders)
+
+        templateImagePath = os.path.join(os.path.dirname(__file__), 'storage/CertificateTemplate.jpg')
+        templateImage = Image(templateImagePath, width=21*cm, height=29.7*cm)
+
+        lineHeight = 0.582*cm
+        stripHeight = 0.4*cm
+        stripWidth = 10.47*cm
+        
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=pagesize)
+        for student in students:
+            templateImage.drawOn(p, 0, 0)
+            p.setFont("simsun", 9)
+            p.drawString(6*cm, pagesize[1]-7.5*cm, student.lastName)
+            p.drawString(6*cm, pagesize[1]-8.05*cm, student.firstName)
+            p.drawString(14*cm, pagesize[1]-7.5*cm, student.schoolClass.school.name)
+            p.drawString(14*cm, pagesize[1]-8.05*cm, str(student.schoolClass))
+
+            age = calculate_age(student.dateOfBirth, student.dateOfTesting)
+            
+            standardParameters = StandardParameter.objects.filter(gender=student.gender, age=age)
+
+            scoreItems = []
+
+            original_score_bal = sum((student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2))            
+            standardParameter_bal = standardParameters.filter(original_score_bal__lte=original_score_bal).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_bal.percentile*Decimal(0.01), original_score_bal, '步'))
+
+            original_score_shh = round(Decimal((student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2), 2)
+            standardParameter_shh = standardParameters.filter(original_score_shh__lte=original_score_bal).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_shh.percentile*Decimal(0.01), original_score_shh, '次'))
+
+            original_score_sws = max((student.e_sws_1, student.e_sws_2))
+            standardParameter_sws = standardParameters.filter(original_score_sws__lte=original_score_sws).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_sws.percentile*Decimal(0.01), original_score_sws, '厘米'))
+
+            original_score_20m = min((student.e_20m_1, student.e_20m_2))
+            standardParameter_20m = standardParameters.filter(original_score_20m__gte=original_score_20m).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), original_score_20m, '秒'))
+
+            original_score_su = student.e_su
+            standardParameter_su = standardParameters.filter(original_score_su__lte=original_score_su).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_su.percentile*Decimal(0.01), original_score_su, '重复次数'))
+
+            original_score_ls = student.e_ls
+            standardParameter_ls = standardParameters.filter(original_score_ls__lte=original_score_ls).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_ls.percentile*Decimal(0.01), original_score_ls, '重复次数'))
+
+            original_score_rb = max((student.e_rb_1, student.e_rb_2))
+            standardParameter_rb = standardParameters.filter(original_score_rb__lte=original_score_rb).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_rb.percentile*Decimal(0.01), original_score_rb, '厘米'))
+
+            original_score_lauf = student.e_lauf_runden * 54 + student.e_lauf_rest
+            standardParameter_lauf = standardParameters.filter(original_score_lauf__lte=original_score_lauf).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_lauf.percentile*Decimal(0.01), original_score_lauf, '米'))
+
+            original_score_ball = max((student.e_ball_1, student.e_ball_2, student.e_ball_3))
+            standardParameter_ball = standardParameters.filter(original_score_ball__lte=original_score_ball).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_ball.percentile*Decimal(0.01), original_score_ball, '米'))
+
+            scoreItem_offset_x = 8.225*cm
+            scoreItem_offset_y = pagesize[1]-11.1*cm
+
+            print(type(stripWidth))
+
+            for scoreItem in scoreItems:
+                p.saveState()
+                p.setFillColor(colors.HexColor('#7fd8ff'))
+                p.rect(scoreItem_offset_x,scoreItem_offset_y-stripHeight,Decimal(stripWidth)*Decimal(scoreItem.percentage),stripHeight, fill=1, stroke=0)
+                p.restoreState()
+                
+                p.drawString(scoreItem_offset_x, scoreItem_offset_y-stripHeight+0.1*cm, '%d%%(%d %s)' % (scoreItem.percentage*100, scoreItem.original_score, scoreItem.unit))
+                
+                scoreItem_offset_y -= lineHeight
+            
+            p.showPage()
+            
+        p.save()
+        
+        if len(students) == 1:
+            student = students[0]
+            if student.dateOfTesting and student.number:
+                filename = 'Certificate %s %s.pdf' % (student.dateOfTesting, student.number)
+            else:
+                filename = 'Certificate.pdf'
+        else:
+            filename = 'Data Sheet.pdf'
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
+
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.write(pdf)
+
+        return response
+        
+
     change_list_template = 'admin/sportsman/student/change_list.html'
+
+class StudentCertificateScoreItem:
+    percentage = 0.0
+    original_score = 0.0
+    unit = ''
+    def __init__(self,percentage, original_score, unit):
+        self.percentage = percentage
+        self.original_score = original_score
+        self.unit = unit
 
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ('name', 'universalName')
@@ -784,6 +913,9 @@ def calculate_monthdelta(date1, date2):
         (-1 if date1.day > imaginary_day_2 else 0)
         )
     return monthdelta
+
+def calculate_age(date1, date2):
+    return date2.year - date1.year - ((date2.month, date2.day) < (date1.month, date1.day))
 
 def evaluate_for_summary(modeladmin, request, queryset):
     for testRefData in queryset:
@@ -862,11 +994,7 @@ class TestSummaryDataAdmin(admin.ModelAdmin):
 
 
 admin.site.register(SequenceNumber, SequenceNumberAdmin)
+admin.site.register(StandardParameter,StandardParameterAdmin)
 admin.site.register(School, SchoolAdmin)
 admin.site.register(SchoolClass, SchoolClassAdmin)
-admin.site.register(Factor,FactorAdmin)
 admin.site.register(Student,StudentAdmin)
-admin.site.register(TestRefData,TestRefDataAdmin)
-admin.site.register(TestRefDataItem,TestRefDataItemAdmin)
-admin.site.register(TestSummaryData,TestSummaryDataAdmin)
-admin.site.register(TestSummaryDataItem)
