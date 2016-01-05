@@ -27,6 +27,8 @@ from reportlab.lib import colors
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from decimal import Decimal
 from django.core.validators import *
+import csv
+from django.utils.encoding import smart_str
 
 from .models import Factor
 from .models import Student
@@ -671,6 +673,7 @@ class StudentAdmin(ImportExportModelAdmin):
             url(r'^gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printables)),
             url(r'^(.+)/gen_certificate_printable/$', self.admin_site.admin_view(self.gen_certificate_printable)),
             url(r'^gen_certificate_printable/$', self.admin_site.admin_view(self.gen_certificate_printables)),
+            url(r'^gen_certificate_list/$', self.admin_site.admin_view(self.gen_certificate_list)),
         ]
         #New urls must appear before the exists ones.
         
@@ -793,52 +796,10 @@ class StudentAdmin(ImportExportModelAdmin):
             p.drawString(14*cm, pagesize[1]-7.5*cm, student.schoolClass.school.name)
             p.drawString(14*cm, pagesize[1]-8.05*cm, str(student.schoolClass))
 
-            age = calculate_age(student.dateOfBirth, student.dateOfTesting)
-            
-            standardParameters = StandardParameter.objects.filter(gender=student.gender, age=age)
-
-            scoreItems = []
-
-            original_score_bal = sum((student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2))            
-            standardParameter_bal = standardParameters.filter(original_score_bal__lte=original_score_bal).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_bal.percentile*Decimal(0.01), original_score_bal, '步'))
-
-            original_score_shh = round(Decimal((student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2), 2)
-            standardParameter_shh = standardParameters.filter(original_score_shh__lte=original_score_bal).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_shh.percentile*Decimal(0.01), original_score_shh, '次'))
-
-            original_score_sws = max((student.e_sws_1, student.e_sws_2))
-            standardParameter_sws = standardParameters.filter(original_score_sws__lte=original_score_sws).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_sws.percentile*Decimal(0.01), original_score_sws, '厘米'))
-
-            original_score_20m = min((student.e_20m_1, student.e_20m_2))
-            standardParameter_20m = standardParameters.filter(original_score_20m__gte=original_score_20m).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), original_score_20m, '秒'))
-
-            original_score_su = student.e_su
-            standardParameter_su = standardParameters.filter(original_score_su__lte=original_score_su).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_su.percentile*Decimal(0.01), original_score_su, '重复次数'))
-
-            original_score_ls = student.e_ls
-            standardParameter_ls = standardParameters.filter(original_score_ls__lte=original_score_ls).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_ls.percentile*Decimal(0.01), original_score_ls, '重复次数'))
-
-            original_score_rb = max((student.e_rb_1, student.e_rb_2))
-            standardParameter_rb = standardParameters.filter(original_score_rb__lte=original_score_rb).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_rb.percentile*Decimal(0.01), original_score_rb, '厘米'))
-
-            original_score_lauf = student.e_lauf_runden * 54 + student.e_lauf_rest
-            standardParameter_lauf = standardParameters.filter(original_score_lauf__lte=original_score_lauf).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_lauf.percentile*Decimal(0.01), original_score_lauf, '米'))
-
-            original_score_ball = max((student.e_ball_1, student.e_ball_2, student.e_ball_3))
-            standardParameter_ball = standardParameters.filter(original_score_ball__lte=original_score_ball).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_ball.percentile*Decimal(0.01), original_score_ball, '米'))
+            scoreItems = self.getscoreItems(student)
 
             scoreItem_offset_x = 8.225*cm
             scoreItem_offset_y = pagesize[1]-11.1*cm
-
-            print(type(stripWidth))
 
             for scoreItem in scoreItems:
                 p.saveState()
@@ -871,7 +832,93 @@ class StudentAdmin(ImportExportModelAdmin):
         response.write(pdf)
 
         return response
+
+    def getscoreItems(self, student):
+        age = calculate_age(student.dateOfBirth, student.dateOfTesting)
+            
+        standardParameters = StandardParameter.objects.filter(gender=student.gender, age=age)
+
+        scoreItems = []
+
+        original_score_bal = sum((student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2))            
+        standardParameter_bal = standardParameters.filter(original_score_bal__lte=original_score_bal).order_by('-percentile')[0]
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_bal.percentile*Decimal(0.01), original_score_bal, '步'))
+
+        original_score_shh = round(Decimal((student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2), 2)
+        standardParameter_shh = standardParameters.filter(original_score_shh__lte=original_score_bal).order_by('-percentile')[0]
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_shh.percentile*Decimal(0.01), original_score_shh, '次'))
+
+        original_score_sws = max((student.e_sws_1, student.e_sws_2))
+        standardParameter_sws = standardParameters.filter(original_score_sws__lte=original_score_sws).order_by('-percentile')[0]
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_sws.percentile*Decimal(0.01), original_score_sws, '厘米'))
+
+        original_score_20m = min((student.e_20m_1, student.e_20m_2))
+        standardParameter_20m = standardParameters.filter(original_score_20m__gte=original_score_20m).order_by('-percentile')[0]
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), original_score_20m, '秒'))
+
+        original_score_su = student.e_su
+        standardParameter_su = standardParameters.filter(original_score_su__lte=original_score_su).order_by('-percentile')[0]
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_su.percentile*Decimal(0.01), original_score_su, '重复次数'))
+
+        original_score_ls = student.e_ls
+        standardParameter_ls = standardParameters.filter(original_score_ls__lte=original_score_ls).order_by('-percentile')[0]
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_ls.percentile*Decimal(0.01), original_score_ls, '重复次数'))
+
+        original_score_rb = max((student.e_rb_1, student.e_rb_2))
+        standardParameter_rb = standardParameters.filter(original_score_rb__lte=original_score_rb).order_by('-percentile')[0]
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_rb.percentile*Decimal(0.01), original_score_rb, '厘米'))
+
+        original_score_lauf = student.e_lauf_runden * 54 + student.e_lauf_rest
+        standardParameter_lauf = standardParameters.filter(original_score_lauf__lte=original_score_lauf).order_by('-percentile')[0]
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_lauf.percentile*Decimal(0.01), original_score_lauf, '米'))
+
+        original_score_ball = max((student.e_ball_1, student.e_ball_2, student.e_ball_3))
+        standardParameter_ball = standardParameters.filter(original_score_ball__lte=original_score_ball).order_by('-percentile')[0]
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_ball.percentile*Decimal(0.01), original_score_ball, '米'))
+
+        return scoreItems
+    
+    def gen_certificate_list(self, request, *args, **kwargs):
+        students = self.get_student_queryset(request)
         
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=mymodel.csv'
+        writer = csv.writer(response, csv.excel)
+        response.write(u'\ufeff'.encode('utf8')) # BOM (optional...Excel needs it to open UTF-8 file properly)
+        writer.writerow([
+            smart_str(u"姓"),
+            smart_str(u"名"),
+            smart_str(u"学校"),
+            smart_str(u"班级"),
+            smart_str(u"平衡"),
+            smart_str(u"侧向跳"),
+            smart_str(u"跳远"),
+            smart_str(u"20米冲刺跑"),
+            smart_str(u"仰卧起坐"),
+            smart_str(u"俯卧撑"),
+            smart_str(u"直身前屈"),
+            smart_str(u"六分跑"),
+            smart_str(u"投掷"),
+        ])
+        for student in students:
+            scoreItems = self.getscoreItems(student)
+            
+            writer.writerow([
+            smart_str(student.lastName),
+            smart_str(student.firstName),
+            smart_str(student.schoolClass.school.name),
+            smart_str(str(student.schoolClass)),
+            smart_str(scoreItems[0].percentage),
+            smart_str(scoreItems[1].percentage),
+            smart_str(scoreItems[2].percentage),
+            smart_str(scoreItems[3].percentage),
+            smart_str(scoreItems[4].percentage),
+            smart_str(scoreItems[5].percentage),
+            smart_str(scoreItems[6].percentage),
+            smart_str(scoreItems[7].percentage),
+            smart_str(scoreItems[8].percentage),
+        ])
+        return response
 
     change_list_template = 'admin/sportsman/student/change_list.html'
 
