@@ -796,7 +796,10 @@ class StudentAdmin(ImportExportModelAdmin):
             p.drawString(14*cm, pagesize[1]-7.5*cm, student.schoolClass.school.name)
             p.drawString(14*cm, pagesize[1]-8.05*cm, str(student.schoolClass))
 
-            scoreItems = self.getscoreItems(student)
+            try:
+                scoreItems = self.getscoreItems(student)
+            except:
+                continue
 
             scoreItem_offset_x = 8.225*cm
             scoreItem_offset_y = pagesize[1]-11.1*cm
@@ -901,7 +904,10 @@ class StudentAdmin(ImportExportModelAdmin):
             smart_str(u"投掷"),
         ])
         for student in students:
-            scoreItems = self.getscoreItems(student)
+            try:
+                scoreItems = self.getscoreItems(student)
+            except:
+                continue
             
             writer.writerow([
             smart_str(student.lastName),
