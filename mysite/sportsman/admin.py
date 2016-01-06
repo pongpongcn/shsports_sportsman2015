@@ -825,7 +825,7 @@ class StudentAdmin(ImportExportModelAdmin):
             else:
                 filename = 'Certificate.pdf'
         else:
-            filename = 'Data Sheet.pdf'
+            filename = 'Certificates.pdf'
 
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
@@ -885,7 +885,7 @@ class StudentAdmin(ImportExportModelAdmin):
         students = self.get_student_queryset(request)
         
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=mymodel.csv'
+        response['Content-Disposition'] = 'attachment; filename=Certificates Data.csv'
         writer = csv.writer(response, csv.excel)
         response.write(u'\ufeff'.encode('utf8')) # BOM (optional...Excel needs it to open UTF-8 file properly)
         writer.writerow([
