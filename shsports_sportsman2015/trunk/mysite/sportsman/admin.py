@@ -809,8 +809,9 @@ class StudentAdmin(ImportExportModelAdmin):
                 p.setFillColor(colors.HexColor('#7fd8ff'))
                 p.rect(scoreItem_offset_x,scoreItem_offset_y-stripHeight,Decimal(stripWidth)*Decimal(scoreItem.percentage),stripHeight, fill=1, stroke=0)
                 p.restoreState()
-                
-                p.drawString(scoreItem_offset_x, scoreItem_offset_y-stripHeight+0.1*cm, '%d%%(%d %s)' % (scoreItem.percentage*100, scoreItem.original_score, scoreItem.unit))
+
+                formatString = '%d%%(%0.'+str(scoreItem.precision)+'f %s)'
+                p.drawString(scoreItem_offset_x, scoreItem_offset_y-stripHeight+0.1*cm, formatString % (scoreItem.percentage*Decimal(100), scoreItem.original_score, scoreItem.unit))
                 
                 scoreItem_offset_y -= lineHeight
             
@@ -857,7 +858,7 @@ class StudentAdmin(ImportExportModelAdmin):
 
         original_score_20m = min((student.e_20m_1, student.e_20m_2))
         standardParameter_20m = standardParameters.filter(original_score_20m__gte=original_score_20m).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), original_score_20m, '秒'))
+        scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), original_score_20m, '秒', 2))
 
         original_score_su = student.e_su
         standardParameter_su = standardParameters.filter(original_score_su__lte=original_score_su).order_by('-percentile')[0]
@@ -893,15 +894,26 @@ class StudentAdmin(ImportExportModelAdmin):
             smart_str(u"名"),
             smart_str(u"学校"),
             smart_str(u"班级"),
+            smart_str(u"性别"),
+            smart_str(u"出生年月"),
             smart_str(u"平衡"),
+            smart_str(u"平衡评价"),
             smart_str(u"侧向跳"),
+            smart_str(u"侧向跳评价"),
             smart_str(u"跳远"),
+            smart_str(u"跳远评价"),
             smart_str(u"20米冲刺跑"),
+            smart_str(u"20米冲刺跑评价"),
             smart_str(u"仰卧起坐"),
+            smart_str(u"仰卧起坐评价"),
             smart_str(u"俯卧撑"),
+            smart_str(u"俯卧撑评价"),
             smart_str(u"直身前屈"),
+            smart_str(u"直身前屈评价"),
             smart_str(u"六分跑"),
+            smart_str(u"六分跑评价"),
             smart_str(u"投掷"),
+            smart_str(u"投掷评价"),
         ])
         for student in students:
             try:
@@ -914,17 +926,36 @@ class StudentAdmin(ImportExportModelAdmin):
             smart_str(student.firstName),
             smart_str(student.schoolClass.school.name),
             smart_str(str(student.schoolClass)),
+            smart_str(self.get_genderDisplay(student.gender)),
+            smart_str(student.dateOfBirth),
+            smart_str(scoreItems[0].original_score),
             smart_str(scoreItems[0].percentage),
+            smart_str(scoreItems[1].original_score),
             smart_str(scoreItems[1].percentage),
+            smart_str(scoreItems[2].original_score),
             smart_str(scoreItems[2].percentage),
+            smart_str(scoreItems[3].original_score),
             smart_str(scoreItems[3].percentage),
+            smart_str(scoreItems[4].original_score),
             smart_str(scoreItems[4].percentage),
+            smart_str(scoreItems[5].original_score),
             smart_str(scoreItems[5].percentage),
+            smart_str(scoreItems[6].original_score),
             smart_str(scoreItems[6].percentage),
+            smart_str(scoreItems[7].original_score),
             smart_str(scoreItems[7].percentage),
+            smart_str(scoreItems[8].original_score),
             smart_str(scoreItems[8].percentage),
         ])
         return response
+
+    def get_genderDisplay(self, genderName):
+        if genderName == 'MALE':
+            return '男'
+        elif genderName == 'FEMALE':
+            return '女'
+        else:
+            return genderName
 
     change_list_template = 'admin/sportsman/student/change_list.html'
 
@@ -932,10 +963,12 @@ class StudentCertificateScoreItem:
     percentage = 0.0
     original_score = 0.0
     unit = ''
-    def __init__(self,percentage, original_score, unit):
+    precision = 0
+    def __init__(self,percentage, original_score, unit, precision = 0):
         self.percentage = percentage
         self.original_score = original_score
         self.unit = unit
+        self.precision = precision
 
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ('name', 'universalName')
