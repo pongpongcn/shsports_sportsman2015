@@ -402,36 +402,38 @@ class StudentResource(resources.ModelResource):
         else:
             return 0
     def dehydrate_error(self, student):
-        if not (student.weight != None and student.weight >= 10 and student.weight <= 100):
-            return '体重'
-        if not (student.height != None and student.height >= 80 and student.height <= 210):
-            return '身高'
-        e_20m_values = (student.e_20m_1, student.e_20m_2)
-        if not all(value != None and value >=3.00 and value <= 9.00 for value in e_20m_values):
-            return '20米跑'
-        e_bal_values = (student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2)
-        if not all(value != None and value >=0 and value <= 8 for value in e_bal_values):
-            return '后退平衡'
-        e_shh_values = (student.e_shh_1s, student.e_shh_1f, student.e_shh_2s, student.e_shh_2f)        
-        if not (all(value != None for value in e_shh_values) and (student.e_shh_1s >= 8 and student.e_shh_1s <= 80 and student.e_shh_2s >= 8 and student.e_shh_2s <= 80 and student.e_shh_1f >=0 and student.e_shh_1f <= student.e_shh_1s and student.e_shh_2f >=0 and student.e_shh_2f <= student.e_shh_2s)):
-            return '侧向跳'
-        e_rb_values = (student.e_rb_1, student.e_rb_2)
-        if not all(value != None and value >= -35 and value <= 35 for value in e_rb_values):
-            return '立位体前屈'
-        if not (student.e_ls != None and student.e_ls >= 0 and student.e_ls <=60):
-            return '俯卧撑'
-        if not (student.e_su != None and student.e_su >= 0 and student.e_su <=60):
-            return '仰卧起坐'
-        e_sws_values = (student.e_sws_1, student.e_sws_2)
-        if not all(value != None and value >=20 and value <= 300 for value in e_sws_values):
-            return '立定跳远'
-        if not (student.e_lauf_runden != None and student.e_lauf_runden >= 0 and student.e_lauf_runden <= 30 and student.e_lauf_rest != None and student.e_lauf_rest >= 0 and student.e_lauf_rest <= 53):
-            return '6分钟跑'
-        e_ball_values = (student.e_ball_1, student.e_ball_2, student.e_ball_3)
-        if not all(value != None and value >=0 and value <= 30 for value in e_ball_values):
-            return '投掷球'
-        return None
-            
+        return check_student_error(student)
+
+def check_student_error(student):
+    if not (student.weight != None and student.weight >= 10 and student.weight <= 100):
+        return '体重'
+    if not (student.height != None and student.height >= 80 and student.height <= 210):
+        return '身高'
+    e_20m_values = (student.e_20m_1, student.e_20m_2)
+    if not all(value != None and value >=3.00 and value <= 9.00 for value in e_20m_values):
+        return '20米跑'
+    e_bal_values = (student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2)
+    if not all(value != None and value >=0 and value <= 8 for value in e_bal_values):
+        return '后退平衡'
+    e_shh_values = (student.e_shh_1s, student.e_shh_1f, student.e_shh_2s, student.e_shh_2f)        
+    if not (all(value != None for value in e_shh_values) and (student.e_shh_1s >= 8 and student.e_shh_1s <= 80 and student.e_shh_2s >= 8 and student.e_shh_2s <= 80 and student.e_shh_1f >=0 and student.e_shh_1f <= student.e_shh_1s and student.e_shh_2f >=0 and student.e_shh_2f <= student.e_shh_2s)):
+        return '侧向跳'
+    e_rb_values = (student.e_rb_1, student.e_rb_2)
+    if not all(value != None and value >= -35 and value <= 35 for value in e_rb_values):
+        return '立位体前屈'
+    if not (student.e_ls != None and student.e_ls >= 0 and student.e_ls <=60):
+        return '俯卧撑'
+    if not (student.e_su != None and student.e_su >= 0 and student.e_su <=60):
+        return '仰卧起坐'
+    e_sws_values = (student.e_sws_1, student.e_sws_2)
+    if not all(value != None and value >=20 and value <= 300 for value in e_sws_values):
+        return '立定跳远'
+    if not (student.e_lauf_runden != None and student.e_lauf_runden >= 0 and student.e_lauf_runden <= 30 and student.e_lauf_rest != None and student.e_lauf_rest >= 0 and student.e_lauf_rest <= 53):
+        return '6分钟跑'
+    e_ball_values = (student.e_ball_1, student.e_ball_2, student.e_ball_3)
+    if not all(value != None and value >=0 and value <= 30 for value in e_ball_values):
+        return '投掷球'
+    return None
 
 class StudentImportExportFormatCSV(TablibFormat):
     TABLIB_MODULE = 'sportsman.formats.student_tablib_format_csv'
@@ -789,17 +791,20 @@ class StudentAdmin(ImportExportModelAdmin):
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=pagesize)
         for student in students:
+            if check_student_error(student) != None:
+                continue
+            
+            try:
+                scoreItems = self.getscoreItems(student)
+            except:
+                continue
+            
             templateImage.drawOn(p, 0, 0)
             p.setFont("simsun", 9)
             p.drawString(6*cm, pagesize[1]-7.5*cm, student.lastName)
             p.drawString(6*cm, pagesize[1]-8.05*cm, student.firstName)
             p.drawString(14*cm, pagesize[1]-7.5*cm, student.schoolClass.school.name)
             p.drawString(14*cm, pagesize[1]-8.05*cm, str(student.schoolClass))
-
-            try:
-                scoreItems = self.getscoreItems(student)
-            except:
-                continue
 
             scoreItem_offset_x = 8.225*cm
             scoreItem_offset_y = pagesize[1]-11.1*cm
@@ -895,7 +900,8 @@ class StudentAdmin(ImportExportModelAdmin):
             smart_str(u"学校"),
             smart_str(u"班级"),
             smart_str(u"性别"),
-            smart_str(u"出生年月"),
+            smart_str(u"出生日期"),
+            smart_str(u"测试日期"),
             smart_str(u"平衡"),
             smart_str(u"平衡评价"),
             smart_str(u"侧向跳"),
@@ -916,37 +922,48 @@ class StudentAdmin(ImportExportModelAdmin):
             smart_str(u"投掷评价"),
         ])
         for student in students:
-            try:
-                scoreItems = self.getscoreItems(student)
-            except:
+            if check_student_error(student) != None:
                 continue
             
-            writer.writerow([
-            smart_str(student.lastName),
-            smart_str(student.firstName),
-            smart_str(student.schoolClass.school.name),
-            smart_str(str(student.schoolClass)),
-            smart_str(self.get_genderDisplay(student.gender)),
-            smart_str(student.dateOfBirth),
-            smart_str(scoreItems[0].original_score),
-            smart_str(scoreItems[0].percentage),
-            smart_str(scoreItems[1].original_score),
-            smart_str(scoreItems[1].percentage),
-            smart_str(scoreItems[2].original_score),
-            smart_str(scoreItems[2].percentage),
-            smart_str(scoreItems[3].original_score),
-            smart_str(scoreItems[3].percentage),
-            smart_str(scoreItems[4].original_score),
-            smart_str(scoreItems[4].percentage),
-            smart_str(scoreItems[5].original_score),
-            smart_str(scoreItems[5].percentage),
-            smart_str(scoreItems[6].original_score),
-            smart_str(scoreItems[6].percentage),
-            smart_str(scoreItems[7].original_score),
-            smart_str(scoreItems[7].percentage),
-            smart_str(scoreItems[8].original_score),
-            smart_str(scoreItems[8].percentage),
-        ])
+            try:
+                scoreItems = self.getscoreItems(student)
+
+                writer.writerow([
+                    smart_str(student.lastName),
+                    smart_str(student.firstName),
+                    smart_str(student.schoolClass.school.name),
+                    smart_str(str(student.schoolClass)),
+                    smart_str(self.get_genderDisplay(student.gender)),
+                    smart_str(student.dateOfBirth),
+                    smart_str(student.dateOfTesting),
+                    smart_str(scoreItems[0].original_score),
+                    smart_str(scoreItems[0].percentage),
+                    smart_str(scoreItems[1].original_score),
+                    smart_str(scoreItems[1].percentage),
+                    smart_str(scoreItems[2].original_score),
+                    smart_str(scoreItems[2].percentage),
+                    smart_str(scoreItems[3].original_score),
+                    smart_str(scoreItems[3].percentage),
+                    smart_str(scoreItems[4].original_score),
+                    smart_str(scoreItems[4].percentage),
+                    smart_str(scoreItems[5].original_score),
+                    smart_str(scoreItems[5].percentage),
+                    smart_str(scoreItems[6].original_score),
+                    smart_str(scoreItems[6].percentage),
+                    smart_str(scoreItems[7].original_score),
+                    smart_str(scoreItems[7].percentage),
+                    smart_str(scoreItems[8].original_score),
+                    smart_str(scoreItems[8].percentage),
+                    ])
+            except:
+                writer.writerow([
+                    smart_str(student.lastName),
+                    smart_str(student.firstName),
+                    smart_str(student.schoolClass.school.name),
+                    smart_str(str(student.schoolClass)),
+                    smart_str(self.get_genderDisplay(student.gender)),
+                    smart_str(student.dateOfBirth),
+                    ])
         return response
 
     def get_genderDisplay(self, genderName):
