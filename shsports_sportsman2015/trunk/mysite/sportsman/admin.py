@@ -847,43 +847,73 @@ class StudentAdmin(ImportExportModelAdmin):
             
         standardParameters = StandardParameter.objects.filter(gender=student.gender, age=age)
 
+        if not standardParameters.exists():
+            raise Exception('数据异常: 年龄')
+
         scoreItems = []
 
-        original_score_bal = sum((student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2))            
-        standardParameter_bal = standardParameters.filter(original_score_bal__lte=original_score_bal).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_bal.percentile*Decimal(0.01), original_score_bal, '步'))
+        original_score_bal = sum((student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2))
+        try:
+            standardParameter_bal = standardParameters.filter(original_score_bal__lte=original_score_bal).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_bal.percentile*Decimal(0.01), original_score_bal, '步'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_bal, '步'))
 
         original_score_shh = round(Decimal((student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2), 2)
-        standardParameter_shh = standardParameters.filter(original_score_shh__lte=original_score_bal).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_shh.percentile*Decimal(0.01), original_score_shh, '次'))
+        try:
+            standardParameter_shh = standardParameters.filter(original_score_shh__lte=original_score_shh).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_shh.percentile*Decimal(0.01), original_score_shh, '次'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_shh, '次'))
 
         original_score_sws = max((student.e_sws_1, student.e_sws_2))
-        standardParameter_sws = standardParameters.filter(original_score_sws__lte=original_score_sws).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_sws.percentile*Decimal(0.01), original_score_sws, '厘米'))
+        try:
+            standardParameter_sws = standardParameters.filter(original_score_sws__lte=original_score_sws).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_sws.percentile*Decimal(0.01), original_score_sws, '厘米'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_sws, '厘米'))
 
         original_score_20m = min((student.e_20m_1, student.e_20m_2))
-        standardParameter_20m = standardParameters.filter(original_score_20m__gte=original_score_20m).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), original_score_20m, '秒', 2))
+        try:
+            standardParameter_20m = standardParameters.filter(original_score_20m__gte=original_score_20m).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), original_score_20m, '秒', 2))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_20m, '秒', 2))
 
         original_score_su = student.e_su
-        standardParameter_su = standardParameters.filter(original_score_su__lte=original_score_su).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_su.percentile*Decimal(0.01), original_score_su, '重复次数'))
+        try:
+            standardParameter_su = standardParameters.filter(original_score_su__lte=original_score_su).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_su.percentile*Decimal(0.01), original_score_su, '重复次数'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_su, '重复次数'))
 
         original_score_ls = student.e_ls
-        standardParameter_ls = standardParameters.filter(original_score_ls__lte=original_score_ls).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_ls.percentile*Decimal(0.01), original_score_ls, '重复次数'))
+        try:
+            standardParameter_ls = standardParameters.filter(original_score_ls__lte=original_score_ls).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_ls.percentile*Decimal(0.01), original_score_ls, '重复次数'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_ls, '重复次数'))
 
         original_score_rb = max((student.e_rb_1, student.e_rb_2))
-        standardParameter_rb = standardParameters.filter(original_score_rb__lte=original_score_rb).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_rb.percentile*Decimal(0.01), original_score_rb, '厘米'))
+        try:
+            standardParameter_rb = standardParameters.filter(original_score_rb__lte=original_score_rb).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_rb.percentile*Decimal(0.01), original_score_rb, '厘米'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_rb, '厘米'))
 
         original_score_lauf = student.e_lauf_runden * 54 + student.e_lauf_rest
-        standardParameter_lauf = standardParameters.filter(original_score_lauf__lte=original_score_lauf).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_lauf.percentile*Decimal(0.01), original_score_lauf, '米'))
+        try:
+            standardParameter_lauf = standardParameters.filter(original_score_lauf__lte=original_score_lauf).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_lauf.percentile*Decimal(0.01), original_score_lauf, '米'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_lauf, '米'))
 
         original_score_ball = max((student.e_ball_1, student.e_ball_2, student.e_ball_3))
-        standardParameter_ball = standardParameters.filter(original_score_ball__lte=original_score_ball).order_by('-percentile')[0]
-        scoreItems.append(StudentCertificateScoreItem(standardParameter_ball.percentile*Decimal(0.01), original_score_ball, '米'))
+        try:
+            standardParameter_ball = standardParameters.filter(original_score_ball__lte=original_score_ball).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_ball.percentile*Decimal(0.01), original_score_ball, '米'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_ball, '米'))
 
         return scoreItems
     
@@ -902,6 +932,8 @@ class StudentAdmin(ImportExportModelAdmin):
             smart_str(u"性别"),
             smart_str(u"出生日期"),
             smart_str(u"测试日期"),
+            smart_str(u"年龄"),
+            smart_str(u"备注"),
             smart_str(u"平衡"),
             smart_str(u"平衡评价"),
             smart_str(u"侧向跳"),
@@ -924,9 +956,15 @@ class StudentAdmin(ImportExportModelAdmin):
         for student in students:
             if check_student_error(student) != None:
                 continue
+
+            try:
+                age = calculate_age(student.dateOfBirth, student.dateOfTesting)
+            except:
+                age = None
             
             try:
                 scoreItems = self.getscoreItems(student)
+                remark = ''
 
                 writer.writerow([
                     smart_str(student.lastName),
@@ -936,6 +974,8 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(self.get_genderDisplay(student.gender)),
                     smart_str(student.dateOfBirth),
                     smart_str(student.dateOfTesting),
+                    smart_str(age),
+                    smart_str(remark),
                     smart_str(scoreItems[0].original_score),
                     smart_str(scoreItems[0].percentage),
                     smart_str(scoreItems[1].original_score),
@@ -955,7 +995,9 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(scoreItems[8].original_score),
                     smart_str(scoreItems[8].percentage),
                     ])
-            except:
+            except Exception as e:
+                remark = str(e)
+                
                 writer.writerow([
                     smart_str(student.lastName),
                     smart_str(student.firstName),
@@ -963,6 +1005,9 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(str(student.schoolClass)),
                     smart_str(self.get_genderDisplay(student.gender)),
                     smart_str(student.dateOfBirth),
+                    smart_str(student.dateOfTesting),
+                    smart_str(age),
+                    smart_str(remark),
                     ])
         return response
 
