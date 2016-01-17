@@ -72,6 +72,7 @@ class SchoolClass(models.Model):
         verbose_name_plural = "班级"
 
 class StandardParameter(models.Model):
+    version = models.CharField('版本', max_length=100)
     gender = models.CharField('性别', max_length=10, choices=Genders)
     age = models.IntegerField('年龄')
     percentile = models.DecimalField('百分位', max_digits=3, decimal_places=1)

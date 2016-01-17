@@ -72,13 +72,13 @@ MovementTypeKeys = (
 class StandardParameterResource(resources.ModelResource):
     class Meta:
         model = StandardParameter
-        import_id_fields = ('gender','age','percentile')
+        import_id_fields = ('version', 'gender','age','percentile')
         exclude = ('id',)
 
 class StandardParameterAdmin(ImportExportModelAdmin):
     resource_class = StandardParameterResource
-    list_display = ('age', 'gender', 'percentile', 'original_score_20m', 'original_score_bal', 'original_score_shh', 'original_score_rb', 'original_score_ls', 'original_score_su', 'original_score_sws', 'original_score_ball', 'original_score_lauf')
-    list_filter = ('age', 'gender')
+    list_display = ('version', 'age', 'gender', 'percentile', 'original_score_20m', 'original_score_bal', 'original_score_shh', 'original_score_rb', 'original_score_ls', 'original_score_su', 'original_score_sws', 'original_score_ball', 'original_score_lauf')
+    list_filter = ('version', 'age', 'gender')
     ordering = ('age', 'gender')
     
 class StudentImportResource(resources.ModelResource):
@@ -853,11 +853,13 @@ class StudentAdmin(ImportExportModelAdmin):
 
         if student.gender == None:
             raise Exception('数据异常: 性别')
+
+        version = 'for_china_by_german_at_201510'
             
-        standardParameters = StandardParameter.objects.filter(gender=student.gender, age=age)
+        standardParameters = StandardParameter.objects.filter(version=version, gender=student.gender, age=age)
 
         if not standardParameters.exists():
-            raise Exception('数据异常: 年龄')
+            raise Exception('数据异常: 没有合适的评分标准')
 
         scoreItems = []
 
