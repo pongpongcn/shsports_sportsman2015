@@ -77,9 +77,21 @@ class StandardParameterResource(resources.ModelResource):
 
 class StandardParameterAdmin(ImportExportModelAdmin):
     resource_class = StandardParameterResource
-    list_display = ('version', 'age', 'gender', 'percentile', 'original_score_20m', 'original_score_bal', 'original_score_shh', 'original_score_rb', 'original_score_ls', 'original_score_su', 'original_score_sws', 'original_score_ball', 'original_score_lauf')
-    list_filter = ('version', 'age', 'gender')
-    ordering = ('age', 'gender')
+    list_display = ('version', 'gender', 'age', 'percentile', 'original_score_20m', 'original_score_bal', 'original_score_shh', 'original_score_rb', 'original_score_ls', 'original_score_su', 'original_score_sws', 'original_score_ball', 'original_score_lauf')
+    list_filter = ('version', 'gender', 'age')
+    ordering = ('version', 'gender', 'age')
+
+class FactorResource(resources.ModelResource):
+    class Meta:
+        model = Factor
+        import_id_fields = ('version', 'gender','month_age')
+        exclude = ('id',)
+
+class FactorAdmin(ImportExportModelAdmin):
+    resource_class = FactorResource
+    list_display = ('version', 'gender', 'month_age', 'mean_20m', 'standard_deviation_20m', 'mean_bal', 'standard_deviation_bal', 'mean_shh', 'standard_deviation_shh', 'mean_rb', 'standard_deviation_rb', 'mean_ls', 'standard_deviation_ls', 'mean_su', 'standard_deviation_su', 'mean_sws', 'standard_deviation_sws', 'mean_ball', 'standard_deviation_ball', 'mean_lauf', 'standard_deviation_lauf')
+    list_filter = ('version', 'gender', 'month_age')
+    ordering = ('version', 'gender', 'month_age')
     
 class StudentImportResource(resources.ModelResource):
     def before_import(self, dataset, dry_run, **kwargs):
@@ -843,23 +855,32 @@ class StudentAdmin(ImportExportModelAdmin):
         return response
 
     def getscoreItems(self, student):
+        # 评分方式，'standardParameter'或'factor'
+        score_method = 'standardParameter'
+        
         if student.dateOfBirth == None:
             raise Exception('数据异常: 出生日期')
 
         if student.dateOfTesting == None:
             raise Exception('数据异常: 测试日期')
 
-        age = calculate_age(student.dateOfBirth, student.dateOfTesting)
-
         if student.gender == None:
             raise Exception('数据异常: 性别')
 
+        if score_method == 'standardParameter':
+            return self.getscoreItems_standardParameter(student)
+        elif score_method == 'factor':
+            return self.getscoreItems_factor(student)
+
+    def getscoreItems_standardParameter(self, student):
         version = 'for_china_by_german_at_201510'
+
+        age = calculate_age(student.dateOfBirth, student.dateOfTesting)
             
         standardParameters = StandardParameter.objects.filter(version=version, gender=student.gender, age=age)
 
         if not standardParameters.exists():
-            raise Exception('数据异常: 没有合适的评分标准')
+            raise Exception('数据异常: 没有适用的评分标准')
 
         scoreItems = []
 
@@ -927,7 +948,113 @@ class StudentAdmin(ImportExportModelAdmin):
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_ball, '米'))
 
         return scoreItems
-    
+
+    def getscoreItems_factor(self, student):
+        version = 'for_china_by_chinese_at_201509'
+
+        month_age = calculate_monthdelta(student.dateOfBirth, student.dateOfTesting)
+
+        factors = Factor.objects.filter(version=version, gender=student.gender, month_age=month_age)
+
+        if not factors.exists():
+            raise Exception('数据异常: 没有适用的评分标准')
+
+        factor = factors[0]
+
+        scoreItems = []
+
+        original_score_bal = sum((student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2))
+        try:
+            mean = float(factor.mean_bal)
+            standard_deviation = float(factor.standard_deviation_bal)
+            original_score = float(original_score_bal)
+            percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_bal, '步'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_bal, '步'))
+
+        original_score_shh = round(Decimal((student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2), 2)
+        try:
+            mean = float(factor.mean_shh)
+            standard_deviation = float(factor.standard_deviation_shh)
+            original_score = float(original_score_shh)
+            percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_shh, '次'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_shh, '次'))
+
+        original_score_sws = max((student.e_sws_1, student.e_sws_2))
+        try:
+            mean = float(factor.mean_sws)
+            standard_deviation = float(factor.standard_deviation_sws)
+            original_score = float(original_score_sws)
+            percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_sws, '厘米'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_sws, '厘米'))
+
+        original_score_20m = min((student.e_20m_1, student.e_20m_2))
+        try:
+            mean = float(factor.mean_20m)
+            standard_deviation = float(factor.standard_deviation_20m)
+            original_score = float(original_score_20m)
+            percentile = 1- round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_20m, '秒', 2))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_20m, '秒', 2))
+
+        original_score_su = student.e_su
+        try:
+            mean = float(factor.mean_su)
+            standard_deviation = float(factor.standard_deviation_su)
+            original_score = float(original_score_su)
+            percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_su, '重复次数'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_su, '重复次数'))
+
+        original_score_ls = student.e_ls
+        try:
+            mean = float(factor.mean_ls)
+            standard_deviation = float(factor.standard_deviation_ls)
+            original_score = float(original_score_ls)
+            percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_ls, '重复次数'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_ls, '重复次数'))
+
+        original_score_rb = max((student.e_rb_1, student.e_rb_2))
+        try:
+            mean = float(factor.mean_rb)
+            standard_deviation = float(factor.standard_deviation_rb)
+            original_score = float(original_score_rb)
+            percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_rb, '厘米'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_rb, '厘米'))
+
+        original_score_lauf = student.e_lauf_runden * 54 + student.e_lauf_rest
+        try:
+            mean = float(factor.mean_lauf)
+            standard_deviation = float(factor.standard_deviation_lauf)
+            original_score = float(original_score_lauf)
+            percentile = 1- round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_lauf, '米'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_lauf, '米'))
+
+        original_score_ball = max((student.e_ball_1, student.e_ball_2, student.e_ball_3))
+        try:
+            mean = float(factor.mean_ball)
+            standard_deviation = float(factor.standard_deviation_ball)
+            original_score = float(original_score_ball)
+            percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_ball, '米'))
+        except:
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_ball, '米'))
+
+        return scoreItems
+
     def gen_certificate_list(self, request, *args, **kwargs):
         students = self.get_student_queryset(request)
         
@@ -1173,6 +1300,7 @@ class TestSummaryDataAdmin(admin.ModelAdmin):
 
 admin.site.register(SequenceNumber, SequenceNumberAdmin)
 admin.site.register(StandardParameter,StandardParameterAdmin)
+admin.site.register(Factor,FactorAdmin)
 admin.site.register(School, SchoolAdmin)
 admin.site.register(SchoolClass, SchoolClassAdmin)
 admin.site.register(Student,StudentAdmin)

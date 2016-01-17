@@ -91,14 +91,31 @@ class StandardParameter(models.Model):
         verbose_name_plural = "标准值表"
 
 class Factor(models.Model):
-    gender = models.CharField('性别', max_length=10, choices=Genders)
+    version = models.CharField('版本', max_length=100)
     month_age = models.IntegerField('月龄')
-    movement_type = models.CharField('测试点', max_length=10, choices=MovementTypes)
-    mean = models.FloatField('平均值')
-    standard_deviation = models.FloatField('标准偏差')
+    gender = models.CharField('性别', max_length=10, choices=Genders)
+    mean_20m = models.DecimalField('20米跑平均值', max_digits=10, decimal_places=2)
+    standard_deviation_20m = models.DecimalField('20米跑标准偏差', max_digits=10, decimal_places=4)
+    mean_bal = models.DecimalField('后退平衡平均值', max_digits=10, decimal_places=2)
+    standard_deviation_bal = models.DecimalField('后退平衡标准偏差', max_digits=10, decimal_places=4)
+    mean_shh = models.DecimalField('侧向跳平均值', max_digits=10, decimal_places=2)
+    standard_deviation_shh = models.DecimalField('侧向跳标准偏差', max_digits=10, decimal_places=4)
+    mean_rb = models.DecimalField('立位体前屈平均值', max_digits=10, decimal_places=2)
+    standard_deviation_rb = models.DecimalField('立位体前屈标准偏差', max_digits=10, decimal_places=4)
+    mean_ls = models.DecimalField('俯卧撑平均值', max_digits=10, decimal_places=2)
+    standard_deviation_ls = models.DecimalField('俯卧撑标准偏差', max_digits=10, decimal_places=4)
+    mean_su = models.DecimalField('仰卧起坐平均值', max_digits=10, decimal_places=2)
+    standard_deviation_su = models.DecimalField('仰卧起坐标准偏差', max_digits=10, decimal_places=4)
+    mean_sws = models.DecimalField('立定跳远平均值', max_digits=10, decimal_places=2)
+    standard_deviation_sws = models.DecimalField('立定跳远标准偏差', max_digits=10, decimal_places=4)
+    mean_ball = models.DecimalField('投掷球平均值', max_digits=10, decimal_places=2)
+    standard_deviation_ball = models.DecimalField('投掷球标准偏差', max_digits=10, decimal_places=4)
+    mean_lauf = models.DecimalField('6分钟跑平均值', max_digits=10, decimal_places=2)
+    standard_deviation_lauf = models.DecimalField('6分钟跑标准偏差', max_digits=10, decimal_places=4)
     
     class Meta:
-        verbose_name_plural = "分布因素(Factors)"
+        verbose_name = "分布因素"
+        verbose_name_plural = "分布因素"
     
 class Student(models.Model):
     noOfStudentStatus = models.CharField('学籍号', max_length=255, null=True, blank=True)
