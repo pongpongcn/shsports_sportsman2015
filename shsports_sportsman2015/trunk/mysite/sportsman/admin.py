@@ -934,6 +934,9 @@ class StudentAdmin(ImportExportModelAdmin):
             smart_str(u"测试日期"),
             smart_str(u"年龄"),
             smart_str(u"备注"),
+            smart_str(u"身高"),
+            smart_str(u"体重"),
+            smart_str(u"BMI"),
             smart_str(u"平衡"),
             smart_str(u"平衡评价"),
             smart_str(u"侧向跳"),
@@ -961,6 +964,8 @@ class StudentAdmin(ImportExportModelAdmin):
                 age = calculate_age(student.dateOfBirth, student.dateOfTesting)
             except:
                 age = None
+
+            BMI = round(student.weight / (student.height * Decimal(0.01)) ** 2, 1)
             
             try:
                 scoreItems = self.getscoreItems(student)
@@ -976,6 +981,9 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(student.dateOfTesting),
                     smart_str(age),
                     smart_str(remark),
+                    smart_str(student.height),
+                    smart_str(student.weight),
+                    smart_str(BMI),
                     smart_str(scoreItems[0].original_score),
                     smart_str(scoreItems[0].percentage),
                     smart_str(scoreItems[1].original_score),
@@ -1008,6 +1016,9 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(student.dateOfTesting),
                     smart_str(age),
                     smart_str(remark),
+                    smart_str(student.height),
+                    smart_str(student.weight),
+                    smart_str(BMI),
                     ])
         return response
 
