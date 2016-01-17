@@ -843,7 +843,16 @@ class StudentAdmin(ImportExportModelAdmin):
         return response
 
     def getscoreItems(self, student):
+        if student.dateOfBirth == None:
+            raise Exception('数据异常: 出生日期')
+
+        if student.dateOfTesting == None:
+            raise Exception('数据异常: 测试日期')
+
         age = calculate_age(student.dateOfBirth, student.dateOfTesting)
+
+        if student.gender == None:
+            raise Exception('数据异常: 性别')
             
         standardParameters = StandardParameter.objects.filter(gender=student.gender, age=age)
 
@@ -933,6 +942,7 @@ class StudentAdmin(ImportExportModelAdmin):
             smart_str(u"出生日期"),
             smart_str(u"测试日期"),
             smart_str(u"年龄"),
+            smart_str(u"月龄"),
             smart_str(u"备注"),
             smart_str(u"身高"),
             smart_str(u"体重"),
@@ -965,6 +975,11 @@ class StudentAdmin(ImportExportModelAdmin):
             except:
                 age = None
 
+            try:
+                month_age = calculate_monthdelta(student.dateOfBirth, student.dateOfTesting)
+            except:
+                month_age = None
+
             BMI = round(student.weight / (student.height * Decimal(0.01)) ** 2, 1)
             
             try:
@@ -980,6 +995,7 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(student.dateOfBirth),
                     smart_str(student.dateOfTesting),
                     smart_str(age),
+                    smart_str(month_age),
                     smart_str(remark),
                     smart_str(student.height),
                     smart_str(student.weight),
@@ -1015,6 +1031,7 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(student.dateOfBirth),
                     smart_str(student.dateOfTesting),
                     smart_str(age),
+                    smart_str(month_age),
                     smart_str(remark),
                     smart_str(student.height),
                     smart_str(student.weight),
