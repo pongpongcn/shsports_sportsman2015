@@ -1038,7 +1038,7 @@ class StudentAdmin(ImportExportModelAdmin):
             mean = float(factor.mean_lauf)
             standard_deviation = float(factor.standard_deviation_lauf)
             original_score = float(original_score_lauf)
-            percentile = 1- round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
+            percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
             scoreItems.append(StudentCertificateScoreItem(percentile, original_score_lauf, '米'))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_lauf, '米'))
@@ -1094,6 +1094,7 @@ class StudentAdmin(ImportExportModelAdmin):
             smart_str(u"六分跑评价"),
             smart_str(u"投掷"),
             smart_str(u"投掷评价"),
+            smart_str(u"评价总分")
         ])
         for student in students:
             if check_student_error(student) != None:
@@ -1114,6 +1115,9 @@ class StudentAdmin(ImportExportModelAdmin):
             try:
                 scoreItems = self.getscoreItems(student)
                 remark = ''
+                stand_score_sum = 0
+                for scoreItem in scoreItems:
+                    stand_score_sum += scoreItem.percentage * 100
 
                 writer.writerow([
                     smart_str(student.lastName),
@@ -1147,6 +1151,7 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(scoreItems[7].percentage),
                     smart_str(scoreItems[8].original_score),
                     smart_str(scoreItems[8].percentage),
+                    smart_str(stand_score_sum)
                     ])
             except Exception as e:
                 remark = str(e)
