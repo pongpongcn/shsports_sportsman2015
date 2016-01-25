@@ -48,9 +48,20 @@ def GetNextSequenceNumberValue(code):
     sequenceNumber = GetNextSequenceNumber(code)
     return sequenceNumber.value
 
+class District(models.Model):
+    name = models.CharField('名称', max_length=100)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "区县"
+        verbose_name_plural = "区县"
+
 class School(models.Model):
     name = models.CharField('名称', max_length=100)
     universalName = models.CharField('名称（英文）', max_length=100)
+    district = models.ForeignKey(District, verbose_name="所属区县", null=True, blank=True)
 
     def __str__(self):
         return self.name
