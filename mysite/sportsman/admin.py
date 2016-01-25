@@ -29,6 +29,7 @@ from decimal import Decimal
 from django.core.validators import *
 import csv
 from django.utils.encoding import smart_str
+from django.contrib.auth import get_permission_codename
 
 from .models import Factor
 from .models import Student
@@ -637,6 +638,46 @@ class StudentAdmin(ImportExportModelAdmin):
         return instance.schoolClass.school
     school.short_description = '学校'
     school.admin_order_field = 'schoolClass__school'
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['has_evaluate_permission'] = self.has_evaluate_permission(request)
+        return super(StudentAdmin, self).change_view(request, object_id,
+            form_url, extra_context=extra_context)
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['has_evaluate_permission'] = self.has_evaluate_permission(request)
+        extra_context['has_import_permission'] = self.has_import_permission(request)
+        extra_context['has_export_permission'] = self.has_export_permission(request)
+        return super(StudentAdmin, self).changelist_view(request, extra_context=extra_context)
+
+    def has_evaluate_permission(self, request):
+        """
+        Returns True if the given request has permission to evaluate an object.
+        Can be overridden by the user in subclasses.
+        """
+        opts = self.opts
+        codename = get_permission_codename('evaluate', opts)
+        return request.user.has_perm("%s.%s" % (opts.app_label, codename))
+    
+    def has_import_permission(self, request):
+        """
+        Returns True if the given request has permission to import an object.
+        Can be overridden by the user in subclasses.
+        """
+        opts = self.opts
+        codename = get_permission_codename('import', opts)
+        return request.user.has_perm("%s.%s" % (opts.app_label, codename))
+
+    def has_export_permission(self, request):
+        """
+        Returns True if the given request has permission to export an object.
+        Can be overridden by the user in subclasses.
+        """
+        opts = self.opts
+        codename = get_permission_codename('export', opts)
+        return request.user.has_perm("%s.%s" % (opts.app_label, codename))
 
     def dataCompleted(self, instance):
         values = (instance.height,

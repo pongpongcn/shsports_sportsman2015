@@ -1,9 +1,9 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_urls %}
 {% block object-tools-items %}
-	<li>
-        <a href="gen_data_sheet_printable" class="historylink">生成成绩登记表</a>
-		<a href="gen_certificate_printable" class="historylink">生成证书</a>
-    </li>
+	<li><a href="gen_data_sheet_printable" class="historylink">生成成绩登记表</a></li>
+	{% if has_evaluate_permission %}
+		<li><a href="gen_certificate_printable" class="historylink">生成证书</a></li>
+	{% endif %}
 	{{ block.super }}
 {% endblock %}
