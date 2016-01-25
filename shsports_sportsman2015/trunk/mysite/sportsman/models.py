@@ -193,6 +193,11 @@ class Student(models.Model):
     class Meta:
         verbose_name = "学生"
         verbose_name_plural = "学生"
+        permissions = (
+            ("import_student", "可以导入学生"),
+            ("export_student", "可以导出学生"),
+            ("evaluate_student", "可以评价学生"),
+        )
 
 class TestRefData(models.Model):
     testing_date = models.DateField('测试日期')
