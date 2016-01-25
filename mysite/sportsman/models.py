@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -57,6 +58,17 @@ class District(models.Model):
     class Meta:
         verbose_name = "区县"
         verbose_name_plural = "区县"
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User)
+    district = models.ForeignKey(District, verbose_name="所属区县", null=True, blank=True)
+
+    def __str__(self):
+        return str(self.user) + '的用户资料'
+
+    class Meta:
+        verbose_name = "用户资料"
+        verbose_name_plural = "用户资料"
 
 class School(models.Model):
     name = models.CharField('名称', max_length=100)

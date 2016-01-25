@@ -30,6 +30,8 @@ from django.core.validators import *
 import csv
 from django.utils.encoding import smart_str
 from django.contrib.auth import get_permission_codename
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 
 from .models import Factor
 from .models import Student
@@ -37,6 +39,7 @@ from .models import TestRefData
 from .models import TestRefDataItem
 from .models import TestSummaryData
 from .models import TestSummaryDataItem
+from .models import UserProfile
 from .models import District
 from .models import School
 from .models import SchoolClass
@@ -640,6 +643,17 @@ class StudentAdmin(ImportExportModelAdmin):
     school.short_description = '学校'
     school.admin_order_field = 'schoolClass__school'
 
+    def get_queryset(self, request):
+        queryset=super(StudentAdmin, self).get_queryset(request)
+        currentUser = request.user
+        if currentUser.groups.filter(name='district_users').count() > 0:
+            if currentUser.userprofile != None and currentUser.userprofile.district != None:
+                district = currentUser.userprofile.district
+                queryset=queryset.filter(schoolClass__school__district=district)
+            else:
+                return []
+        return queryset
+
     def change_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}
         extra_context['has_evaluate_permission'] = self.has_evaluate_permission(request)
@@ -715,7 +729,7 @@ class StudentAdmin(ImportExportModelAdmin):
     
     list_display = ('noOfStudentStatus', 'lastName', 'firstName', 'gender', 'dateOfBirth', 'school', 'schoolClass', 'dateOfTesting', 'number', 'dataCompleted')
     list_display_links = ('noOfStudentStatus', 'lastName', 'firstName')
-    list_filter = ('dateOfTesting','schoolClass__school', StudentDataCompletedListFilter)
+    list_filter = ('dateOfTesting','schoolClass__school__district','schoolClass__school', StudentDataCompletedListFilter)
     ordering = ('dateOfTesting', 'number')
     readonly_fields = ('external_id', 'school', 'number')
     search_fields = ('lastName', 'firstName', '=number', '=noOfStudentStatus')
@@ -1235,6 +1249,21 @@ class StudentCertificateScoreItem:
         self.original_score = original_score
         self.unit = unit
         self.precision = precision
+
+# Define an inline admin descriptor for Employee model
+# which acts a bit like a singleton
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = '用户资料'
+
+# Define a new User admin
+class UserAdmin(BaseUserAdmin):
+    inlines = (UserProfileInline,)
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
 
 class DistrictAdmin(admin.ModelAdmin):
     list_display = ('name',)
