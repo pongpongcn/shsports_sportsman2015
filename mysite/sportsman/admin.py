@@ -37,6 +37,7 @@ from .models import TestRefData
 from .models import TestRefDataItem
 from .models import TestSummaryData
 from .models import TestSummaryDataItem
+from .models import District
 from .models import School
 from .models import SchoolClass
 from .models import SequenceNumber
@@ -1235,8 +1236,11 @@ class StudentCertificateScoreItem:
         self.unit = unit
         self.precision = precision
 
+class DistrictAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
 class SchoolAdmin(admin.ModelAdmin):
-    list_display = ('name', 'universalName')
+    list_display = ('name', 'universalName', 'district')
 
 class SchoolClassAdmin(admin.ModelAdmin):
     list_display = ('school', 'name', 'universalName')
@@ -1347,6 +1351,7 @@ class TestSummaryDataAdmin(admin.ModelAdmin):
 admin.site.register(SequenceNumber, SequenceNumberAdmin)
 admin.site.register(StandardParameter,StandardParameterAdmin)
 admin.site.register(Factor,FactorAdmin)
+admin.site.register(District, DistrictAdmin)
 admin.site.register(School, SchoolAdmin)
 admin.site.register(SchoolClass, SchoolClassAdmin)
 admin.site.register(Student,StudentAdmin)
