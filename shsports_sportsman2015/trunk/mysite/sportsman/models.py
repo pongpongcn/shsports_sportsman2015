@@ -222,6 +222,39 @@ class Student(models.Model):
             ("evaluate_student", "可以评价学生"),
         )
 
+class StudentEvaluation(models.Model):
+    student = models.OneToOneField(Student)
+    age = models.IntegerField('年龄')
+    month_age = models.IntegerField('月龄')
+    day_age = models.IntegerField('日龄')
+    bmi = models.DecimalField('BMI', max_digits=3, decimal_places=1)
+    original_score_bal = models.IntegerField('后退平衡 原始成绩')
+    percentage_bal = models.DecimalField('后退平衡 评价', max_digits=5, decimal_places=2) 
+    original_score_shh = models.DecimalField('侧向跳 原始成绩', max_digits=19, decimal_places=2)
+    percentage_shh = models.DecimalField('侧向跳 评价', max_digits=5, decimal_places=2) 
+    original_score_sws = models.DecimalField('立定跳远 原始成绩', max_digits=19, decimal_places=2)
+    percentage_sws = models.DecimalField('立定跳远 评价', max_digits=5, decimal_places=2) 
+    original_score_20m = models.DecimalField('20米跑 原始成绩', max_digits=19, decimal_places=2)
+    percentage_20m = models.DecimalField('20米跑 评价', max_digits=5, decimal_places=2) 
+    original_score_su = models.IntegerField('仰卧起坐 原始成绩')
+    percentage_su = models.DecimalField('仰卧起坐 评价', max_digits=5, decimal_places=2) 
+    original_score_ls = models.IntegerField('俯卧撑 原始成绩')
+    percentage_ls = models.DecimalField('俯卧撑 评价', max_digits=5, decimal_places=2) 
+    original_score_rb = models.DecimalField('立位体前屈 原始成绩', max_digits=19, decimal_places=2)
+    percentage_rb = models.DecimalField('立位体前屈 评价', max_digits=5, decimal_places=2) 
+    original_score_lauf = models.IntegerField('6分钟跑 原始成绩')
+    percentage_lauf = models.DecimalField('6分钟跑 评价', max_digits=5, decimal_places=2) 
+    original_score_ball = models.DecimalField('投掷球 原始成绩', max_digits=19, decimal_places=2)
+    percentage_ball = models.DecimalField('投掷球 评价', max_digits=5, decimal_places=2)
+    score_sum = models.DecimalField('评价总分', max_digits=19, decimal_places=2)
+
+    def __str__(self):
+        return str(self.student) + ' 的评价'
+
+    class Meta:
+        verbose_name = "学生评价"
+        verbose_name_plural = "学生评价"
+
 class TestRefData(models.Model):
     testing_date = models.DateField('测试日期')
     testing_number = models.IntegerField('测试编号')

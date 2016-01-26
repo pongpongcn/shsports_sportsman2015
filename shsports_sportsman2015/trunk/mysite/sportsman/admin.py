@@ -35,6 +35,7 @@ from django.contrib.auth.models import User
 
 from .models import Factor
 from .models import Student
+from .models import StudentEvaluation
 from .models import TestRefData
 from .models import TestRefDataItem
 from .models import TestSummaryData
@@ -568,6 +569,7 @@ class StudentForm(forms.ModelForm):
                 msg = "错误次数不能超过总次数"
                 self.add_error('e_shh_2f', msg)
 
+
 class StudentAdmin(ImportExportModelAdmin):
     form = StudentForm
     resource_class = StudentResource
@@ -576,6 +578,15 @@ class StudentAdmin(ImportExportModelAdmin):
         base_formats.XLS,
         base_formats.HTML,
     )
+
+    def get_actions(self, request):
+        actions = super(StudentAdmin, self).get_actions(request)
+        if not self.has_evaluate_permission(request):
+            if 'evaluate_selected' in actions:
+                del actions['evaluate_selected']
+        return actions
+    actions = ['evaluate_selected']
+    
     def get_import_resource_class(self):
         return StudentImportResource
     
@@ -637,21 +648,32 @@ class StudentAdmin(ImportExportModelAdmin):
             'fields': ('questionary', 'addressClearance', 'external_id','e_slauf_10',)
             })
     )
-
+    
     def school(self, instance):
         return instance.schoolClass.school
     school.short_description = '学校'
     school.admin_order_field = 'schoolClass__school'
+	
+    def district(self, instance):
+        return instance.schoolClass.school.district
+    district.short_description = '区县'
+    district.admin_order_field = 'schoolClass__school__district'
 
     def get_queryset(self, request):
         queryset=super(StudentAdmin, self).get_queryset(request)
         currentUser = request.user
         if currentUser.groups.filter(name='district_users').count() > 0:
-            if currentUser.userprofile != None and currentUser.userprofile.district != None:
-                district = currentUser.userprofile.district
+            district = None
+            try:
+                userprofile = currentUser.userprofile
+                if userprofile.district != None:
+                    district = currentUser.userprofile.district
+            except:
+                pass
+            if district != None:
                 queryset=queryset.filter(schoolClass__school__district=district)
             else:
-                return []
+                queryset=Student.objects.none()
         return queryset
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
@@ -727,7 +749,7 @@ class StudentAdmin(ImportExportModelAdmin):
     dataCompleted.short_description = '数据完整'
     dataCompleted.boolean = True
     
-    list_display = ('noOfStudentStatus', 'lastName', 'firstName', 'gender', 'dateOfBirth', 'school', 'schoolClass', 'dateOfTesting', 'number', 'dataCompleted')
+    list_display = ('noOfStudentStatus', 'lastName', 'firstName', 'gender', 'dateOfBirth', 'district', 'school', 'schoolClass', 'dateOfTesting', 'number', 'dataCompleted')
     list_display_links = ('noOfStudentStatus', 'lastName', 'firstName')
     list_filter = ('dateOfTesting','schoolClass__school__district','schoolClass__school', StudentDataCompletedListFilter)
     ordering = ('dateOfTesting', 'number')
@@ -895,7 +917,7 @@ class StudentAdmin(ImportExportModelAdmin):
         if len(students) == 1:
             student = students[0]
             if student.dateOfTesting and student.number:
-                filename = 'Certificate %s %s.pdf' % (student.dateOfTesting, student.number)
+                filename = 'Certificate_%s_%s.pdf' % (student.dateOfTesting, student.number)
             else:
                 filename = 'Certificate.pdf'
         else:
@@ -1111,11 +1133,72 @@ class StudentAdmin(ImportExportModelAdmin):
 
         return scoreItems
 
+    def evaluate_selected(modeladmin, request, queryset):
+        modeladmin.gen_student_evaluation_data(queryset)
+        
+    evaluate_selected.short_description = "评价所选的 学生"
+
+    def gen_student_evaluation_data(self, students):
+        for student in students:
+            try:
+                studentEvaluation = student.studentevaluation
+            except:
+                studentEvaluation = None
+
+            if studentEvaluation != None:
+                continue
+
+            if check_student_error(student) != None:
+                continue
+
+            try:
+                age = calculate_age(student.dateOfBirth, student.dateOfTesting)
+                month_age = calculate_monthdelta(student.dateOfBirth, student.dateOfTesting)
+                day_age = calculate_daydelta(student.dateOfBirth, student.dateOfTesting)
+                
+                BMI = round(student.weight / (student.height * Decimal(0.01)) ** 2, 1)
+
+                scoreItems = self.getscoreItems(student)
+                stand_score_sum = 0
+                for scoreItem in scoreItems:
+                    stand_score_sum += scoreItem.percentage * 100
+                
+                studentEvaluation = StudentEvaluation()
+                studentEvaluation.student = student
+                studentEvaluation.age = age
+                studentEvaluation.month_age = month_age
+                studentEvaluation.day_age = day_age
+                studentEvaluation.bmi = BMI
+
+                studentEvaluation.original_score_bal = scoreItems[0].original_score
+                studentEvaluation.percentage_bal = scoreItems[0].percentage
+                studentEvaluation.original_score_shh = scoreItems[1].original_score
+                studentEvaluation.percentage_shh = scoreItems[1].percentage
+                studentEvaluation.original_score_sws = scoreItems[2].original_score
+                studentEvaluation.percentage_sws = scoreItems[2].percentage
+                studentEvaluation.original_score_20m = scoreItems[3].original_score
+                studentEvaluation.percentage_20m = scoreItems[3].percentage
+                studentEvaluation.original_score_su = scoreItems[4].original_score
+                studentEvaluation.percentage_su = scoreItems[4].percentage
+                studentEvaluation.original_score_ls = scoreItems[5].original_score
+                studentEvaluation.percentage_ls = scoreItems[5].percentage
+                studentEvaluation.original_score_rb = scoreItems[6].original_score
+                studentEvaluation.percentage_rb = scoreItems[6].percentage
+                studentEvaluation.original_score_lauf = scoreItems[7].original_score
+                studentEvaluation.percentage_lauf = scoreItems[7].percentage
+                studentEvaluation.original_score_ball = scoreItems[8].original_score
+                studentEvaluation.percentage_ball = scoreItems[8].percentage
+                studentEvaluation.score_sum = stand_score_sum
+                
+                studentEvaluation.save()
+            except Exception as e:
+                print(str(e))
+
     def gen_certificate_list(self, request, *args, **kwargs):
         students = self.get_student_queryset(request)
         
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=Certificates Data.csv'
+        response['Content-Disposition'] = 'attachment; filename=CertificatesData.csv'
         writer = csv.writer(response, csv.excel)
         response.write(u'\ufeff'.encode('utf8')) # BOM (optional...Excel needs it to open UTF-8 file properly)
         writer.writerow([
@@ -1265,6 +1348,72 @@ class UserAdmin(BaseUserAdmin):
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
+class StudentEvaluationAdmin(admin.ModelAdmin):
+    list_display = ('noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','dateOfBirth','dateOfTesting','bmi','score_sum')
+    list_filter = ('student__schoolClass__school__district','student__schoolClass__school')
+    readonly_fields = ('lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'month_age', 'day_age', 'height', 'weight', 'bmi', 'original_score_bal', 'percentage_bal', 'original_score_shh', 'percentage_shh', 'original_score_sws', 'percentage_sws', 'original_score_20m', 'percentage_20m', 'original_score_su', 'percentage_su', 'original_score_ls', 'percentage_ls', 'original_score_rb', 'percentage_rb', 'original_score_lauf', 'percentage_lauf', 'original_score_ball', 'percentage_ball', 'score_sum')
+    exclude = ('student',)
+
+    def get_queryset(self, request):
+        queryset=super(StudentEvaluationAdmin, self).get_queryset(request)
+        currentUser = request.user
+        if currentUser.groups.filter(name='district_users').count() > 0:
+            district = None
+            try:
+                userprofile = currentUser.userprofile
+                if userprofile.district != None:
+                    district = currentUser.userprofile.district
+            except:
+                pass
+            if district != None:
+                queryset=queryset.filter(student__schoolClass__school__district=district)
+            else:
+                queryset=StudentEvaluation.objects.none()
+        return queryset
+    
+    def noOfStudentStatus(self, obj):
+        return obj.student.noOfStudentStatus
+    noOfStudentStatus.short_description = '学籍号'
+    def lastName(self, obj):
+        return obj.student.lastName
+    lastName.short_description = '姓'
+    def firstName(self, obj):
+        return obj.student.firstName
+    firstName.short_description = '名'
+    def district(self, obj):
+        return obj.student.schoolClass.school.district
+    district.short_description = '区县'
+    def school(self, obj):
+        return obj.student.schoolClass.school
+    school.short_description = '学校'
+    def schoolClass(self, obj):
+        return obj.student.schoolClass
+    schoolClass.short_description = '班级'
+    def gender(self, obj):
+        return self.get_genderDisplay(obj.student.gender)
+    gender.short_description = '性别'
+    def dateOfBirth(self, obj):
+        return self.get_genderDisplay(obj.student.dateOfBirth)
+    dateOfBirth.short_description = '出生日期'
+    def dateOfTesting(self, obj):
+        return self.get_genderDisplay(obj.student.dateOfTesting)
+    dateOfTesting.short_description = '测试日期'
+    def height(self, obj):
+        return self.get_genderDisplay(obj.student.height)
+    height.short_description = '身高'
+    def weight(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    weight.short_description = '体重'
+
+    def get_genderDisplay(self, genderName):
+        if genderName == 'MALE':
+            return '男'
+        elif genderName == 'FEMALE':
+            return '女'
+        else:
+            return genderName
+    
+
 class DistrictAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
@@ -1301,25 +1450,8 @@ def calculate_monthdelta(date1, date2):
 def calculate_age(date1, date2):
     return date2.year - date1.year - ((date2.month, date2.day) < (date1.month, date1.day))
 
-def evaluate_for_summary(modeladmin, request, queryset):
-    for testRefData in queryset:
-        testSummaryDataQuery = TestSummaryData.objects.filter(test_ref_data=testRefData)
-        if testSummaryDataQuery.exists():
-            testSummaryData = testSummaryDataQuery[0]
-        else:
-            testSummaryData = TestSummaryData(test_ref_data=testRefData, student=testRefData.student, testing_date=testRefData.testing_date, height=testRefData.height, weight=testRefData.weight)
-            delta_age = testRefData.testing_date - testRefData.student.birth_date
-            testSummaryData.month_age = calculate_monthdelta(testRefData.student.birth_date, testRefData.testing_date)
-            testSummaryData.day_age = delta_age.days
-            testSummaryData.save()
-
-        TestSummaryDataItem.objects.filter(test_summary_data=testSummaryData).delete()
-        #20米冲刺跑
-        evaluate_for_summary_item_20m(testSummaryData)
-        #俯卧撑
-        evaluate_for_summary_item_ls(testSummaryData)
-        
-evaluate_for_summary.short_description = "评估"
+def calculate_daydelta(date1, date2):
+    return (date2 - date1).days
 
 def evaluate_for_summary_item_20m(testSummaryData):
     movement_type = '20m'
@@ -1353,7 +1485,6 @@ class TestRefDataAdmin(admin.ModelAdmin):
     inlines = [
         TestRefDataItemInline,
     ]
-    actions = [evaluate_for_summary]
     def school_name(self, obj):
         return obj.student.school_name
     school_name.short_description = '学校'
@@ -1384,3 +1515,4 @@ admin.site.register(District, DistrictAdmin)
 admin.site.register(School, SchoolAdmin)
 admin.site.register(SchoolClass, SchoolClassAdmin)
 admin.site.register(Student,StudentAdmin)
+admin.site.register(StudentEvaluation,StudentEvaluationAdmin)
