@@ -1351,8 +1351,23 @@ admin.site.register(User, UserAdmin)
 class StudentEvaluationAdmin(admin.ModelAdmin):
     list_display = ('noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','dateOfBirth','dateOfTesting','bmi','score_sum')
     list_filter = ('student__schoolClass__school__district','student__schoolClass__school')
-    readonly_fields = ('lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'month_age', 'day_age', 'height', 'weight', 'bmi', 'original_score_bal', 'percentage_bal', 'original_score_shh', 'percentage_shh', 'original_score_sws', 'percentage_sws', 'original_score_20m', 'percentage_20m', 'original_score_su', 'percentage_su', 'original_score_ls', 'percentage_ls', 'original_score_rb', 'percentage_rb', 'original_score_lauf', 'percentage_lauf', 'original_score_ball', 'percentage_ball', 'score_sum')
-    exclude = ('student',)
+    fields = ('lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'month_age', 'day_age', 'height', 'weight', 'bmi', 'original_score_bal', 'percentage_bal', 'original_score_shh', 'percentage_shh', 'original_score_sws', 'percentage_sws', 'original_score_20m', 'percentage_20m', 'original_score_su', 'percentage_su', 'original_score_ls', 'percentage_ls', 'original_score_rb', 'percentage_rb', 'original_score_lauf', 'percentage_lauf', 'original_score_ball', 'percentage_ball', 'score_sum')
+    readonly_fields = fields
+
+    def get_fields(self, request, obj=None):
+        fields = list(super(StudentEvaluationAdmin, self).get_fields(request, obj))
+        currentUser = request.user
+        if currentUser.groups.filter(name='district_users').count() > 0:
+            fields.remove('original_score_bal')
+            fields.remove('original_score_shh')
+            fields.remove('original_score_sws')
+            fields.remove('original_score_20m')
+            fields.remove('original_score_su')
+            fields.remove('original_score_ls')
+            fields.remove('original_score_rb')
+            fields.remove('original_score_lauf')
+            fields.remove('original_score_ball')
+        return fields
 
     def get_queryset(self, request):
         queryset=super(StudentEvaluationAdmin, self).get_queryset(request)
@@ -1367,6 +1382,23 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
                 pass
             if district != None:
                 queryset=queryset.filter(student__schoolClass__school__district=district)
+                
+                districtStudentEvaluation = StudentEvaluation.objects.filter(student__schoolClass__school__district=district)
+
+                studentEvaluations_low = districtStudentEvaluation.order_by('score_sum')[:15]
+                if studentEvaluations_low.count() > 0:
+                    studentEvaluation_score_sum_low_max = list(studentEvaluations_low)[-1].score_sum
+                else:
+                    studentEvaluation_score_sum_low_max = None
+
+                studentEvaluations_high = districtStudentEvaluation.order_by('-score_sum')[:15]
+                if studentEvaluations_high.count() > 0:
+                    studentEvaluation_score_sum_high_min = list(studentEvaluations_high)[-1].score_sum
+                else:
+                    studentEvaluation_score_sum_high_min = None
+                
+                if studentEvaluation_score_sum_low_max != None and studentEvaluation_score_sum_high_min != None:
+                    queryset = queryset.filter(Q(score_sum__gte=studentEvaluation_score_sum_high_min)|Q(score_sum__lte=studentEvaluation_score_sum_low_max))
             else:
                 queryset=StudentEvaluation.objects.none()
         return queryset
