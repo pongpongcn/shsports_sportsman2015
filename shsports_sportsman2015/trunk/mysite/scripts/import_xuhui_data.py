@@ -1,4 +1,4 @@
-import tablib
+import tablib, os
 from import_export import resources, fields
 from decimal import *
 from sportsman.models import Student, School, SchoolClass, StudentEvaluation
@@ -139,7 +139,8 @@ class StudentEvaluationResource(resources.ModelResource):
         fields = ('age','month_age','day_age','bmi','score_sum','percentage_bal','percentage_shh','percentage_sws','percentage_20m','percentage_su','percentage_ls','percentage_rb','percentage_lauf','percentage_ball')
         
 def run():
-    dataset = tablib.import_set(open('Data_Shanghai-Movement-Check_2015.csv').read())
+    datasheetPath = os.path.join(os.path.dirname(__file__), 'data/Data_Shanghai-Movement-Check_2015.csv')
+    dataset = tablib.import_set(open(datasheetPath, encoding='utf-8').read())
     StudentResource().import_data(dataset, dry_run=False)
     StudentEvaluationResource().import_data(dataset, dry_run=False)
     print('Done!')
