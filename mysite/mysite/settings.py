@@ -115,6 +115,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = 'static'
 
 
-from .extras.import_export import TempFolderStorage
+from .extras import import_export
 
-IMPORT_EXPORT_TMP_STORAGE_CLASS = TempFolderStorage
+IMPORT_EXPORT_TMP_STORAGE_CLASS = import_export.TempFolderStorage
