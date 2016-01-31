@@ -6,7 +6,7 @@ reportlab
 numpy
 matplotlib
 mysqlclient
-pinyin
+pinyin>=0.3,<0.4
 PyPDF2
 python-dateutil
 scipy

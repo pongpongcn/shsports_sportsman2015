@@ -7,9 +7,9 @@ from django.db.models import Q
 from django.db.models.fields import BLANK_CHOICE_DASH
 from import_export import resources, fields
 from import_export.admin import ImportExportModelAdmin, base_formats
-from import_export.formats.base_formats import TablibFormat
+from import_export.formats.base_formats import TextFormat
 from import_export.instance_loaders import ModelInstanceLoader
-import calendar, os, pinyin, six
+import calendar, os, pinyin
 from django.utils import timezone
 from statistics import mean
 import scipy.stats
@@ -110,8 +110,8 @@ class StudentImportResource(resources.ModelResource):
             schoolClasses.append(schoolClass)
             gender = self.get_gender(row['性别'])
             genders.append(gender)
-            universalFirstNames.append(pinyin.get(row['名']).capitalize())
-            universalLastNames.append(pinyin.get(row['姓']).capitalize())
+            universalFirstNames.append(pinyin.get(row['名'], format="strip").capitalize())
+            universalLastNames.append(pinyin.get(row['姓'], format="strip").capitalize())
         dataset.append_col(schoolClasses, header='schoolClass')
         dataset.append_col(genders, header='gender')
         dataset.append_col(universalFirstNames, header='universalFirstName')
@@ -143,14 +143,16 @@ class StudentImportResource(resources.ModelResource):
     lastName = fields.Field(attribute='lastName', column_name='姓')
     dateOfBirth = fields.Field(attribute='dateOfBirth', column_name='出生日期')
     dateOfTesting = fields.Field(attribute='dateOfTesting', column_name='测试日期')
-    schoolClass = fields.Field(attribute='schoolClass')
-    gender = fields.Field(attribute='gender')
-    universalFirstName = fields.Field(attribute='universalFirstName')
-    universalLastName = fields.Field(attribute='universalLastName')
+    schoolClass = fields.Field(attribute='schoolClass', column_name='班级(内部对象)')
+    gender = fields.Field(attribute='gender', column_name='性别(内部值)')
+    universalFirstName = fields.Field(attribute='universalFirstName', column_name='First Name')
+    universalLastName = fields.Field(attribute='universalLastName', column_name='Last Name')
     class Meta:
         model = Student
         import_id_fields = ('noOfStudentStatus',)
         fields = ()
+        #Does not working until now.
+        skip_unchanged = True
 
 class StudentResource(resources.ModelResource):
     numberTalentCheck = fields.Field()
@@ -453,15 +455,9 @@ def check_student_error(student):
         return '投掷球'
     return None
 
-class StudentImportExportFormatCSV(TablibFormat):
+class StudentImportExportFormatCSV(TextFormat):
     TABLIB_MODULE = 'sportsman.formats.student_tablib_format_csv'
     CONTENT_TYPE = 'text/csv'
-
-    def get_read_mode(self):
-        return 'rU' if six.PY3 else 'rb'
-
-    def is_binary(self):
-        return False if six.PY3 else True
 
 class StudentDataCompletedListFilter(admin.SimpleListFilter):
     title = ('数据完整情况')
@@ -589,7 +585,7 @@ class StudentAdmin(ImportExportModelAdmin):
     
     def get_import_resource_class(self):
         return StudentImportResource
-    
+
     date_hierarchy = 'dateOfTesting'
     fieldsets = (
         (None, {
