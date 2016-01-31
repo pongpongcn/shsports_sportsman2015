@@ -113,3 +113,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = 'static'
+
+
+from .extras.import_export import TempFolderStorage
+
+IMPORT_EXPORT_TMP_STORAGE_CLASS = TempFolderStorage
