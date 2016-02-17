@@ -958,68 +958,59 @@ class StudentAdmin(ImportExportModelAdmin):
 
         scoreItems = []
 
-        original_score_bal = sum((student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2))
         try:
-            standardParameter_bal = standardParameters.filter(original_score_bal__lte=original_score_bal).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_bal.percentile*Decimal(0.01), original_score_bal, '步'))
+            standardParameter_bal = standardParameters.filter(original_score_bal__lte=student.e_bal).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_bal.percentile*Decimal(0.01), student.e_bal, '步'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_bal, '步'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_bal, '步'))
 
-        original_score_shh = round(Decimal((student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2), 2)
         try:
-            standardParameter_shh = standardParameters.filter(original_score_shh__lte=original_score_shh).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_shh.percentile*Decimal(0.01), original_score_shh, '次'))
+            standardParameter_shh = standardParameters.filter(original_score_shh__lte=student.e_shh).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_shh.percentile*Decimal(0.01), student.e_shh, '次'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_shh, '次'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_shh, '次'))
 
-        original_score_sws = max((student.e_sws_1, student.e_sws_2))
         try:
-            standardParameter_sws = standardParameters.filter(original_score_sws__lte=original_score_sws).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_sws.percentile*Decimal(0.01), original_score_sws, '厘米'))
+            standardParameter_sws = standardParameters.filter(original_score_sws__lte=student.e_sws).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_sws.percentile*Decimal(0.01), student.e_sws, '厘米'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_sws, '厘米'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_sws, '厘米'))
 
-        original_score_20m = min((student.e_20m_1, student.e_20m_2))
         try:
-            standardParameter_20m = standardParameters.filter(original_score_20m__gte=original_score_20m).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), original_score_20m, '秒', 2))
+            standardParameter_20m = standardParameters.filter(original_score_20m__gte=student.e_20m).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), student.e_20m, '秒', 2))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_20m, '秒', 2))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_20m, '秒', 2))
 
-        original_score_su = student.e_su
         try:
-            standardParameter_su = standardParameters.filter(original_score_su__lte=original_score_su).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_su.percentile*Decimal(0.01), original_score_su, '重复次数'))
+            standardParameter_su = standardParameters.filter(original_score_su__lte=student.e_su).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_su.percentile*Decimal(0.01), student.e_su, '重复次数'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_su, '重复次数'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_su, '重复次数'))
 
-        original_score_ls = student.e_ls
         try:
-            standardParameter_ls = standardParameters.filter(original_score_ls__lte=original_score_ls).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_ls.percentile*Decimal(0.01), original_score_ls, '重复次数'))
+            standardParameter_ls = standardParameters.filter(original_score_ls__lte=student.e_ls).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_ls.percentile*Decimal(0.01), student.e_ls, '重复次数'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_ls, '重复次数'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_ls, '重复次数'))
 
-        original_score_rb = max((student.e_rb_1, student.e_rb_2))
         try:
-            standardParameter_rb = standardParameters.filter(original_score_rb__lte=original_score_rb).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_rb.percentile*Decimal(0.01), original_score_rb, '厘米'))
+            standardParameter_rb = standardParameters.filter(original_score_rb__lte=student.e_rb).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_rb.percentile*Decimal(0.01), student.e_rb, '厘米'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_rb, '厘米'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_rb, '厘米'))
 
-        original_score_lauf = student.e_lauf_runden * 54 + student.e_lauf_rest
         try:
-            standardParameter_lauf = standardParameters.filter(original_score_lauf__lte=original_score_lauf).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_lauf.percentile*Decimal(0.01), original_score_lauf, '米'))
+            standardParameter_lauf = standardParameters.filter(original_score_lauf__lte=student.e_lauf).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_lauf.percentile*Decimal(0.01), student.e_lauf, '米'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_lauf, '米'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_lauf, '米'))
 
-        original_score_ball = max((student.e_ball_1, student.e_ball_2, student.e_ball_3))
         try:
-            standardParameter_ball = standardParameters.filter(original_score_ball__lte=original_score_ball).order_by('-percentile')[0]
-            scoreItems.append(StudentCertificateScoreItem(standardParameter_ball.percentile*Decimal(0.01), original_score_ball, '米'))
+            standardParameter_ball = standardParameters.filter(original_score_ball__lte=student.e_ball).order_by('-percentile')[0]
+            scoreItems.append(StudentCertificateScoreItem(standardParameter_ball.percentile*Decimal(0.01), student.e_ball, '米'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_ball, '米'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_ball, '米'))
 
         return scoreItems
 
@@ -1037,95 +1028,86 @@ class StudentAdmin(ImportExportModelAdmin):
 
         scoreItems = []
 
-        original_score_bal = sum((student.e_bal60_1, student.e_bal60_2, student.e_bal45_1, student.e_bal45_2, student.e_bal30_1, student.e_bal30_2))
         try:
             mean = float(factor.mean_bal)
             standard_deviation = float(factor.standard_deviation_bal)
-            original_score = float(original_score_bal)
+            original_score = float(student.e_bal)
             percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
-            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_bal, '步'))
+            scoreItems.append(StudentCertificateScoreItem(percentile, student.e_bal, '步'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_bal, '步'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_bal, '步'))
 
-        original_score_shh = round(Decimal((student.e_shh_1s - student.e_shh_1f + student.e_shh_2s - student.e_shh_2f) / 2), 2)
         try:
             mean = float(factor.mean_shh)
             standard_deviation = float(factor.standard_deviation_shh)
-            original_score = float(original_score_shh)
+            original_score = float(student.e_shh)
             percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
-            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_shh, '次'))
+            scoreItems.append(StudentCertificateScoreItem(percentile, student.e_shh, '次'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_shh, '次'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_shh, '次'))
 
-        original_score_sws = max((student.e_sws_1, student.e_sws_2))
         try:
             mean = float(factor.mean_sws)
             standard_deviation = float(factor.standard_deviation_sws)
-            original_score = float(original_score_sws)
+            original_score = float(student.e_sws)
             percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
-            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_sws, '厘米'))
+            scoreItems.append(StudentCertificateScoreItem(percentile, student.e_sws, '厘米'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_sws, '厘米'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_sws, '厘米'))
 
-        original_score_20m = min((student.e_20m_1, student.e_20m_2))
         try:
             mean = float(factor.mean_20m)
             standard_deviation = float(factor.standard_deviation_20m)
-            original_score = float(original_score_20m)
+            original_score = float(student.e_20m)
             percentile = 1- round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
-            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_20m, '秒', 2))
+            scoreItems.append(StudentCertificateScoreItem(percentile, student.e_20m, '秒', 2))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_20m, '秒', 2))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_20m, '秒', 2))
 
-        original_score_su = student.e_su
         try:
             mean = float(factor.mean_su)
             standard_deviation = float(factor.standard_deviation_su)
-            original_score = float(original_score_su)
+            original_score = float(student.e_su)
             percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
-            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_su, '重复次数'))
+            scoreItems.append(StudentCertificateScoreItem(percentile, student.e_su, '重复次数'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_su, '重复次数'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_su, '重复次数'))
 
-        original_score_ls = student.e_ls
         try:
             mean = float(factor.mean_ls)
             standard_deviation = float(factor.standard_deviation_ls)
-            original_score = float(original_score_ls)
+            original_score = float(student.e_ls)
             percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
-            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_ls, '重复次数'))
+            scoreItems.append(StudentCertificateScoreItem(percentile, student.e_ls, '重复次数'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_ls, '重复次数'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_ls, '重复次数'))
 
-        original_score_rb = max((student.e_rb_1, student.e_rb_2))
         try:
             mean = float(factor.mean_rb)
             standard_deviation = float(factor.standard_deviation_rb)
-            original_score = float(original_score_rb)
+            original_score = float(student.e_rb)
             percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
-            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_rb, '厘米'))
+            scoreItems.append(StudentCertificateScoreItem(percentile, student.e_rb, '厘米'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_rb, '厘米'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_rb, '厘米'))
 
-        original_score_lauf = student.e_lauf_runden * 54 + student.e_lauf_rest
         try:
             mean = float(factor.mean_lauf)
             standard_deviation = float(factor.standard_deviation_lauf)
-            original_score = float(original_score_lauf)
+            original_score = float(student.e_lauf)
             percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
-            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_lauf, '米'))
+            scoreItems.append(StudentCertificateScoreItem(percentile, student.e_lauf, '米'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_lauf, '米'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_lauf, '米'))
 
-        original_score_ball = max((student.e_ball_1, student.e_ball_2, student.e_ball_3))
         try:
             mean = float(factor.mean_ball)
             standard_deviation = float(factor.standard_deviation_ball)
-            original_score = float(original_score_ball)
+            original_score = float(student.e_ball)
             percentile = round(scipy.stats.norm(mean,standard_deviation).cdf(original_score), 2)
-            scoreItems.append(StudentCertificateScoreItem(percentile, original_score_ball, '米'))
+            scoreItems.append(StudentCertificateScoreItem(percentile, student.e_ball, '米'))
         except:
-            scoreItems.append(StudentCertificateScoreItem(Decimal(0), original_score_ball, '米'))
+            scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_ball, '米'))
 
         return scoreItems
 
@@ -1268,23 +1250,23 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(student.height),
                     smart_str(student.weight),
                     smart_str(BMI),
-                    smart_str(scoreItems[0].original_score),
+                    smart_str(student.e_bal),
                     smart_str(scoreItems[0].percentage),
-                    smart_str(scoreItems[1].original_score),
+                    smart_str(student.e_shh),
                     smart_str(scoreItems[1].percentage),
-                    smart_str(scoreItems[2].original_score),
+                    smart_str(student.e_sws),
                     smart_str(scoreItems[2].percentage),
-                    smart_str(scoreItems[3].original_score),
+                    smart_str(student.e_20m),
                     smart_str(scoreItems[3].percentage),
-                    smart_str(scoreItems[4].original_score),
+                    smart_str(student.e_su),
                     smart_str(scoreItems[4].percentage),
-                    smart_str(scoreItems[5].original_score),
+                    smart_str(student.e_ls),
                     smart_str(scoreItems[5].percentage),
-                    smart_str(scoreItems[6].original_score),
+                    smart_str(student.e_rb),
                     smart_str(scoreItems[6].percentage),
-                    smart_str(scoreItems[7].original_score),
+                    smart_str(student.e_lauf),
                     smart_str(scoreItems[7].percentage),
-                    smart_str(scoreItems[8].original_score),
+                    smart_str(student.e_ball),
                     smart_str(scoreItems[8].percentage),
                     smart_str(stand_score_sum)
                     ])
