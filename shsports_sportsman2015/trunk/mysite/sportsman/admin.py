@@ -1305,6 +1305,24 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(student.height),
                     smart_str(student.weight),
                     smart_str(BMI),
+                    smart_str(student.e_bal),
+                    None,
+                    smart_str(student.e_shh),
+                    None,
+                    smart_str(student.e_sws),
+                    None,
+                    smart_str(student.e_20m),
+                    None,
+                    smart_str(student.e_su),
+                    None,
+                    smart_str(student.e_ls),
+                    None,
+                    smart_str(student.e_rb),
+                    None,
+                    smart_str(student.e_lauf),
+                    None,
+                    smart_str(student.e_ball),
+                    None
                     ])
         return response
 
