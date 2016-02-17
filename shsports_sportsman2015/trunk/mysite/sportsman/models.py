@@ -214,44 +214,43 @@ class Student(models.Model):
             return None
     e_lauf = property(_get_e_lauf, None, None, '测试成绩 6分钟跑（米）')
     
-    e_ls = models.IntegerField('俯卧撑 次数（40秒内）', null=True, blank=True)
+    e_ls = models.IntegerField('测试成绩 俯卧撑（次数）', null=True, blank=True)
     
-    e_rb_1 = models.DecimalField('立位体前屈 第一次（厘米）', max_digits=5, decimal_places=2, null=True, blank=True)
-    e_rb_2 = models.DecimalField('立位体前屈 第二次（厘米）', max_digits=5, decimal_places=2, null=True, blank=True)
+    e_rb_1 = models.DecimalField('测试成绩 立位体前屈 第一次（厘米）', max_digits=5, decimal_places=2, null=True, blank=True)
+    e_rb_2 = models.DecimalField('测试成绩 立位体前屈 第二次（厘米）', max_digits=5, decimal_places=2, null=True, blank=True)
     def _get_e_rb(self):
         values = (self.e_rb_1, self.e_rb_2)
         if all(value != None for value in values):
             return max(values)
         else:
             return None
-    e_rb = property(_get_e_rb, None, None, '立位体前屈（厘米）')
+    e_rb = property(_get_e_rb, None, None, '测试成绩 立位体前屈（厘米）')
     
-    e_shh_1f = models.PositiveSmallIntegerField('侧向跳 第一次跳（错误次数）', null=True, blank=True)
-    e_shh_1s = models.PositiveSmallIntegerField('侧向跳 第一次跳（总次数）', null=True, blank=True)
-    e_shh_2f = models.PositiveSmallIntegerField('侧向跳 第二次跳（错误次数）', null=True, blank=True)
-    e_shh_2s = models.PositiveSmallIntegerField('侧向跳 第二次跳（总次数）', null=True, blank=True)
+    e_shh_1f = models.PositiveSmallIntegerField('测试成绩 侧向跳 第一次跳（错误次数）', null=True, blank=True)
+    e_shh_1s = models.PositiveSmallIntegerField('测试成绩 侧向跳 第一次跳（总次数）', null=True, blank=True)
+    e_shh_2f = models.PositiveSmallIntegerField('测试成绩 侧向跳 第二次跳（错误次数）', null=True, blank=True)
+    e_shh_2s = models.PositiveSmallIntegerField('测试成绩 侧向跳 第二次跳（总次数）', null=True, blank=True)
     def _get_e_shh(self):
         values = (self.e_shh_1f, self.e_shh_1s, self.e_shh_2f, self.e_shh_2s)
         if all(value != None for value in values):
             return round(Decimal((self.e_shh_1s - self.e_shh_1f + self.e_shh_2s - self.e_shh_2f) / 2), 2)
         else:
             return None
-    e_shh = property(_get_e_shh, None, None, '侧向跳（次数）')
+    e_shh = property(_get_e_shh, None, None, '测试成绩 侧向跳（次数）')
     
-    e_su = models.IntegerField('仰卧起坐 次数（40秒内）', null=True, blank=True)
+    e_su = models.IntegerField('测试成绩 仰卧起坐（次数）', null=True, blank=True)
     
-    e_sws_1 = models.DecimalField('立定跳远 第一次（厘米）', max_digits=5, decimal_places=2, null=True, blank=True)
-    e_sws_2 = models.DecimalField('立定跳远 第二次（厘米）', max_digits=5, decimal_places=2, null=True, blank=True)
+    e_sws_1 = models.DecimalField('测试成绩 立定跳远 第一次（厘米）', max_digits=5, decimal_places=2, null=True, blank=True)
+    e_sws_2 = models.DecimalField('测试成绩 立定跳远 第二次（厘米）', max_digits=5, decimal_places=2, null=True, blank=True)
     def _get_e_sws(self):
         values = (self.e_sws_1, self.e_sws_2)
         if all(value != None for value in values):
             return max(values)
         else:
             return None
-    e_sws = property(_get_e_sws, None, None, '立定跳远（厘米）')
+    e_sws = property(_get_e_sws, None, None, '测试成绩 立定跳远（厘米）')
     
     e_slauf_10 = models.DecimalField('星形跑重复10次', max_digits=19, decimal_places=2, null=True, blank=True)
-
     last_name = models.CharField('姓', max_length=5, null=True, blank=True)
     first_name = models.CharField('名', max_length=10, null=True, blank=True)
     birth_date = models.DateField('出生日期', null=True, blank=True)
