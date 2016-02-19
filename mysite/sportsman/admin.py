@@ -1432,6 +1432,33 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
     def weight(self, obj):
         return self.get_genderDisplay(obj.student.weight)
     weight.short_description = '体重'
+    def e_bal(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    e_bal.short_description = '体重'
+    def e_shh(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    e_shh.short_description = '体重'
+    def e_sws(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    e_sws.short_description = '体重'
+    def e_20m(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    e_20m.short_description = '体重'
+    def e_su(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    e_su.short_description = '体重'
+    def e_ls(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    e_ls.short_description = '体重'
+    def e_rb(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    e_rb.short_description = '体重'
+    def e_lauf(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    e_lauf.short_description = '体重'
+    def e_ball(self, obj):
+        return self.get_genderDisplay(obj.student.weight)
+    e_ball.short_description = '体重'
 
     def get_genderDisplay(self, genderName):
         if genderName == 'MALE':
