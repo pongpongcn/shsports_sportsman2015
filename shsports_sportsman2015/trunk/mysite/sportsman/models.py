@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
+from .functions import calculate_age, calculate_months_of_age, calculate_days_of_age, calculate_bmi
 
 # Create your models here.
 
@@ -160,6 +161,38 @@ class Student(models.Model):
     city = models.CharField('城市（地址）', max_length=255, null=True, blank=True)
     addressClearance = models.BooleanField('地址Clearance', default=False)
     
+    def _get_age(self):
+        values = (self.dateOfBirth, self.dateOfTesting)
+        if all(value != None for value in values):
+            return calculate_age(self.dateOfBirth, self.dateOfTesting)
+        else:
+            return None
+    age = property(_get_age, None, None, '年龄')
+    
+    def _get_months_of_age(self):
+        values = (self.dateOfBirth, self.dateOfTesting)
+        if all(value != None for value in values):
+            return calculate_months_of_age(self.dateOfBirth, self.dateOfTesting)
+        else:
+            return None
+    months_of_age = property(_get_months_of_age, None, None, '月龄')
+    
+    def _get_days_of_age(self):
+        values = (self.dateOfBirth, self.dateOfTesting)
+        if all(value != None for value in values):
+            return calculate_days_of_age(self.dateOfBirth, self.dateOfTesting)
+        else:
+            return None
+    days_of_age = property(_get_days_of_age, None, None, '日龄')
+    
+    def _get_bmi(self):
+        values = (self.weight, self.height)
+        if all(value != None for value in values):
+            return calculate_bmi(self.weight, self.height * Decimal(0.01))
+        else:
+            return None
+    bmi = property(_get_bmi, None, None, 'BMI')
+
     #Examination results
 
     weight = models.DecimalField('体重（公斤）', max_digits=5, decimal_places=2, null=True, blank=True)
@@ -295,6 +328,7 @@ class Student(models.Model):
 
 class StudentEvaluation(models.Model):
     student = models.OneToOneField(Student)
+    
     p_bal = models.DecimalField('累积概率 平衡', max_digits=2, decimal_places=2, null=True, blank=True)
     p_shh = models.DecimalField('累积概率 侧向跳', max_digits=2, decimal_places=2, null=True, blank=True)
     p_sws = models.DecimalField('累积概率 跳远', max_digits=2, decimal_places=2, null=True, blank=True)
@@ -328,15 +362,11 @@ class StudentEvaluation(models.Model):
     potential_volleyball = models.DecimalField('运动潜质 排球', max_digits=3, decimal_places=3, null=True, blank=True)
     potential_athletics_running = models.DecimalField('运动潜质 耐力跑', max_digits=3, decimal_places=3, null=True, blank=True)
     potential_athletics_sprinting_jumping_throwing = models.DecimalField('运动潜质 跑跳投', max_digits=3, decimal_places=3, null=True, blank=True)
-
     
-    age = models.IntegerField('年龄')
-    month_age = models.IntegerField('月龄')
-    day_age = models.IntegerField('日龄')
-    bmi = models.DecimalField('BMI', max_digits=3, decimal_places=1)
+    is_talent = models.BooleanField('运动天才', default=False)
+    is_frail = models.BooleanField('需要运动健康干预', default=False)
+    certificate = models.FileField('证书', upload_to='certificates/%Y/%m/%d/', null=True, blank=True)
     
-    score_sum = models.DecimalField('总分', max_digits=19, decimal_places=2)
-
     def __str__(self):
         return str(self.student) + ' 的评价'
 
