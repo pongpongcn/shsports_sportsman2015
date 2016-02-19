@@ -1345,10 +1345,13 @@ admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 class StudentEvaluationAdmin(admin.ModelAdmin):
-    list_display = ('noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','dateOfBirth','dateOfTesting','bmi','score_sum')
+    list_display = ('noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','dateOfBirth','dateOfTesting','bmi')
     list_filter = ('student__schoolClass__school__district','student__schoolClass__school')
-    fields = ('lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'month_age', 'day_age', 'height', 'weight', 'bmi', 'e_bal', 'p_bal', 'e_shh', 'p_shh', 'e_sws', 'p_sws', 'e_20m', 'p_20m', 'e_su', 'p_su', 'e_ls', 'p_ls', 'e_rb', 'p_rb', 'e_lauf', 'p_lauf', 'e_ball', 'p_ball', 'score_sum')
-    readonly_fields = fields
+    fields = ('lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'months_of_age', 'days_of_age', 'height', 'weight', 'bmi', 'e_bal', 'p_bal', 'e_shh', 'p_shh', 'e_sws', 'p_sws', 'e_20m', 'p_20m', 'e_su', 'p_su', 'e_ls', 'p_ls', 'e_rb', 'p_rb', 'e_lauf', 'p_lauf', 'e_ball', 'p_ball', 'certificate')
+    
+    temp_readonly_fields = list(fields)
+    temp_readonly_fields.remove('certificate')
+    readonly_fields = tuple(temp_readonly_fields)
 
     def get_fields(self, request, obj=None):
         fields = list(super(StudentEvaluationAdmin, self).get_fields(request, obj))
@@ -1433,32 +1436,44 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
         return self.get_genderDisplay(obj.student.weight)
     weight.short_description = '体重'
     def e_bal(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
-    e_bal.short_description = '体重'
+        return self.get_genderDisplay(obj.student.e_bal)
+    e_bal.short_description = '平衡'
     def e_shh(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
-    e_shh.short_description = '体重'
+        return self.get_genderDisplay(obj.student.e_shh)
+    e_shh.short_description = '侧向跳'
     def e_sws(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
-    e_sws.short_description = '体重'
+        return self.get_genderDisplay(obj.student.e_sws)
+    e_sws.short_description = '跳远'
     def e_20m(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
-    e_20m.short_description = '体重'
+        return self.get_genderDisplay(obj.student.e_20m)
+    e_20m.short_description = '20米冲刺跑'
     def e_su(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
-    e_su.short_description = '体重'
+        return self.get_genderDisplay(obj.student.e_su)
+    e_su.short_description = '仰卧起坐'
     def e_ls(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
-    e_ls.short_description = '体重'
+        return self.get_genderDisplay(obj.student.e_ls)
+    e_ls.short_description = '俯卧撑'
     def e_rb(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
-    e_rb.short_description = '体重'
+        return self.get_genderDisplay(obj.student.e_rb)
+    e_rb.short_description = '直身前屈'
     def e_lauf(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
-    e_lauf.short_description = '体重'
+        return self.get_genderDisplay(obj.student.e_lauf)
+    e_lauf.short_description = '六分跑'
     def e_ball(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
-    e_ball.short_description = '体重'
+        return self.get_genderDisplay(obj.student.e_ball)
+    e_ball.short_description = '投掷'
+    def age(self, obj):
+        return self.get_genderDisplay(obj.student.age)
+    age.short_description = '年龄'
+    def months_of_age(self, obj):
+        return self.get_genderDisplay(obj.student.months_of_age)
+    months_of_age.short_description = '月龄'
+    def days_of_age(self, obj):
+        return self.get_genderDisplay(obj.student.days_of_age)
+    days_of_age.short_description = '日龄'
+    def bmi(self, obj):
+        return obj.student.bmi
+    bmi.short_description = 'BMI'
 
     def get_genderDisplay(self, genderName):
         if genderName == 'MALE':
