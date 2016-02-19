@@ -295,20 +295,26 @@ class Student(models.Model):
 
 class StudentEvaluation(models.Model):
     student = models.OneToOneField(Student)
+    p_bal = models.PositiveSmallIntegerField('百分等级 平衡', null=True, blank=True)
+    p_shh = models.PositiveSmallIntegerField('百分等级 侧向跳', null=True, blank=True)
+    p_sws = models.PositiveSmallIntegerField('百分等级 跳远', null=True, blank=True)
+    p_20m = models.PositiveSmallIntegerField('百分等级 20米冲刺跑', null=True, blank=True)
+    p_su = models.PositiveSmallIntegerField('百分等级 仰卧起坐', null=True, blank=True)
+    p_ls = models.PositiveSmallIntegerField('百分等级 俯卧撑', null=True, blank=True)
+    p_rb = models.PositiveSmallIntegerField('百分等级 直身前屈', null=True, blank=True)
+    p_lauf = models.PositiveSmallIntegerField('百分等级 六分跑', null=True, blank=True)
+    p_ball = models.PositiveSmallIntegerField('百分等级 投掷', null=True, blank=True)
+    p_height = models.PositiveSmallIntegerField('百分等级 身高', null=True, blank=True)
+    p_weight = models.PositiveSmallIntegerField('百分等级 体重', null=True, blank=True)
+    p_bmi = models.PositiveSmallIntegerField('百分等级 BMI', null=True, blank=True)
+    
+    
     age = models.IntegerField('年龄')
     month_age = models.IntegerField('月龄')
     day_age = models.IntegerField('日龄')
     bmi = models.DecimalField('BMI', max_digits=3, decimal_places=1)
-    p_bal = models.DecimalField('后退平衡 评价', max_digits=5, decimal_places=2)
-    p_shh = models.DecimalField('侧向跳 评价', max_digits=5, decimal_places=2)
-    p_sws = models.DecimalField('立定跳远 评价', max_digits=5, decimal_places=2)
-    p_20m = models.DecimalField('20米跑 评价', max_digits=5, decimal_places=2)
-    p_su = models.DecimalField('仰卧起坐 评价', max_digits=5, decimal_places=2)
-    p_ls = models.DecimalField('俯卧撑 评价', max_digits=5, decimal_places=2)
-    p_rb = models.DecimalField('立位体前屈 评价', max_digits=5, decimal_places=2)
-    p_lauf = models.DecimalField('6分钟跑 评价', max_digits=5, decimal_places=2)
-    p_ball = models.DecimalField('投掷球 评价', max_digits=5, decimal_places=2)
-    score_sum = models.DecimalField('评价总分', max_digits=19, decimal_places=2)
+    
+    score_sum = models.DecimalField('总分', max_digits=19, decimal_places=2)
 
     def __str__(self):
         return str(self.student) + ' 的评价'
