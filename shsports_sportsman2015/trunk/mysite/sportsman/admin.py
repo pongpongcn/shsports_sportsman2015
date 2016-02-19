@@ -83,7 +83,7 @@ class StandardParameterResource(resources.ModelResource):
 
 class StandardParameterAdmin(ImportExportModelAdmin):
     resource_class = StandardParameterResource
-    list_display = ('version', 'gender', 'age', 'percentile', 'original_score_20m', 'original_score_bal', 'original_score_shh', 'original_score_rb', 'original_score_ls', 'original_score_su', 'original_score_sws', 'original_score_ball', 'original_score_lauf')
+    list_display = ('version', 'gender', 'age', 'percentile', 'e_20m', 'e_bal', 'e_shh', 'e_rb', 'e_ls', 'e_su', 'e_sws', 'e_ball', 'e_lauf')
     list_filter = ('version', 'gender', 'age')
     ordering = ('version', 'gender', 'age')
 
@@ -959,55 +959,55 @@ class StudentAdmin(ImportExportModelAdmin):
         scoreItems = []
 
         try:
-            standardParameter_bal = standardParameters.filter(original_score_bal__lte=student.e_bal).order_by('-percentile')[0]
+            standardParameter_bal = standardParameters.filter(e_bal__lte=student.e_bal).order_by('-percentile')[0]
             scoreItems.append(StudentCertificateScoreItem(standardParameter_bal.percentile*Decimal(0.01), student.e_bal, '步'))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_bal, '步'))
 
         try:
-            standardParameter_shh = standardParameters.filter(original_score_shh__lte=student.e_shh).order_by('-percentile')[0]
+            standardParameter_shh = standardParameters.filter(e_shh__lte=student.e_shh).order_by('-percentile')[0]
             scoreItems.append(StudentCertificateScoreItem(standardParameter_shh.percentile*Decimal(0.01), student.e_shh, '次'))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_shh, '次'))
 
         try:
-            standardParameter_sws = standardParameters.filter(original_score_sws__lte=student.e_sws).order_by('-percentile')[0]
+            standardParameter_sws = standardParameters.filter(e_sws__lte=student.e_sws).order_by('-percentile')[0]
             scoreItems.append(StudentCertificateScoreItem(standardParameter_sws.percentile*Decimal(0.01), student.e_sws, '厘米'))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_sws, '厘米'))
 
         try:
-            standardParameter_20m = standardParameters.filter(original_score_20m__gte=student.e_20m).order_by('-percentile')[0]
+            standardParameter_20m = standardParameters.filter(e_20m__gte=student.e_20m).order_by('-percentile')[0]
             scoreItems.append(StudentCertificateScoreItem(standardParameter_20m.percentile*Decimal(0.01), student.e_20m, '秒', 2))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_20m, '秒', 2))
 
         try:
-            standardParameter_su = standardParameters.filter(original_score_su__lte=student.e_su).order_by('-percentile')[0]
+            standardParameter_su = standardParameters.filter(e_su__lte=student.e_su).order_by('-percentile')[0]
             scoreItems.append(StudentCertificateScoreItem(standardParameter_su.percentile*Decimal(0.01), student.e_su, '重复次数'))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_su, '重复次数'))
 
         try:
-            standardParameter_ls = standardParameters.filter(original_score_ls__lte=student.e_ls).order_by('-percentile')[0]
+            standardParameter_ls = standardParameters.filter(e_ls__lte=student.e_ls).order_by('-percentile')[0]
             scoreItems.append(StudentCertificateScoreItem(standardParameter_ls.percentile*Decimal(0.01), student.e_ls, '重复次数'))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_ls, '重复次数'))
 
         try:
-            standardParameter_rb = standardParameters.filter(original_score_rb__lte=student.e_rb).order_by('-percentile')[0]
+            standardParameter_rb = standardParameters.filter(e_rb__lte=student.e_rb).order_by('-percentile')[0]
             scoreItems.append(StudentCertificateScoreItem(standardParameter_rb.percentile*Decimal(0.01), student.e_rb, '厘米'))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_rb, '厘米'))
 
         try:
-            standardParameter_lauf = standardParameters.filter(original_score_lauf__lte=student.e_lauf).order_by('-percentile')[0]
+            standardParameter_lauf = standardParameters.filter(e_lauf__lte=student.e_lauf).order_by('-percentile')[0]
             scoreItems.append(StudentCertificateScoreItem(standardParameter_lauf.percentile*Decimal(0.01), student.e_lauf, '米'))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_lauf, '米'))
 
         try:
-            standardParameter_ball = standardParameters.filter(original_score_ball__lte=student.e_ball).order_by('-percentile')[0]
+            standardParameter_ball = standardParameters.filter(e_ball__lte=student.e_ball).order_by('-percentile')[0]
             scoreItems.append(StudentCertificateScoreItem(standardParameter_ball.percentile*Decimal(0.01), student.e_ball, '米'))
         except:
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_ball, '米'))
@@ -1148,24 +1148,24 @@ class StudentAdmin(ImportExportModelAdmin):
                 studentEvaluation.day_age = day_age
                 studentEvaluation.bmi = BMI
 
-                studentEvaluation.original_score_bal = scoreItems[0].original_score
-                studentEvaluation.percentage_bal = scoreItems[0].percentage
-                studentEvaluation.original_score_shh = scoreItems[1].original_score
-                studentEvaluation.percentage_shh = scoreItems[1].percentage
-                studentEvaluation.original_score_sws = scoreItems[2].original_score
-                studentEvaluation.percentage_sws = scoreItems[2].percentage
-                studentEvaluation.original_score_20m = scoreItems[3].original_score
-                studentEvaluation.percentage_20m = scoreItems[3].percentage
-                studentEvaluation.original_score_su = scoreItems[4].original_score
-                studentEvaluation.percentage_su = scoreItems[4].percentage
-                studentEvaluation.original_score_ls = scoreItems[5].original_score
-                studentEvaluation.percentage_ls = scoreItems[5].percentage
-                studentEvaluation.original_score_rb = scoreItems[6].original_score
-                studentEvaluation.percentage_rb = scoreItems[6].percentage
-                studentEvaluation.original_score_lauf = scoreItems[7].original_score
-                studentEvaluation.percentage_lauf = scoreItems[7].percentage
-                studentEvaluation.original_score_ball = scoreItems[8].original_score
-                studentEvaluation.percentage_ball = scoreItems[8].percentage
+                studentEvaluation.e_bal = scoreItems[0].original_score
+                studentEvaluation.p_bal = scoreItems[0].percentage
+                studentEvaluation.e_shh = scoreItems[1].original_score
+                studentEvaluation.p_shh = scoreItems[1].percentage
+                studentEvaluation.e_sws = scoreItems[2].original_score
+                studentEvaluation.p_sws = scoreItems[2].percentage
+                studentEvaluation.e_20m = scoreItems[3].original_score
+                studentEvaluation.p_20m = scoreItems[3].percentage
+                studentEvaluation.e_su = scoreItems[4].original_score
+                studentEvaluation.p_su = scoreItems[4].percentage
+                studentEvaluation.e_ls = scoreItems[5].original_score
+                studentEvaluation.p_ls = scoreItems[5].percentage
+                studentEvaluation.e_rb = scoreItems[6].original_score
+                studentEvaluation.p_rb = scoreItems[6].percentage
+                studentEvaluation.e_lauf = scoreItems[7].original_score
+                studentEvaluation.p_lauf = scoreItems[7].percentage
+                studentEvaluation.e_ball = scoreItems[8].original_score
+                studentEvaluation.p_ball = scoreItems[8].percentage
                 studentEvaluation.score_sum = stand_score_sum
                 
                 studentEvaluation.save()
@@ -1347,22 +1347,22 @@ admin.site.register(User, UserAdmin)
 class StudentEvaluationAdmin(admin.ModelAdmin):
     list_display = ('noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','dateOfBirth','dateOfTesting','bmi','score_sum')
     list_filter = ('student__schoolClass__school__district','student__schoolClass__school')
-    fields = ('lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'month_age', 'day_age', 'height', 'weight', 'bmi', 'original_score_bal', 'percentage_bal', 'original_score_shh', 'percentage_shh', 'original_score_sws', 'percentage_sws', 'original_score_20m', 'percentage_20m', 'original_score_su', 'percentage_su', 'original_score_ls', 'percentage_ls', 'original_score_rb', 'percentage_rb', 'original_score_lauf', 'percentage_lauf', 'original_score_ball', 'percentage_ball', 'score_sum')
+    fields = ('lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'month_age', 'day_age', 'height', 'weight', 'bmi', 'e_bal', 'p_bal', 'e_shh', 'p_shh', 'e_sws', 'p_sws', 'e_20m', 'p_20m', 'e_su', 'p_su', 'e_ls', 'p_ls', 'e_rb', 'p_rb', 'e_lauf', 'p_lauf', 'e_ball', 'p_ball', 'score_sum')
     readonly_fields = fields
 
     def get_fields(self, request, obj=None):
         fields = list(super(StudentEvaluationAdmin, self).get_fields(request, obj))
         currentUser = request.user
         if currentUser.groups.filter(name='district_users').count() > 0:
-            fields.remove('original_score_bal')
-            fields.remove('original_score_shh')
-            fields.remove('original_score_sws')
-            fields.remove('original_score_20m')
-            fields.remove('original_score_su')
-            fields.remove('original_score_ls')
-            fields.remove('original_score_rb')
-            fields.remove('original_score_lauf')
-            fields.remove('original_score_ball')
+            fields.remove('e_bal')
+            fields.remove('e_shh')
+            fields.remove('e_sws')
+            fields.remove('e_20m')
+            fields.remove('e_su')
+            fields.remove('e_ls')
+            fields.remove('e_rb')
+            fields.remove('e_lauf')
+            fields.remove('e_ball')
         return fields
 
     def get_queryset(self, request):
