@@ -47,7 +47,7 @@ class StudentEvaluationResource(resources.ModelResource):
         fields = ('p_bal','p_shh','p_sws','p_20m','p_su','p_ls','p_rb','p_lauf','p_ball','p_height','p_weight','p_bmi')
         
 def run():
-    datasheetPath = os.path.join(os.path.dirname(__file__), 'data/certificate-data-04.02.2016_for_excel.csv')
+    datasheetPath = os.path.join(os.path.dirname(__file__), 'data/certificate-data-04.02.2016.csv')
     dataset = tablib.import_set(open(datasheetPath, encoding='utf-8').read())
     StudentEvaluationResource().import_data(dataset)
     print('Done!')
