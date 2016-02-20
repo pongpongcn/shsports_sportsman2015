@@ -1,5 +1,5 @@
-import tablib, os
-from import_export import resources, fields
+import tablib, os, datetime
+from import_export import resources, fields, widgets
 from decimal import *
 from sportsman.models import Student, School, SchoolClass, StudentEvaluation
 from sportsman.admin import calculate_age, calculate_monthdelta, calculate_daydelta
@@ -44,78 +44,19 @@ class StudentResource(resources.ModelResource):
 class StudentEvaluationResource(resources.ModelResource):
     def before_import(self, dataset, dry_run, **kwargs):
         student_ids = []
-        ages = []
-        month_ages = []
-        day_ages = []
-        bmis = []
-        score_sums = []
-        percentage_bals = []
-        percentage_shhs = []
-        percentage_swses = []
-        percentage_20ms = []
-        percentage_sus = []
-        percentage_lses = []
-        percentage_rbs = []
-        percentage_laufs = []
-        percentage_balls = []
         for row in dataset.dict:
-            noOfStudentStatus = 'Data_Shanghai-Movement-Check_2015_' + row['id']
-            student = self.get_student(noOfStudentStatus)
+            number = int(row['number'])
+            dateOfTesting = datetime.datetime.strptime(row['dateOfTesting'], '%Y/%m/%d').date()
+            student = self.get_student(number=number, dateOfTesting=dateOfTesting)
             student_ids.append(student.id)
-            age = calculate_age(student.dateOfBirth, student.dateOfTesting)
-            ages.append(age)
-            month_age = calculate_monthdelta(student.dateOfBirth, student.dateOfTesting)
-            month_ages.append(month_age)
-            day_age = calculate_daydelta(student.dateOfBirth, student.dateOfTesting)
-            day_ages.append(day_age)
-            bmi = round(student.weight / (student.height * Decimal(0.01)) ** 2, 1)
-            bmis.append(bmi)
-            percentage_bal = Decimal(row['p_bal']) * Decimal(0.01)
-            percentage_bals.append(percentage_bal)
-            percentage_shh = Decimal(row['p_shh']) * Decimal(0.01)
-            percentage_shhs.append(percentage_shh)
-            percentage_sws = Decimal(row['p_sws']) * Decimal(0.01)
-            percentage_swses.append(percentage_sws)
-            percentage_20m = Decimal(row['p_20m']) * Decimal(0.01)
-            percentage_20ms.append(percentage_20m)
-            percentage_su = Decimal(row['p_su']) * Decimal(0.01)
-            percentage_sus.append(percentage_su)
-            percentage_ls = Decimal(row['p_ls']) * Decimal(0.01)
-            percentage_lses.append(percentage_ls)
-            percentage_rb = Decimal(row['p_rb']) * Decimal(0.01)
-            percentage_rbs.append(percentage_rb)
-            percentage_lauf = Decimal(row['p_lauf']) * Decimal(0.01)
-            percentage_laufs.append(percentage_lauf)
-            percentage_ball = Decimal(row['p_ball']) * Decimal(0.01)
-            percentage_balls.append(percentage_ball)
-            score_sum = 0
-            score_sum += percentage_bal * 100
-            score_sum += percentage_shh * 100
-            score_sum += percentage_sws * 100
-            score_sum += percentage_20m * 100
-            score_sum += percentage_su * 100
-            score_sum += percentage_ls * 100
-            score_sum += percentage_rb * 100
-            score_sum += percentage_lauf * 100
-            score_sum += percentage_ball * 100
-            score_sums.append(score_sum)
         dataset.append_col(student_ids, header='student_id')
-        dataset.append_col(ages, header='age')
-        dataset.append_col(month_ages, header='month_age')
-        dataset.append_col(day_ages, header='day_age')
-        dataset.append_col(bmis, header='bmi')
-        dataset.append_col(score_sums, header='score_sum')
-        dataset.append_col(percentage_bals, header='percentage_bal')
-        dataset.append_col(percentage_shhs, header='percentage_shh')
-        dataset.append_col(percentage_swses, header='percentage_sws')
-        dataset.append_col(percentage_20ms, header='percentage_20m')
-        dataset.append_col(percentage_sus, header='percentage_su')
-        dataset.append_col(percentage_lses, header='percentage_ls')
-        dataset.append_col(percentage_rbs, header='percentage_rb')
-        dataset.append_col(percentage_laufs, header='percentage_lauf')
-        dataset.append_col(percentage_balls, header='percentage_ball')
-    def get_student(self, noOfStudentStatus):
-        studentQuery = Student.objects.filter(noOfStudentStatus=noOfStudentStatus)
+    def before_save_instance(self, instance, dry_run):
+        #根据名单
+        #instance.is_talent = True
+        #根据证书
+        #instance.is_frail = True
+    def get_student(self, number, dateOfTesting):
+        studentQuery = Student.objects.filter(number=number, dateOfTesting=dateOfTesting)
         if studentQuery.exists():
             student = studentQuery[0]
         else:
@@ -123,24 +64,33 @@ class StudentEvaluationResource(resources.ModelResource):
         return student
 
     student_id = fields.Field(attribute='student_id')
-    original_score_bal = fields.Field(attribute='original_score_bal', column_name='e_bal')
-    original_score_shh = fields.Field(attribute='original_score_shh', column_name='e_shh')
-    original_score_sws = fields.Field(attribute='original_score_sws', column_name='e_sws')
-    original_score_20m = fields.Field(attribute='original_score_20m', column_name='e_20m')
-    original_score_su = fields.Field(attribute='original_score_su', column_name='e_su')
-    original_score_ls = fields.Field(attribute='original_score_ls', column_name='e_ls')
-    original_score_rb = fields.Field(attribute='original_score_rb', column_name='e_rb')
-    original_score_lauf = fields.Field(attribute='original_score_lauf', column_name='e_lauf')
-    original_score_ball = fields.Field(attribute='original_score_ball', column_name='e_ball')
-
+    potential_badminton = fields.Field(attribute='potential_badminton', widget=widgets.DecimalWidget(), column_name='badminton')
+    potential_basketball = fields.Field(attribute='potential_basketball', widget=widgets.DecimalWidget(), column_name='basketball')
+    potential_soccer = fields.Field(attribute='potential_soccer', widget=widgets.DecimalWidget(), column_name='soccer')
+    potential_gymnastics = fields.Field(attribute='potential_gymnastics', widget=widgets.DecimalWidget(), column_name='gymnastics')
+    potential_canoe = fields.Field(attribute='potential_canoe', widget=widgets.DecimalWidget(), column_name='canoe/kayak')
+    potential_discus = fields.Field(attribute='potential_discus', widget=widgets.DecimalWidget(), column_name='discus')
+    potential_shot_put = fields.Field(attribute='potential_shot_put', widget=widgets.DecimalWidget(), column_name='shot put')
+    potential_pole_vault = fields.Field(attribute='potential_pole_vault', widget=widgets.DecimalWidget(), column_name='pole vault')
+    potential_high_jump = fields.Field(attribute='potential_high_jump', widget=widgets.DecimalWidget(), column_name='high jump')
+    potential_javelin = fields.Field(attribute='potential_javelin', widget=widgets.DecimalWidget(), column_name='javelin')
+    potential_long_jump = fields.Field(attribute='potential_long_jump', widget=widgets.DecimalWidget(), column_name='long jump')
+    potential_huerdles = fields.Field(attribute='potential_huerdles', widget=widgets.DecimalWidget(), column_name='huerdles')
+    potential_sprint = fields.Field(attribute='potential_sprint', widget=widgets.DecimalWidget(), column_name='sprint')
+    potential_rowing = fields.Field(attribute='potential_rowing', widget=widgets.DecimalWidget(), column_name='rowing')
+    potential_swimming = fields.Field(attribute='potential_swimming', widget=widgets.DecimalWidget(), column_name='swimming')
+    potential_tennis = fields.Field(attribute='potential_tennis', widget=widgets.DecimalWidget(), column_name='tennis')
+    potential_table_tennis = fields.Field(attribute='potential_table_tennis', widget=widgets.DecimalWidget(), column_name='table tennis')
+    potential_volleyball = fields.Field(attribute='potential_volleyball', widget=widgets.DecimalWidget(), column_name='volleyball')
+    
     class Meta:
         model = StudentEvaluation
         import_id_fields = ('student_id',)
-        fields = ('age','month_age','day_age','bmi','score_sum','percentage_bal','percentage_shh','percentage_sws','percentage_20m','percentage_su','percentage_ls','percentage_rb','percentage_lauf','percentage_ball')
+        fields = ('p_bal','p_shh','p_sws','p_20m','p_su','p_ls','p_rb','p_lauf','p_ball','p_height','p_weight','p_bmi')
         
 def run():
     datasheetPath = os.path.join(os.path.dirname(__file__), 'data/Data_Shanghai-Movement-Check_2015.csv')
     dataset = tablib.import_set(open(datasheetPath, encoding='utf-8').read())
-    StudentResource().import_data(dataset, dry_run=False)
-    StudentEvaluationResource().import_data(dataset, dry_run=False)
+    StudentResource().import_data(dataset)
+    StudentEvaluationResource().import_data(dataset)
     print('Done!')
