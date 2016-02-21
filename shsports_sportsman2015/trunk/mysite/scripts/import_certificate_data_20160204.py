@@ -40,7 +40,7 @@ class StudentEvaluationResource(resources.ModelResource):
 
         certificate_template = 'ShanghaiMovementCheck2015'
         certificate_data = {'template':certificate_template, 'potential_items':temp_potential_item_names}
-        instance.certificate_data = certificate_data
+        instance.certificate_data = json.dumps(certificate_data)
     def get_student(self, number, dateOfTesting):
         studentQuery = Student.objects.filter(number=number, dateOfTesting=dateOfTesting)
         if studentQuery.exists():
