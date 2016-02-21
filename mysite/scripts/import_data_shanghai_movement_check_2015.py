@@ -120,10 +120,43 @@ class StudentEvaluationResource(resources.ModelResource):
         def __init__(self, name, value):
             self.name = name
             self.value = value
+
+class StudentEvaluationTalentResource(resources.ModelResource):
+    def before_import(self, dataset, dry_run, **kwargs):
+        student_ids = []
+        for row in dataset.dict:
+            print(row['名'])
+        dataset.append_col(student_ids, header='student_id')
+    def before_save_instance(self, instance, dry_run):
+        instance.is_talent = True
         
+    def get_student(self, number, dateOfTesting):
+        studentQuery = Student.objects.filter(number=number, dateOfTesting=dateOfTesting)
+        if studentQuery.exists():
+            student = studentQuery[0]
+        else:
+            student = None
+        return student
+
+    student_id = fields.Field(attribute='student_id')
+    
+    class Meta:
+        model = StudentEvaluation
+        import_id_fields = ('student_id',)
+        fields = ()
+
+    class PotentialItem:
+        def __init__(self, name, value):
+            self.name = name
+            self.value = value
+            
 def run():
     datasheetPath = os.path.join(os.path.dirname(__file__), 'data/Data_Shanghai-Movement-Check_2015.csv')
     dataset = tablib.import_set(open(datasheetPath, encoding='utf-8').read())
-    StudentResource().import_data(dataset)
-    StudentEvaluationResource().import_data(dataset)
+    #StudentResource().import_data(dataset)
+    #StudentEvaluationResource().import_data(dataset)
+    
+    talentDatasheetPath = os.path.join(os.path.dirname(__file__), 'data/三区细筛名单.csv')
+    talentDataset = tablib.import_set(open(datasheetPath, encoding='utf-8').read())
+    StudentEvaluationTalentResource().import_data(talentDataset)
     print('Done!')
