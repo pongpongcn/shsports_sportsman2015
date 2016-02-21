@@ -24,6 +24,7 @@ from reportlab.platypus.tables import TableStyle
 from reportlab.rl_config import defaultPageSize
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from decimal import Decimal
 from django.core.validators import *
@@ -1353,7 +1354,16 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
     temp_readonly_fields = list(fields)
     temp_readonly_fields.remove('certificate')
     readonly_fields = tuple(temp_readonly_fields)
+    
+    change_list_template = 'admin/sportsman/studentevaluation/change_list.html'
 
+    def get_urls(self):
+        urls = super(StudentEvaluationAdmin, self).get_urls()
+        my_urls = [
+            url(r'^gen_certificate_printable/$', self.admin_site.admin_view(self.gen_certificate_printables)),
+        ]
+        return my_urls + urls 
+    
     #对于区县控制显示内容的代码见Rev.201
     def get_fields(self, request, obj=None):
         fields = list(super(StudentEvaluationAdmin, self).get_fields(request, obj))
@@ -1482,6 +1492,80 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
         return obj.student.bmi
     bmi.short_description = 'BMI'
 
+    def gen_certificate_printables(self, request, *args, **kwargs):
+        studentEvaluations = self.get_student_evaluation_queryset(request)
+        
+        return self.gen_certificate_printable_response(studentEvaluations)
+
+    def gen_certificate_printable_response(self, studentEvaluations):
+        pdfmetrics.registerFont(ttfonts.TTFont("simsun", "simsun.ttc"))
+        pagesize = A4
+        fontName = 'simsun'
+
+        dictGenders = dict(Genders)
+
+        lineHeight = 0.582*cm
+        stripHeight = 0.4*cm
+        stripWidth = 10.47*cm
+        
+        buffer = BytesIO()
+
+        doc = ShanghaiMovementCheck2015DocTemplate(buffer, showBoundary=1)
+        Story = []
+        styles = {
+            'Normal': ParagraphStyle('Normal', fontName='simsun', fontSize=9, leading=9),
+        }
+        
+        for studentEvaluation in studentEvaluations:
+            p_content = Paragraph('正文'*1000, styles['Normal'])
+            Story.append(p_content)
+            
+            Story.append(PageBreak())
+
+        doc.build(Story)
+        
+        if len(studentEvaluations) == 1:
+            studentEvaluation = studentEvaluations[0]
+            if studentEvaluation.dateOfTesting and studentEvaluation.number:
+                filename = 'Certificate_%s_%s.pdf' % (studentEvaluation.dateOfTesting, studentEvaluation.number)
+            else:
+                filename = 'Certificate.pdf'
+        else:
+            filename = 'Certificates.pdf'
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
+
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.write(pdf)
+
+        return response
+    
+    def get_student_evaluation_queryset(self, request):
+        """
+        Returns export queryset.
+
+        Default implementation respects applied search and filters.
+        """
+        # copied from django/contrib/admin/options.py
+        list_display = self.get_list_display(request)
+        list_display_links = self.get_list_display_links(request, list_display)
+
+        ChangeList = self.get_changelist(request)
+        cl = ChangeList(request, self.model, list_display,
+                        list_display_links, self.list_filter,
+                        self.date_hierarchy, self.search_fields,
+                        self.list_select_related, self.list_per_page,
+                        self.list_max_show_all, self.list_editable,
+                        self)
+
+        # query_set has been renamed to queryset in Django 1.8
+        try:
+            return cl.queryset
+        except AttributeError:
+            return cl.query_set
+    
     def get_genderDisplay(self, genderName):
         if genderName == 'MALE':
             return '男'
@@ -1489,7 +1573,60 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
             return '女'
         else:
             return genderName
+         
+class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
+    styles = {
+            'Title': ParagraphStyle('Title', fontName='simsun', fontSize=44, leading=66, alignment=TA_CENTER),
+            'SubTitle': ParagraphStyle('SubTitle', fontName='simsun', fontSize=16, leading=24, alignment=TA_CENTER)
+        }
+
+    templateImageLeftPath_width, templateImageLeftPath_height = 2.82*cm, 13.19*cm
+    templateImageLeftPath = os.path.join(os.path.dirname(__file__), 'storage/CertificateTemplates/ShanghaiMovementCheck2015/Left.jpg')
+    templateImageLeft = Image(templateImageLeftPath, width=templateImageLeftPath_width, height=templateImageLeftPath_height)
     
+    templateImageBottom_width, templateImageBottom_height = 18.75*cm, 2.13*cm
+    templateImageBottomPath = os.path.join(os.path.dirname(__file__), 'storage/CertificateTemplates/ShanghaiMovementCheck2015/Bottom.jpg')
+    templateImageBottom = Image(templateImageBottomPath, width=templateImageBottom_width, height=templateImageBottom_height)
+        
+    def normalPages(self, canvas, doc):
+        canvas.saveState()
+
+        aW = doc.pagesize[0] # available width and height
+        aH = doc.pagesize[1]
+        
+        p_title = Paragraph('证书', self.styles['Title'])
+        w,h = p_title.wrap(aW, aH) # find required space
+        p_title.drawOn(canvas,0,aH-h)
+        aH = aH - h
+        
+        p_sub_title = Paragraph('2015年上海运动能力测试 - Shanghai Movement Check 2015', self.styles['SubTitle'])
+        w,h = p_sub_title.wrap(aW, aH) # find required space
+        p_sub_title.drawOn(canvas,0,aH-h)
+        aH = aH - h
+        
+        self.templateImageLeft.drawOn(canvas, 1*cm, aH-self.templateImageLeftPath_height-1*cm)
+        self.templateImageBottom.drawOn(canvas, (aW-self.templateImageBottom_width)/2, 1*cm)
+        
+        canvas.restoreState()
+        
+    def build(self,flowables, canvasmaker=canvas.Canvas):
+        """build the document using the flowables.  Annotate the first page using the onFirstPage
+               function and later pages using the onLaterPages function.  The onXXX pages should follow
+               the signature
+
+                  def myOnFirstPage(canvas, document):
+                      # do annotations and modify the document
+                      ...
+
+               The functions can do things like draw logos, page numbers,
+               footers, etcetera. They can use external variables to vary
+               the look (for example providing page numbering or section names).
+        """
+        self._calc()    #in case we changed margins sizes etc
+        frameT_leftMargin, frameT_bottomMargin, frameT_topMargin = 4*cm, 4*cm, 4*cm
+        frameT = Frame(frameT_leftMargin, frameT_bottomMargin, self.width+self.leftMargin-frameT_leftMargin, self.height+self.bottomMargin+self.topMargin-frameT_bottomMargin-frameT_topMargin)
+        self.addPageTemplates([PageTemplate(id='Normal',frames=frameT, onPage=self.normalPages,pagesize=self.pagesize)])
+        BaseDocTemplate.build(self,flowables, canvasmaker=canvasmaker) 
 
 class DistrictAdmin(admin.ModelAdmin):
     list_display = ('name',)
