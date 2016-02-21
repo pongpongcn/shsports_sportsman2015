@@ -1,4 +1,4 @@
-import tablib, os, datetime
+import tablib, os, datetime, json
 from import_export import resources, fields, widgets
 from decimal import *
 from sportsman.models import Student, School, SchoolClass, StudentEvaluation
@@ -20,6 +20,27 @@ class StudentEvaluationResource(resources.ModelResource):
             instance.is_talent = True
         elif p_total < 350:
             instance.is_frail = True
+        
+        potential_items = []
+        potential_items.append(self.PotentialItem('badminton', instance.potential_badminton))
+        potential_items.append(self.PotentialItem('basketball', instance.potential_basketball))
+        potential_items.append(self.PotentialItem('soccer', instance.potential_soccer))
+        potential_items.append(self.PotentialItem('gymnastics', instance.potential_gymnastics))
+        potential_items.append(self.PotentialItem('canoe', instance.potential_canoe))
+        potential_items.append(self.PotentialItem('athletics_running', instance.potential_athletics_running))
+        potential_items.append(self.PotentialItem('athletics_sprinting_jumping_throwing', instance.potential_athletics_sprinting_jumping_throwing))
+        potential_items.append(self.PotentialItem('swimming', instance.potential_swimming))
+        potential_items.append(self.PotentialItem('table_tennis', instance.potential_table_tennis))
+        potential_items.append(self.PotentialItem('volleyball', instance.potential_volleyball))
+        potential_items.sort(key=lambda item: item.value, reverse=True)
+        temp_potential_item_names = []
+        if instance.is_frail != True:
+            for potential_item in potential_items[:5]:
+                temp_potential_item_names.append(potential_item.name)
+
+        certificate_template = 'ShanghaiMovementCheck2015'
+        certificate_data = {'template':certificate_template, 'potential_items':temp_potential_item_names}
+        instance.certificate_data = certificate_data
     def get_student(self, number, dateOfTesting):
         studentQuery = Student.objects.filter(number=number, dateOfTesting=dateOfTesting)
         if studentQuery.exists():
@@ -44,7 +65,12 @@ class StudentEvaluationResource(resources.ModelResource):
         model = StudentEvaluation
         import_id_fields = ('student_id',)
         fields = ('p_bal','p_shh','p_sws','p_20m','p_su','p_ls','p_rb','p_lauf','p_ball','p_height','p_weight','p_bmi')
-        
+
+    class PotentialItem:
+        def __init__(self, name, value):
+            self.name = name
+            self.value = value
+
 def run():
     datasheetPath = os.path.join(os.path.dirname(__file__), 'data/certificate-data-04.02.2016.csv')
     dataset = tablib.import_set(open(datasheetPath, encoding='utf-8').read())
