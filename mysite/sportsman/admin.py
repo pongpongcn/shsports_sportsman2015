@@ -1518,7 +1518,10 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
         }
         
         for studentEvaluation in studentEvaluations[:100]:
-            p_content = Paragraph('''姓: <a href="#MYANCHOR"
+            pdfStudentBasicInfo = PdfStudentBasicInfo(studentEvaluation, style=styles['Normal'])
+            Story.append(pdfStudentBasicInfo)
+            
+            p_content = Paragraph('''<a href="#MYANCHOR"
 color="blue">is a link to</a> an
 anchor tag ie <a
 name="MYANCHOR"/><font
@@ -1529,9 +1532,6 @@ fontName="Helvetica">is another
 link to</link> the same anchor
 tag.''', styles['Normal'])
             Story.append(p_content)
-            
-            handAnnotation = HandAnnotation()
-            Story.append(handAnnotation)
             
             Story.append(PageBreak())
 
@@ -1587,27 +1587,37 @@ tag.''', styles['Normal'])
         else:
             return genderName
 
-class HandAnnotation(Flowable):
+class PdfStudentBasicInfo(Flowable):
     '''A hand flowable.'''
-    def __init__(self, xoffset=0, size=None, fillcolor=colors.tan, strokecolor=colors.green):
-        from reportlab.lib.units import inch
-        if size is None: size=4*inch
-        self.fillcolor, self.strokecolor = fillcolor, strokecolor
-        self.xoffset = xoffset
-        self.size = size
-        # normal size is 4 inches
-        self.scale = size/(4.0*inch)
-    def wrap(self, *args):
-        return (self.xoffset, self.size)
+    def __init__(self, studentEvaluation, style):
+        self.studentEvaluation = studentEvaluation
+        self.style = style
+    def wrap(self, availableWidth, availableHeight):
+        height = 2*cm
+        self.availableWidth = availableWidth
+        self.height = height
+        return (availableWidth, height)
     def draw(self):
-        canvas = self.canv
-        canvas.setLineWidth(6)
-        canvas.setFillColor(self.fillcolor)
-        canvas.setStrokeColor(self.strokecolor)
-        canvas.translate(self.xoffset+self.size,0)
-        canvas.rotate(90)
-        canvas.scale(self.scale, self.scale)
-        hand(canvas, debug=0, fill=1)
+        c = self.canv
+        c.setFont(self.style.fontName, self.style.fontSize)
+        student = self.studentEvaluation.student
+        aW, aH = self.availableWidth, self.height
+        header_w, data_w, h = 2*cm, self.availableWidth*0.5-2*cm, 0.5*cm
+        c.drawString(self.availableWidth-aW,aH-h,'姓:')
+        aW = aW-header_w
+        c.drawString(self.availableWidth-aW,aH-h,student.lastName)
+        aW = aW-data_w
+        c.drawString(self.availableWidth-aW,aH-h,'学校:')
+        aW = aW-header_w
+        c.drawString(self.availableWidth-aW,aH-h,str(student.schoolClass.school))
+        aW, aH = self.availableWidth, aH-h
+        c.drawString(self.availableWidth-aW,aH-h,'名:')
+        aW = aW-header_w
+        c.drawString(self.availableWidth-aW,aH-h,student.firstName)
+        aW = aW-data_w
+        c.drawString(self.availableWidth-aW,aH-h,'班级:')
+        aW = aW-header_w
+        c.drawString(self.availableWidth-aW,aH-h,str(student.schoolClass))
 
 def hand(canvas, debug=1, fill=0):
     (startx, starty) = (0,0)
