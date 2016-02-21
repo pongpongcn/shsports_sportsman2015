@@ -363,8 +363,8 @@ class StudentEvaluation(models.Model):
     potential_athletics_running = models.DecimalField('运动潜质 耐力跑', max_digits=7, decimal_places=6, null=True, blank=True)
     potential_athletics_sprinting_jumping_throwing = models.DecimalField('运动潜质 跑跳投', max_digits=7, decimal_places=6, null=True, blank=True)
     
-    is_talent = models.BooleanField('运动天才', default=False)
-    is_frail = models.BooleanField('需要运动健康干预', default=False)
+    is_talent = models.BooleanField('运动天赋优秀', default=False)
+    is_frail = models.BooleanField('需要健康干预', default=False)
     certificate_data = models.TextField('证书数据', null=True, blank=True)
     certificate_file = models.FileField('证书文件', upload_to='certificates/%Y/%m/%d/', null=True, blank=True)
     
