@@ -124,6 +124,6 @@ class StudentEvaluationResource(resources.ModelResource):
 def run():
     datasheetPath = os.path.join(os.path.dirname(__file__), 'data/Data_Shanghai-Movement-Check_2015.csv')
     dataset = tablib.import_set(open(datasheetPath, encoding='utf-8').read())
-    StudentResource().import_data(dataset)
+    #StudentResource().import_data(dataset)
     StudentEvaluationResource().import_data(dataset)
     print('Done!')

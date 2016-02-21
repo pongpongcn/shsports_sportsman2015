@@ -25,6 +25,7 @@ from reportlab.rl_config import defaultPageSize
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
+from reportlab.platypus.flowables import Flowable
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from decimal import Decimal
 from django.core.validators import *
@@ -1516,9 +1517,21 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
             'Normal': ParagraphStyle('Normal', fontName='simsun', fontSize=9, leading=9),
         }
         
-        for studentEvaluation in studentEvaluations:
-            p_content = Paragraph('正文'*1000, styles['Normal'])
+        for studentEvaluation in studentEvaluations[:100]:
+            p_content = Paragraph('''姓: <a href="#MYANCHOR"
+color="blue">is a link to</a> an
+anchor tag ie <a
+name="MYANCHOR"/><font
+color="green">here</font>. This
+<link href="#MYANCHOR"
+color="blue"
+fontName="Helvetica">is another
+link to</link> the same anchor
+tag.''', styles['Normal'])
             Story.append(p_content)
+            
+            handAnnotation = HandAnnotation()
+            Story.append(handAnnotation)
             
             Story.append(PageBreak())
 
@@ -1573,7 +1586,73 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
             return '女'
         else:
             return genderName
-         
+
+class HandAnnotation(Flowable):
+    '''A hand flowable.'''
+    def __init__(self, xoffset=0, size=None, fillcolor=colors.tan, strokecolor=colors.green):
+        from reportlab.lib.units import inch
+        if size is None: size=4*inch
+        self.fillcolor, self.strokecolor = fillcolor, strokecolor
+        self.xoffset = xoffset
+        self.size = size
+        # normal size is 4 inches
+        self.scale = size/(4.0*inch)
+    def wrap(self, *args):
+        return (self.xoffset, self.size)
+    def draw(self):
+        canvas = self.canv
+        canvas.setLineWidth(6)
+        canvas.setFillColor(self.fillcolor)
+        canvas.setStrokeColor(self.strokecolor)
+        canvas.translate(self.xoffset+self.size,0)
+        canvas.rotate(90)
+        canvas.scale(self.scale, self.scale)
+        hand(canvas, debug=0, fill=1)
+
+def hand(canvas, debug=1, fill=0):
+    (startx, starty) = (0,0)
+    curves = [
+        ( 0, 2), ( 0, 4), ( 0, 8), # back of hand
+        ( 5, 8), ( 7,10), ( 7,14),
+        (10,14), (10,13), ( 7.5, 8), # thumb
+        (13, 8), (14, 8), (17, 8),
+        (19, 8), (19, 6), (17, 6),
+        (15, 6), (13, 6), (11, 6), # index, pointing
+        (12, 6), (13, 6), (14, 6),
+        (16, 6), (16, 4), (14, 4),
+        (13, 4), (12, 4), (11, 4), # middle
+        (11.5, 4), (12, 4), (13, 4),
+        (15, 4), (15, 2), (13, 2),
+        (12.5, 2), (11.5, 2), (11, 2), # ring
+        (11.5, 2), (12, 2), (12.5, 2),
+        (14, 2), (14, 0), (12.5, 0),
+        (10, 0), (8, 0), (6, 0), # pinky, then close
+        ]
+
+    if debug: canvas.setLineWidth(6)
+    u = inch*0.2
+    p = canvas.beginPath()
+    p.moveTo(startx, starty)
+    ccopy = list(curves)
+    while ccopy:
+        [(x1,y1), (x2,y2), (x3,y3)] = ccopy[:3]
+        del ccopy[:3]
+        p.curveTo(x1*u,y1*u,x2*u,y2*u,x3*u,y3*u)
+    p.close()
+    canvas.drawPath(p, fill=fill)
+    if debug:
+        from reportlab.lib.colors import red, green
+        (lastx, lasty) = (startx, starty)
+        ccopy = list(curves)
+        while ccopy:
+            [(x1,y1), (x2,y2), (x3,y3)] = ccopy[:3]
+            del ccopy[:3]
+            canvas.setStrokeColor(red)
+            canvas.line(lastx*u,lasty*u, x1*u,y1*u)
+            canvas.setStrokeColor(green)
+            canvas.line(x2*u,y2*u, x3*u,y3*u)
+            (lastx,lasty) = (x3,y3)
+        
 class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     styles = {
             'Title': ParagraphStyle('Title', fontName='simsun', fontSize=44, leading=66, alignment=TA_CENTER),
