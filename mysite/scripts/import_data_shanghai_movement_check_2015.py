@@ -55,6 +55,34 @@ class StudentEvaluationResource(resources.ModelResource):
         #instance.is_talent = True
         #根据证书
         #instance.is_frail = True
+        potential_items = []
+        potential_items.append(self.PotentialItem('badminton', instance.potential_badminton))
+        potential_items.append(self.PotentialItem('basketball', instance.potential_basketball))
+        potential_items.append(self.PotentialItem('soccer', instance.potential_soccer))
+        potential_items.append(self.PotentialItem('gymnastics', instance.potential_gymnastics))
+        potential_items.append(self.PotentialItem('canoe', instance.potential_canoe))
+        potential_items.append(self.PotentialItem('discus', instance.potential_discus))
+        potential_items.append(self.PotentialItem('shot_put', instance.potential_shot_put))
+        potential_items.append(self.PotentialItem('pole_vault', instance.potential_pole_vault))
+        potential_items.append(self.PotentialItem('high_jump', instance.potential_high_jump))
+        potential_items.append(self.PotentialItem('javelin', instance.potential_javelin))
+        potential_items.append(self.PotentialItem('long_jump', instance.potential_long_jump))
+        potential_items.append(self.PotentialItem('huerdles', instance.potential_huerdles))
+        potential_items.append(self.PotentialItem('sprint', instance.potential_sprint))
+        potential_items.append(self.PotentialItem('rowing', instance.potential_rowing))
+        potential_items.append(self.PotentialItem('swimming', instance.potential_swimming))
+        potential_items.append(self.PotentialItem('tennis', instance.potential_tennis))
+        potential_items.append(self.PotentialItem('table_tennis', instance.potential_table_tennis))
+        potential_items.append(self.PotentialItem('volleyball', instance.potential_volleyball))
+        potential_items.sort(key=lambda item: item.value, reverse=True)
+        temp_potential_item_names = []
+        if instance.is_frail != True:
+            for potential_item in potential_items[:3]:
+                temp_potential_item_names.append(potential_item.name)
+
+        certificate_template = 'ShanghaiMovementCheck2015'
+        certificate_data = {'template':certificate_template, 'potential_items':temp_potential_item_names}
+        instance.certificate_data = certificate_data
     def get_student(self, number, dateOfTesting):
         studentQuery = Student.objects.filter(number=number, dateOfTesting=dateOfTesting)
         if studentQuery.exists():
@@ -87,6 +115,11 @@ class StudentEvaluationResource(resources.ModelResource):
         model = StudentEvaluation
         import_id_fields = ('student_id',)
         fields = ('p_bal','p_shh','p_sws','p_20m','p_su','p_ls','p_rb','p_lauf','p_ball','p_height','p_weight','p_bmi')
+
+    class PotentialItem:
+        def __init__(self, name, value):
+            self.name = name
+            self.value = value
         
 def run():
     datasheetPath = os.path.join(os.path.dirname(__file__), 'data/Data_Shanghai-Movement-Check_2015.csv')

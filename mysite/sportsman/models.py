@@ -365,7 +365,8 @@ class StudentEvaluation(models.Model):
     
     is_talent = models.BooleanField('运动天才', default=False)
     is_frail = models.BooleanField('需要运动健康干预', default=False)
-    certificate = models.FileField('证书', upload_to='certificates/%Y/%m/%d/', null=True, blank=True)
+    certificate_data = models.TextField('证书数据', null=True, blank=True)
+    certificate_file = models.FileField('证书文件', upload_to='certificates/%Y/%m/%d/', null=True, blank=True)
     
     def __str__(self):
         return str(self.student) + ' 的评价'
@@ -373,7 +374,7 @@ class StudentEvaluation(models.Model):
     class Meta:
         verbose_name = "学生评价"
         verbose_name_plural = "学生评价"
-
+        
 class TestRefData(models.Model):
     testing_date = models.DateField('测试日期')
     testing_number = models.IntegerField('测试编号')
