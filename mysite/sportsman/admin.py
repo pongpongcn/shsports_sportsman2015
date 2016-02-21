@@ -1345,14 +1345,16 @@ admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 class StudentEvaluationAdmin(admin.ModelAdmin):
-    list_display = ('noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','dateOfBirth','dateOfTesting','bmi')
-    list_filter = ('student__schoolClass__school__district','student__schoolClass__school')
+    list_display = ('noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','is_talent','is_frail')
+    list_filter = ('student__schoolClass__school__district','student__gender','is_talent','is_frail')
     fields = ('lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'months_of_age', 'days_of_age', 'height', 'weight', 'bmi', 'e_bal', 'p_bal', 'e_shh', 'p_shh', 'e_sws', 'p_sws', 'e_20m', 'p_20m', 'e_su', 'p_su', 'e_ls', 'p_ls', 'e_rb', 'p_rb', 'e_lauf', 'p_lauf', 'e_ball', 'p_ball', 'certificate')
+    ordering = ('student__schoolClass__school__district', 'student__schoolClass__school', 'student__schoolClass', 'student__lastName', 'student__firstName')
     
     temp_readonly_fields = list(fields)
     temp_readonly_fields.remove('certificate')
     readonly_fields = tuple(temp_readonly_fields)
 
+    #对于区县控制显示内容的代码见Rev.201
     def get_fields(self, request, obj=None):
         fields = list(super(StudentEvaluationAdmin, self).get_fields(request, obj))
         currentUser = request.user
@@ -1408,18 +1410,23 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
     def lastName(self, obj):
         return obj.student.lastName
     lastName.short_description = '姓'
+    lastName.admin_order_field = 'student__lastName'
     def firstName(self, obj):
         return obj.student.firstName
     firstName.short_description = '名'
+    firstName.admin_order_field = 'student__firstName'
     def district(self, obj):
         return obj.student.schoolClass.school.district
     district.short_description = '区县'
+    district.admin_order_field = 'student__schoolClass__school__district'
     def school(self, obj):
         return obj.student.schoolClass.school
     school.short_description = '学校'
+    school.admin_order_field = 'student__schoolClass__school'
     def schoolClass(self, obj):
         return obj.student.schoolClass
     schoolClass.short_description = '班级'
+    schoolClass.admin_order_field = 'student__schoolClass'
     def gender(self, obj):
         return self.get_genderDisplay(obj.student.gender)
     gender.short_description = '性别'
