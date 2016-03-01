@@ -49,6 +49,7 @@ from .models import SchoolClass
 from .models import SequenceNumber
 from .models import Genders
 from .models import StandardParameter
+from .models import TestPlan
 
 # Register your models here.
 MovementTypeKeys = (
@@ -591,7 +592,7 @@ class StudentAdmin(ImportExportModelAdmin):
     date_hierarchy = 'dateOfTesting'
     fieldsets = (
         (None, {
-            'fields': ('noOfStudentStatus', ('school', 'schoolClass'), ('firstName', 'lastName'), ('universalFirstName', 'universalLastName'), 'gender', 'dateOfBirth', ('dateOfTesting', 'number'))
+            'fields': ('testPlan', 'noOfStudentStatus', ('school', 'schoolClass'), ('firstName', 'lastName'), ('universalFirstName', 'universalLastName'), 'gender', 'dateOfBirth', ('dateOfTesting', 'number'))
             }),
         ('地址', {
             'classes': ('wide',),
@@ -747,10 +748,10 @@ class StudentAdmin(ImportExportModelAdmin):
     dataCompleted.short_description = '数据完整'
     dataCompleted.boolean = True
     
-    list_display = ('noOfStudentStatus', 'lastName', 'firstName', 'gender', 'dateOfBirth', 'district', 'school', 'schoolClass', 'dateOfTesting', 'number', 'dataCompleted')
+    list_display = ('testPlan', 'noOfStudentStatus', 'lastName', 'firstName', 'gender', 'dateOfBirth', 'district', 'school', 'schoolClass', 'dateOfTesting', 'number', 'dataCompleted')
     list_display_links = ('noOfStudentStatus', 'lastName', 'firstName')
-    list_filter = ('dateOfTesting','schoolClass__school__district','schoolClass__school', StudentDataCompletedListFilter)
-    ordering = ('dateOfTesting', 'number')
+    list_filter = ('testPlan', 'dateOfTesting','schoolClass__school__district','schoolClass__school', StudentDataCompletedListFilter)
+    ordering = ('testPlan', 'dateOfTesting', 'number')
     readonly_fields = ('external_id', 'school', 'number')
     search_fields = ('lastName', 'firstName', '=number', '=noOfStudentStatus')
     radio_fields = {"gender": admin.HORIZONTAL}
@@ -1347,9 +1348,9 @@ admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 class StudentEvaluationAdmin(admin.ModelAdmin):
-    list_display = ('noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','is_talent','is_frail')
-    list_filter = ('student__schoolClass__school__district','student__gender','is_talent','is_frail')
-    fields = ('lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'months_of_age', 'days_of_age', 'height', 'weight', 'bmi', 'e_bal', 'p_bal', 'e_shh', 'p_shh', 'e_sws', 'p_sws', 'e_20m', 'p_20m', 'e_su', 'p_su', 'e_ls', 'p_ls', 'e_rb', 'p_rb', 'e_lauf', 'p_lauf', 'e_ball', 'p_ball', 'certificate_file')
+    list_display = ('testPlan','noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','is_talent','is_frail')
+    list_filter = ('testPlan','student__schoolClass__school__district','student__gender','is_talent','is_frail')
+    fields = ('testPlan','lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'months_of_age', 'days_of_age', 'height', 'weight', 'bmi', 'e_bal', 'p_bal', 'e_shh', 'p_shh', 'e_sws', 'p_sws', 'e_20m', 'p_20m', 'e_su', 'p_su', 'e_ls', 'p_ls', 'e_rb', 'p_rb', 'e_lauf', 'p_lauf', 'e_ball', 'p_ball', 'certificate_file')
     ordering = ('student__schoolClass__school__district', 'student__schoolClass__school', 'student__schoolClass', 'student__lastName', 'student__firstName')
     
     temp_readonly_fields = list(fields)
@@ -1837,6 +1838,9 @@ class SchoolAdmin(admin.ModelAdmin):
 
 class SchoolClassAdmin(admin.ModelAdmin):
     list_display = ('school', 'name', 'universalName')
+    
+class TestPlanAdmin(admin.ModelAdmin):
+    list_display = ('name', 'startDate', 'endDate', 'isPublished')
 
 class SequenceNumberAdmin(admin.ModelAdmin):
     list_display = ('code', 'value', 'prefix', 'suffix')
@@ -1929,5 +1933,6 @@ admin.site.register(Factor,FactorAdmin)
 admin.site.register(District, DistrictAdmin)
 admin.site.register(School, SchoolAdmin)
 admin.site.register(SchoolClass, SchoolClassAdmin)
+admin.site.register(TestPlan, TestPlanAdmin)
 admin.site.register(Student,StudentAdmin)
 admin.site.register(StudentEvaluation,StudentEvaluationAdmin)
