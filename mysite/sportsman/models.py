@@ -141,9 +141,23 @@ class Factor(models.Model):
     class Meta:
         verbose_name = "分布因素"
         verbose_name_plural = "分布因素"
+
+class TestPlan(models.Model):
+    name = models.CharField('名称', max_length=255)
+    startDate = models.DateField('开始日期', null=True, blank=True)
+    endDate = models.DateField('结束日期', null=True, blank=True)
+    isPublished = models.BooleanField('已发布', default=False)
+
+    def __str__(self):
+        return self.name
     
+    class Meta:
+        verbose_name = "测试批次"
+        verbose_name_plural = "测试批次"
+        
 class Student(models.Model):
     noOfStudentStatus = models.CharField('学籍号', max_length=255, null=True, blank=True)
+    testPlan = models.ForeignKey(TestPlan, verbose_name="测试批次", null=True, blank=True)
     schoolClass = models.ForeignKey(SchoolClass, verbose_name="班级")
     firstName = models.CharField('名', max_length=255)
     lastName = models.CharField('姓', max_length=255)
@@ -328,6 +342,8 @@ class Student(models.Model):
 
 class StudentEvaluation(models.Model):
     student = models.OneToOneField(Student)
+    
+    testPlan = models.ForeignKey(TestPlan, verbose_name="测试批次", null=True, blank=True)
     
     p_bal = models.PositiveSmallIntegerField('百分等级 平衡', null=True, blank=True)
     p_shh = models.PositiveSmallIntegerField('百分等级 侧向跳', null=True, blank=True)
