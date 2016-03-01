@@ -51,10 +51,11 @@ class StudentEvaluationResource(resources.ModelResource):
             student_ids.append(student.id)
         dataset.append_col(student_ids, header='student_id')
     def before_save_instance(self, instance, dry_run):
-        #根据名单
-        #instance.is_talent = True
-        #根据证书
-        #instance.is_frail = True
+        p_values = (instance.p_bal,instance.p_shh,instance.p_sws,instance.p_20m,instance.p_su,instance.p_ls,instance.p_rb,instance.p_lauf,instance.p_ball)
+        p_total = sum(p_values)
+        if p_total <= 319:
+            instance.is_frail = True
+
         potential_items = []
         potential_items.append(self.PotentialItem('badminton', instance.potential_badminton))
         potential_items.append(self.PotentialItem('basketball', instance.potential_basketball))
@@ -153,8 +154,8 @@ class StudentEvaluationTalentResource(resources.ModelResource):
 def run():
     datasheetPath = os.path.join(os.path.dirname(__file__), 'data/Data_Shanghai-Movement-Check_2015.csv')
     dataset = tablib.import_set(open(datasheetPath, encoding='utf-8').read())
-    #StudentResource().import_data(dataset)
-    #StudentEvaluationResource().import_data(dataset)
+    StudentResource().import_data(dataset)
+    StudentEvaluationResource().import_data(dataset)
     
     talentDatasheetPath = os.path.join(os.path.dirname(__file__), 'data/三区细筛名单.csv')
     talentDataset = tablib.import_set(open(datasheetPath, encoding='utf-8').read())
