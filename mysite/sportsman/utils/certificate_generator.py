@@ -29,10 +29,12 @@ class CertificateGenerator:
         styles = self.styles
         
         for studentEvaluation in studentEvaluations:
+            testPlanName = studentEvaluation.testPlan.name
+
             pdfStudentBasicInfo = PdfStudentBasicInfo(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentBasicInfo)
             
-            p = Paragraph('您在2015年上海运动能力测试中的表现', styles['BodyText'])
+            p = Paragraph('您在%s中的表现' % testPlanName, styles['BodyText'])
             Story.append(p)
             
             pdfStudentPRChart = PdfStudentPRChart(studentEvaluation, style=styles['Normal'])
