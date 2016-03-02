@@ -12,12 +12,10 @@ from reportlab.lib import colors
 from decimal import Decimal
 
 class CertificateGenerator:
-    def gen_certificate(studentEvaluations):
+    def gen_certificate(filename, studentEvaluations):
         pdfmetrics.registerFont(TTFont("simsun", "simsun.ttc"))
         
-        buffer = BytesIO()
-
-        doc = ShanghaiMovementCheck2015DocTemplate(buffer)
+        doc = ShanghaiMovementCheck2015DocTemplate(filename)
         Story = []
         styles = {
             'Normal': ParagraphStyle('Normal', fontName='simsun', fontSize=9, leading=11),
@@ -54,11 +52,6 @@ class CertificateGenerator:
             Story.append(PageBreak())
 
         doc.build(Story)
-
-        pdf = buffer.getvalue()
-        buffer.close()
-        
-        return pdf
         
 class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     styles = {

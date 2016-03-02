@@ -2,14 +2,14 @@ from django.contrib import admin
 from django import forms
 from django.conf import settings
 from django.conf.urls import url
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, StreamingHttpResponse
 from django.db.models import Q
 from django.db.models.fields import BLANK_CHOICE_DASH
 from import_export import resources, fields
 from import_export.admin import ImportExportModelAdmin, base_formats
 from import_export.formats.base_formats import TextFormat
 from import_export.instance_loaders import ModelInstanceLoader
-import calendar, os, pinyin, json, csv
+import calendar, os, pinyin, json, csv, tempfile, zipfile
 from django.utils import timezone
 from statistics import mean
 import scipy.stats
@@ -33,6 +33,7 @@ from django.utils.encoding import smart_str
 from django.contrib.auth import get_permission_codename
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
+from django.core.servers.basehttp import FileWrapper
 from .utils.certificate_generator import CertificateGenerator
 
 from .models import Factor
@@ -1496,27 +1497,29 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
     def gen_certificate_printable(self, request, object_id):
         studentEvaluation = StudentEvaluation.objects.get(pk=object_id)
         
-        return self.gen_certificate_printable_response((studentEvaluation,))
+        return self._gen_certificate((studentEvaluation,))
     
     def gen_certificate_printables(self, request, *args, **kwargs):
         studentEvaluations = self.get_student_evaluation_queryset(request)
         
-        return self.gen_certificate_printable_response(studentEvaluations)
+        return self._gen_certificate(studentEvaluations)
 
-    def gen_certificate_printable_response(self, studentEvaluations):
-        pdf = CertificateGenerator.gen_certificate(studentEvaluations)
-        
+    def _gen_certificate(self, studentEvaluations):
         if len(studentEvaluations) == 1:
             studentEvaluation = studentEvaluations[0]
-            filename = 'Certificate_%s.pdf' % (studentEvaluation.student.noOfStudentStatus)
+            filename = 'Certificate.pdf'
         else:
             filename = 'Certificates.pdf'
 
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
+        fp = tempfile.TemporaryFile()
+        CertificateGenerator.gen_certificate(fp, studentEvaluations)
+        filesize = fp.tell()
+        fp.seek(0)
         
-        response.write(pdf)
-
+        response = StreamingHttpResponse(FileWrapper(fp), content_type='application/pdf')
+        response['Content-Length'] = filesize
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        
         return response
     
     def get_student_evaluation_queryset(self, request):
