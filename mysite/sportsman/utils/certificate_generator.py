@@ -6,7 +6,7 @@ from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 from reportlab.lib.units import cm, inch
 from reportlab.lib.fonts import tt2ps
 from reportlab.pdfgen import canvas
-from reportlab.platypus.flowables import Flowable
+from reportlab.platypus.flowables import Flowable, DocAssign
 import os, json
 from io import BytesIO
 from reportlab.lib import colors
@@ -30,6 +30,8 @@ class CertificateGenerator:
         
         for studentEvaluation in studentEvaluations:
             testPlanName = studentEvaluation.testPlan.name
+            
+            Story.append(DocAssign('doc.SubTitle',"'"+testPlanName+"'"))
 
             pdfStudentBasicInfo = PdfStudentBasicInfo(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentBasicInfo)
@@ -77,18 +79,17 @@ def getShanghaiMovementCheck2015StyleSheet():
                    )
 
     stylesheet.add(ParagraphStyle(name='Title',
-                                  parent=stylesheet['Normal'],
-                                  fontName = tt2ps(stylesheet['Normal'].fontName,1,0),
-                                  fontSize=18,
-                                  leading=22,
+                                  fontName = tt2ps('Microsoft-YaHei',1,0),
+                                  fontSize=44,
+                                  leading=52,
                                   alignment=TA_CENTER,
                                   spaceAfter=6),
                    alias='title')
 
     stylesheet.add(ParagraphStyle(name='SubTitle',
-                                  parent=stylesheet['Title'],
-                                  fontSize=18,
-                                  leading=22,
+                                  fontName='Microsoft-YaHei',
+                                  fontSize=16,
+                                  leading=20,
                                   alignment=TA_CENTER,
                                   spaceAfter=6),
                    alias='subTitle')
@@ -106,7 +107,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     templateImageBottomPath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/Bottom.jpg')
     templateImageBottom = Image(templateImageBottomPath, width=templateImageBottom_width, height=templateImageBottom_height)
         
-    def normalPages(self, canvas, doc):
+    def afterNormalPage(self, canvas, doc):
         canvas.saveState()
 
         aW = doc.pagesize[0] # available width and height
@@ -117,7 +118,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
         p_title.drawOn(canvas,0,aH-h)
         aH = aH - h
         
-        p_sub_title = Paragraph('2015年上海运动能力测试 - Shanghai Movement Check 2015', self.styles['SubTitle'])
+        p_sub_title = Paragraph(doc.SubTitle, self.styles['SubTitle'])
         w,h = p_sub_title.wrap(aW, aH) # find required space
         p_sub_title.drawOn(canvas,0,aH-h)
         aH = aH - h
@@ -143,7 +144,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
         self._calc()    #in case we changed margins sizes etc
         frameT_leftMargin, frameT_bottomMargin, frameT_topMargin, frameT_rightMargin = 3.8*cm, 4*cm, 4*cm, 0.8*cm
         frameT = Frame(frameT_leftMargin, frameT_bottomMargin, self.width+self.leftMargin+self.rightMargin-frameT_leftMargin-frameT_rightMargin, self.height+self.bottomMargin+self.topMargin-frameT_bottomMargin-frameT_topMargin)
-        self.addPageTemplates([PageTemplate(id='Normal',frames=frameT, onPage=self.normalPages,pagesize=self.pagesize)])
+        self.addPageTemplates([PageTemplate(id='Normal',frames=frameT, onPageEnd=self.afterNormalPage,pagesize=self.pagesize)])
         BaseDocTemplate.build(self,flowables, canvasmaker=canvasmaker) 
         
 class PdfStudentBasicInfo(Flowable):
@@ -161,17 +162,17 @@ class PdfStudentBasicInfo(Flowable):
         student = self.studentEvaluation.student
         aW, aH = self.availableWidth, self.height
         header_w, data_w, h = 2*cm, self.availableWidth*0.5-2*cm, 0.5*cm
-        c.drawString(self.availableWidth-aW,aH-h,'姓:')
+        c.drawString(self.availableWidth-aW,aH-h,'姓名:')
         aW = aW-header_w
-        c.drawString(self.availableWidth-aW,aH-h,student.lastName)
+        c.drawString(self.availableWidth-aW,aH-h,student.lastName+student.firstName)
         aW = aW-data_w
         c.drawString(self.availableWidth-aW,aH-h,'学校:')
         aW = aW-header_w
         c.drawString(self.availableWidth-aW,aH-h,str(student.schoolClass.school))
         aW, aH = self.availableWidth, aH-h
-        c.drawString(self.availableWidth-aW,aH-h,'名:')
+        c.drawString(self.availableWidth-aW,aH-h,'性别:')
         aW = aW-header_w
-        c.drawString(self.availableWidth-aW,aH-h,student.firstName)
+        c.drawString(self.availableWidth-aW,aH-h,student.gender)
         aW = aW-data_w
         c.drawString(self.availableWidth-aW,aH-h,'班级:')
         aW = aW-header_w
