@@ -1505,16 +1505,25 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
         return self._gen_certificate(studentEvaluations)
 
     def _gen_certificate(self, studentEvaluations):
+        '''
+        输出PDF内容到临时文件，随后分段发送到客户端。
+        从而避免内存过多消耗，同时临时文件会自动移除。
+        '''
+        
+        fp = tempfile.TemporaryFile()
+        
+        generator = CertificateGenerator(fp)
+        
+        generator.gen_certificate(fp, studentEvaluations)
+        
+        filesize = fp.tell()
+        fp.seek(0)
+        
         if len(studentEvaluations) == 1:
             studentEvaluation = studentEvaluations[0]
             filename = 'Certificate.pdf'
         else:
             filename = 'Certificates.pdf'
-
-        fp = tempfile.TemporaryFile()
-        CertificateGenerator.gen_certificate(fp, studentEvaluations)
-        filesize = fp.tell()
-        fp.seek(0)
         
         response = StreamingHttpResponse(FileWrapper(fp), content_type='application/pdf')
         response['Content-Length'] = filesize
