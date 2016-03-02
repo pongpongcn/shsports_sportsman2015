@@ -1,9 +1,10 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Table, Image
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 from reportlab.lib.units import cm, inch
+from reportlab.lib.fonts import tt2ps
 from reportlab.pdfgen import canvas
 from reportlab.platypus.flowables import Flowable
 import os, json
@@ -11,19 +12,21 @@ from io import BytesIO
 from reportlab.lib import colors
 from decimal import Decimal
 
+pdfmetrics.registerFont(TTFont('Microsoft-YaHei', 'msyh.ttc'))
+pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Bold', 'msyhbd.ttc'))
+pdfmetrics.registerFontFamily('Microsoft-YaHei',normal='Microsoft-YaHei',bold='Microsoft-YaHei-Bold')
+
 class CertificateGenerator:
     def __init__(self, filename):
         self.filename = filename
+        self.styles = getShanghaiMovementCheck2015StyleSheet()
     
     def build(self, studentEvaluations):
-        pdfmetrics.registerFont(TTFont("simsun", "simsun.ttc"))
-        
         doc = ShanghaiMovementCheck2015DocTemplate(self.filename)
+        
         Story = []
-        styles = {
-            'Normal': ParagraphStyle('Normal', fontName='simsun', fontSize=9, leading=11),
-            'BodyText': ParagraphStyle('Normal', fontName='simsun', fontSize=9, leading=11, spaceBefore=6),
-        }
+        
+        styles = self.styles
         
         for studentEvaluation in studentEvaluations:
             pdfStudentBasicInfo = PdfStudentBasicInfo(studentEvaluation, style=styles['Normal'])
@@ -55,12 +58,43 @@ class CertificateGenerator:
             Story.append(PageBreak())
 
         doc.build(Story)
+
+def getShanghaiMovementCheck2015StyleSheet():
+    """Returns a stylesheet object"""
+    stylesheet = StyleSheet1()
+
+    stylesheet.add(ParagraphStyle(name='Normal',
+                                  fontName='Microsoft-YaHei',
+                                  fontSize=10,
+                                  leading=12)
+                   )
+
+    stylesheet.add(ParagraphStyle(name='BodyText',
+                                  parent=stylesheet['Normal'],
+                                  spaceBefore=6)
+                   )
+
+    stylesheet.add(ParagraphStyle(name='Title',
+                                  parent=stylesheet['Normal'],
+                                  fontName = tt2ps(stylesheet['Normal'].fontName,1,0),
+                                  fontSize=18,
+                                  leading=22,
+                                  alignment=TA_CENTER,
+                                  spaceAfter=6),
+                   alias='title')
+
+    stylesheet.add(ParagraphStyle(name='SubTitle',
+                                  parent=stylesheet['Title'],
+                                  fontSize=18,
+                                  leading=22,
+                                  alignment=TA_CENTER,
+                                  spaceAfter=6),
+                   alias='subTitle')
+                   
+    return stylesheet
         
 class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
-    styles = {
-            'Title': ParagraphStyle('Title', fontName='simsun', fontSize=44, leading=66, alignment=TA_CENTER),
-            'SubTitle': ParagraphStyle('SubTitle', fontName='simsun', fontSize=16, leading=24, alignment=TA_CENTER)
-        }
+    styles  = getShanghaiMovementCheck2015StyleSheet()
 
     templateImageLeftPath_width, templateImageLeftPath_height = 2.82*cm, 13.19*cm
     templateImageLeftPath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/Left.jpg')
