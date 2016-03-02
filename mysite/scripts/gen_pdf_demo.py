@@ -7,21 +7,16 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 def run():
-    pdfmetrics.registerFont(TTFont('Microsoft YaHei', 'msyh.ttc'))
-    pdfmetrics.registerFont(TTFont('Microsoft YaHei Bold', 'msyhbd.ttc'))
-    pdfmetrics.registerFont(TTFont('Microsoft YaHei Light', 'msyhl.ttc'))
-    pdfmetrics.registerFontFamily('Microsoft YaHei',normal='Microsoft YaHei',bold='Microsoft YaHei Bold')
+    pdfmetrics.registerFont(TTFont('Microsoft-YaHei', 'msyh.ttc'))
+    pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Bold', 'msyhbd.ttc'))
+    pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Light', 'msyhl.ttc'))
+    pdfmetrics.registerFontFamily('Microsoft-YaHei',normal='Microsoft-YaHei',bold='Microsoft-YaHei-Bold')
 
     styles = getSampleStyleSheet()
     
     story = []
 
-    story.append(Paragraph('''<font name="Microsoft YaHei"><b>粗体</b></font>''', styles['Normal']))
-    story.append(Paragraph('''<font name="Microsoft YaHei Bold">粗体</font>''', styles['Normal']))
-    story.append(Paragraph('''<font name="Times-Roman"><b>Bold</b></font>''', styles['Normal']))
-    story.append(Paragraph('''<font name="times"><b>Bold</b></font>''', styles['Normal']))
-    story.append(Paragraph('''<font name="Courier"><b>Bold</b></font>''', styles['Normal']))
-    story.append(Paragraph('''<font name="courier"><b>Bold</b></font>''', styles['Normal']))
+    story.append(Paragraph('''<font name="Microsoft-YaHei">常规文本<b>粗体文本</b></font><font name="Times-Roman">Normal Text<b>Bold Text</b></font>''', styles['Normal']))
     
     
     pdfmetrics.registerFont(TTFont('Vera', 'Vera.ttf'))
