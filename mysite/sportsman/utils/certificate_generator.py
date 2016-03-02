@@ -15,10 +15,10 @@ class CertificateGenerator:
     def __init__(self, filename):
         self.filename = filename
     
-    def gen_certificate(slef, filename, studentEvaluations):
+    def build(self, studentEvaluations):
         pdfmetrics.registerFont(TTFont("simsun", "simsun.ttc"))
         
-        doc = ShanghaiMovementCheck2015DocTemplate(filename)
+        doc = ShanghaiMovementCheck2015DocTemplate(self.filename)
         Story = []
         styles = {
             'Normal': ParagraphStyle('Normal', fontName='simsun', fontSize=9, leading=11),
