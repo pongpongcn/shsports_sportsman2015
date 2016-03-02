@@ -12,7 +12,10 @@ from reportlab.lib import colors
 from decimal import Decimal
 
 class CertificateGenerator:
-    def gen_certificate(filename, studentEvaluations):
+    def __init__(self, filename):
+        self.filename = filename
+    
+    def gen_certificate(slef, filename, studentEvaluations):
         pdfmetrics.registerFont(TTFont("simsun", "simsun.ttc"))
         
         doc = ShanghaiMovementCheck2015DocTemplate(filename)
