@@ -1514,7 +1514,7 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
         
         generator = CertificateGenerator(fp)
         
-        generator.gen_certificate(fp, studentEvaluations)
+        generator.build(studentEvaluations)
         
         filesize = fp.tell()
         fp.seek(0)
