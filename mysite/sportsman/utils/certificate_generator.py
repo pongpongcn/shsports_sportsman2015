@@ -34,7 +34,10 @@ class CertificateGenerator:
         for studentEvaluation in studentEvaluations:
             testPlanName = studentEvaluation.testPlan.name
             
-            Story.append(DocAssign('doc.certificateSubtitle',"'"+testPlanName+"'"))
+            Story.append(FrameBreak('Header'))
+            
+            Story.append(Paragraph('证书', self.styles['Title']))
+            Story.append(Paragraph(testPlanName, self.styles['Subtitle']))
 
             Story.append(FrameBreak('Content'))
             
@@ -111,42 +114,25 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     footerHeight = 2.5*cm
     leftWidth = 3*cm
     signatureHeight = 2*cm
-    
-    certificateTitle = '证书'
-    
+
     def __init__(self, filename, **kw):
         kw['leftMargin'], kw['rightMargin'], kw['topMargin'], kw['bottomMargin'] = 1.27*cm, 1.27*cm, 1.27*cm, 1.27*cm
         BaseDocTemplate.__init__(self, filename, **kw)
     
     def afterNormalPage(self, canvas, doc):
         canvas.saveState()
-        
-        '''Header Region'''
-        w,h = self.width, self.headerHeight
-        x,y = self.leftMargin, self.pagesize[1] - self.topMargin - h
-        frameHeader = Frame(x, y, w, h, showBoundary=1)
 
-        drawlist = []
-        drawlist.append(Paragraph(doc.certificateTitle, self.styles['Title']))
-        drawlist.append(Paragraph(doc.certificateSubtitle, self.styles['Subtitle']))
-
-        frameHeader.addFromList(drawlist, canvas)
-        
         '''Footer Region'''
         w,h = self.pagesize[0], self.footerHeight
         x,y = 0, self.bottomMargin
         frameFooter = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
-
         frameFooter.addFromList([self.bottomImage], canvas)
-        
         
         '''Left Region'''
         w,h = self.leftWidth, self.height - self.headerHeight - self.footerHeight
         x,y = self.leftMargin, self.pagesize[1] - self.topMargin - self.headerHeight - h
         frameLeft = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
-
         frameLeft.addFromList([self.leftImage], canvas)
-        
         
         canvas.restoreState()
         
@@ -166,6 +152,11 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
                the look (for example providing page numbering or section names).
         """
         self._calc()    #in case we changed margins sizes etc
+        
+        '''Header Region'''
+        w,h = self.width, self.headerHeight
+        x,y = self.leftMargin, self.pagesize[1] - self.topMargin - h
+        frameHeader = Frame(x, y, w, h, id='Header', showBoundary=1)
 
         '''Content Region'''
         w,h = self.width - self.leftWidth, self.height - self.headerHeight - self.footerHeight - self.signatureHeight
@@ -177,7 +168,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
         x,y = x, y - h
         frameSignature = Frame(x, y, w, h, id='Signature', showBoundary=1)
 
-        self.addPageTemplates([PageTemplate(id='Normal',frames=(frameContent, frameSignature), onPageEnd=self.afterNormalPage)])
+        self.addPageTemplates([PageTemplate(id='Normal',frames=(frameHeader, frameContent, frameSignature), onPageEnd=self.afterNormalPage)])
         BaseDocTemplate.build(self,flowables, canvasmaker=canvasmaker) 
         
 class PdfStudentBasicInfo(Flowable):
