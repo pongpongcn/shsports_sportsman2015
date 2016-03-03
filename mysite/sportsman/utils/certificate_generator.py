@@ -17,9 +17,9 @@ from io import BytesIO
 from reportlab.lib import colors
 from decimal import Decimal
 
-pdfmetrics.registerFont(TTFont('Microsoft-YaHei', 'msyh.ttc'))
-pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Bold', 'msyhbd.ttc'))
-pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Light', 'msyhl.ttc'))
+pdfmetrics.registerFont(TTFont('Microsoft-YaHei', 'MSYH.TTC'))
+pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Bold', 'MSYHBD.TTC'))
+pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Light', 'MSYHL.TTC'))
 pdfmetrics.registerFontFamily('Microsoft-YaHei',normal='Microsoft-YaHei',bold='Microsoft-YaHei-Bold')
 pdfmetrics.registerFontFamily('Microsoft-YaHei-Light',normal='Microsoft-YaHei-Light',bold='Microsoft-YaHei-Bold')
 
