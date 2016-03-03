@@ -44,24 +44,33 @@ class CertificateGenerator:
             pdfStudentBasicInfo = PdfStudentBasicInfo(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentBasicInfo)
             
+            Story.append(Spacer(0,0.5*cm))
+            
             p = Paragraph('您在%s中的表现' % testPlanName, styles['Normal'])
             Story.append(p)
+            
+            Story.append(Spacer(0,0.5*cm))
             
             pdfStudentPRChart = PdfStudentPRChart(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentPRChart)
             
-            p = Paragraph('50%表示同年龄段孩子所具备运动能力的平均水平,百分比值越高代表孩子具备的运动能力越突出。百分比只 是运动能力的参考值。', styles['Normal'])
+            Story.append(Spacer(0,0.5*cm))
+            
+            p = Paragraph('50%表示同年龄段孩子所具备运动能力的平均水平，百分比值越高代表孩子具备的运动能力越突出。百分比只是运动能力的参考值。', styles['Normal'])
             Story.append(p)
             
-            p = Paragraph('尊敬的家长： 感谢您的孩子参加了我们的运动能力测试！ 您的孩子正处于各项身体素质发展的关键敏感期。这个阶段也是传统意义上的儿童体育运动阶段。让孩子参 加到各种儿童体育运动中去,将为孩子运动机能的全面发展提供重要的机会。跳、跑、踢、抛、接、滑动、转 动等能力,如果得到综合的运用和锻炼,将使孩子的手、眼、脑、四肢、肌肉、神经、心理得到均衡发展,并使 您的孩子茁壮成长。', styles['Normal'])
+            Story.append(Spacer(0,0.5*cm))
+            
+            p = Paragraph('尊敬的家长：<br/>感谢您的孩子参加了我们的运动能力测试！<br/>您的孩子正处于各项身体素质发展的关键敏感期。这个阶段也是传统意义上的儿童体育运动阶段。让孩子参加到各种儿童体育运动中去，将为孩子运动机能的全面发展提供重要的机会。跳、跑、踢、抛、接、滑动、转动等能力，如果得到综合的运用和锻炼，将使孩子的手、眼、脑、四肢、肌肉、神经、心理得到均衡发展，并使您的孩子茁壮成长。', styles['Normal'])
             Story.append(p)
+            
+            Story.append(Spacer(0,0.5*cm))
             
             pdfStudentComment = PdfStudentComment(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentComment)
             
             Story.append(FrameBreak('Signature'))
-            p = Paragraph('''上海市青少年体育选材育才中心 Shanghai Sports Talent Identification & Development Center
-德国拜罗伊特大学 University of Bayreuth - Training & Movement Science''', styles['Normal'])
+            p = Paragraph('''上海市青少年体育选材育才中心&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Shanghai Sports Talent Identification & Development Center<br/>德国拜罗伊特大学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;University of Bayreuth - Training & Movement Science''', styles['Normal'])
             Story.append(p)
             
             Story.append(PageBreak())
@@ -189,7 +198,7 @@ class PdfStudentBasicInfo(Flowable):
         header_w, data_w, h = 2*cm, self.availableWidth*0.5-2*cm, 0.5*cm
         c.drawString(self.availableWidth-aW,aH-h,'姓名:')
         aW = aW-header_w
-        c.drawString(self.availableWidth-aW,aH-h,student.lastName+student.firstName)
+        c.drawString(self.availableWidth-aW,aH-h,'%s%s' % (student.lastName, student.firstName))
         aW = aW-data_w
         c.drawString(self.availableWidth-aW,aH-h,'学校:')
         aW = aW-header_w
@@ -197,7 +206,7 @@ class PdfStudentBasicInfo(Flowable):
         aW, aH = self.availableWidth, aH-h
         c.drawString(self.availableWidth-aW,aH-h,'性别:')
         aW = aW-header_w
-        c.drawString(self.availableWidth-aW,aH-h,student.gender)
+        c.drawString(self.availableWidth-aW,aH-h,student.get_gender_display())
         aW = aW-data_w
         c.drawString(self.availableWidth-aW,aH-h,'班级:')
         aW = aW-header_w
@@ -276,9 +285,9 @@ class PdfStudentComment(Flowable):
         aW, aH = self.availableWidth, self.height
         data_w, h = self.availableWidth*0.5, 0.5*cm
         if studentEvaluation.is_frail:
-            c.drawString(0,aH-h,'基于本次测试的综合表现,您的孩子需要进行运动健康干预。')
+            c.drawString(0,aH-h,'基于本次测试的综合表现，您的孩子需要进行运动健康干预。')
         else:
-            c.drawString(0,aH-h,'基于本次测试的综合表现,您的孩子在以下这几个项目中具有较好的运动潜质：')
+            c.drawString(0,aH-h,'基于本次测试的综合表现，您的孩子在以下这几个项目中具有较好的运动潜质：')
             aH = aH-h
             
             certificate_data = json.loads(studentEvaluation.certificate_data)

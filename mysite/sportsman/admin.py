@@ -1245,7 +1245,7 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(student.firstName),
                     smart_str(student.schoolClass.school.name),
                     smart_str(str(student.schoolClass)),
-                    smart_str(self.get_genderDisplay(student.gender)),
+                    smart_str(student.get_gender_display()),
                     smart_str(student.dateOfBirth),
                     smart_str(student.dateOfTesting),
                     smart_str(age),
@@ -1282,7 +1282,7 @@ class StudentAdmin(ImportExportModelAdmin):
                     smart_str(student.firstName),
                     smart_str(student.schoolClass.school.name),
                     smart_str(str(student.schoolClass)),
-                    smart_str(self.get_genderDisplay(student.gender)),
+                    smart_str(student.get_gender_display()),
                     smart_str(student.dateOfBirth),
                     smart_str(student.dateOfTesting),
                     smart_str(age),
@@ -1311,14 +1311,6 @@ class StudentAdmin(ImportExportModelAdmin):
                     None
                     ])
         return response
-
-    def get_genderDisplay(self, genderName):
-        if genderName == 'MALE':
-            return '男'
-        elif genderName == 'FEMALE':
-            return '女'
-        else:
-            return genderName
 
     change_list_template = 'admin/sportsman/student/change_list.html'
 
@@ -1440,55 +1432,55 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
     schoolClass.short_description = '班级'
     schoolClass.admin_order_field = 'student__schoolClass'
     def gender(self, obj):
-        return self.get_genderDisplay(obj.student.gender)
+        return obj.student.get_gender_display()
     gender.short_description = '性别'
     def dateOfBirth(self, obj):
-        return self.get_genderDisplay(obj.student.dateOfBirth)
+        return obj.student.dateOfBirth
     dateOfBirth.short_description = '出生日期'
     def dateOfTesting(self, obj):
-        return self.get_genderDisplay(obj.student.dateOfTesting)
+        return obj.student.dateOfTesting
     dateOfTesting.short_description = '测试日期'
     def height(self, obj):
-        return self.get_genderDisplay(obj.student.height)
+        return obj.student.height
     height.short_description = '身高'
     def weight(self, obj):
-        return self.get_genderDisplay(obj.student.weight)
+        return obj.student.weight
     weight.short_description = '体重'
     def e_bal(self, obj):
-        return self.get_genderDisplay(obj.student.e_bal)
+        return obj.student.e_bal
     e_bal.short_description = '平衡'
     def e_shh(self, obj):
-        return self.get_genderDisplay(obj.student.e_shh)
+        return obj.student.e_shh
     e_shh.short_description = '侧向跳'
     def e_sws(self, obj):
-        return self.get_genderDisplay(obj.student.e_sws)
+        return obj.student.e_sws
     e_sws.short_description = '跳远'
     def e_20m(self, obj):
-        return self.get_genderDisplay(obj.student.e_20m)
+        return obj.student.e_20m
     e_20m.short_description = '20米冲刺跑'
     def e_su(self, obj):
-        return self.get_genderDisplay(obj.student.e_su)
+        return obj.student.e_su
     e_su.short_description = '仰卧起坐'
     def e_ls(self, obj):
-        return self.get_genderDisplay(obj.student.e_ls)
+        return obj.student.e_ls
     e_ls.short_description = '俯卧撑'
     def e_rb(self, obj):
-        return self.get_genderDisplay(obj.student.e_rb)
+        return obj.student.e_rb
     e_rb.short_description = '直身前屈'
     def e_lauf(self, obj):
-        return self.get_genderDisplay(obj.student.e_lauf)
+        return obj.student.e_lauf
     e_lauf.short_description = '六分跑'
     def e_ball(self, obj):
-        return self.get_genderDisplay(obj.student.e_ball)
+        return obj.student.e_ball
     e_ball.short_description = '投掷'
     def age(self, obj):
-        return self.get_genderDisplay(obj.student.age)
+        return obj.student.age
     age.short_description = '年龄'
     def months_of_age(self, obj):
-        return self.get_genderDisplay(obj.student.months_of_age)
+        return obj.student.months_of_age
     months_of_age.short_description = '月龄'
     def days_of_age(self, obj):
-        return self.get_genderDisplay(obj.student.days_of_age)
+        return obj.student.days_of_age
     days_of_age.short_description = '日龄'
     def bmi(self, obj):
         return obj.student.bmi
@@ -1554,16 +1546,6 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
             return cl.queryset
         except AttributeError:
             return cl.query_set
-    
-    def get_genderDisplay(self, genderName):
-        if genderName == 'MALE':
-            return '男'
-        elif genderName == 'FEMALE':
-            return '女'
-        else:
-            return genderName
-
-
 
 class DistrictAdmin(admin.ModelAdmin):
     list_display = ('name',)
