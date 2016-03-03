@@ -95,7 +95,7 @@ def getShanghaiMovementCheck2015StyleSheet():
 class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     styles  = getShanghaiMovementCheck2015StyleSheet()
 
-    leftImageWidth, leftImageHeight = 2.82*cm, 13.19*cm
+    leftImageWidth, leftImageHeight = 2.82*cm, 14.84*cm
     leftImagePath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/Left.jpg')
     leftImage = Image(leftImagePath, width=leftImageWidth, height=leftImageHeight)
     
