@@ -29,7 +29,7 @@ class CertificateGenerator:
         self.styles = getShanghaiMovementCheck2015StyleSheet()
     
     def build(self, studentEvaluations):
-        doc = ShanghaiMovementCheck2015DocTemplate(self.filename, showBoundary=1)
+        doc = ShanghaiMovementCheck2015DocTemplate(self.filename)
         
         Story = []
         
@@ -55,50 +55,10 @@ class CertificateGenerator:
             
             Story.append(Spacer(0,0.5*cm))
             
-            pdfStudentPRChart = PdfStudentPRChart(studentEvaluation, style=styles['Normal'])
+            pdfStudentPRChart = get_studentPRChart(studentEvaluation)
             Story.append(pdfStudentPRChart)
             
-            Story.append(Spacer(0,0.5*cm))
-            
-            drawing = Drawing(14*cm, 6*cm)
-            
-            data = [(81, 86, 86, 96, 89, 93, 45, 94, 44)]
-            labels = [("81%(36 步)", "86%(30.50 次)", "86%(147.00 厘米)", "96%(3.98 秒)", "89%(20 重复次数)", "93%(17 重复次数)", "45%(4.00 厘米)", "94%(1008 米)", "44%(10.20 米)")]
-            categories = ['平衡','侧向跳','跳远','20米冲刺跑','仰卧起坐','俯卧撑','直身前屈','六分跑','投掷']
-            
-            bc = HorizontalBarChart()
-            bc.x = 1.5*cm
-            bc.y = 0
-            bc.width = drawing.width - bc.x
-            bc.height = drawing.height
-            bc.data = data
-            bc.bars.strokeColor = None
-            bc.bars[0].fillColor = colors.HexColor('#7fd8ff')
-            bc.barLabelFormat = 'values'
-            bc.barLabelArray = labels
-            bc.barLabels.boxAnchor = 'w'
-            bc.barLabels.fixedEnd = LabelOffset()
-            bc.barLabels.fixedEnd.posMode='low'
-            
-            bc.barLabels.fontName = 'Microsoft-YaHei'
-            bc.barLabels.fontSize = 8
-            bc.valueAxis.valueMin = 0
-            bc.valueAxis.valueMax = 100
-            bc.valueAxis.valueStep = 10
-            bc.valueAxis.labels.fontName = 'Microsoft-YaHei'
-            bc.valueAxis.labels.fontSize = 8
-            bc.categoryAxis.categoryNames = categories
-            bc.categoryAxis.labels.boxAnchor = 'w'
-            bc.categoryAxis.labels.dx = -1.5*cm
-            bc.categoryAxis.labels.fontName = 'Microsoft-YaHei'
-            bc.categoryAxis.labels.fontSize = 8
-            bc.categoryAxis.visibleAxis = 0
-            bc.categoryAxis.visibleTicks = 0
-
-            drawing.add(bc)
-                    
-            Story.append(drawing)
-            Story.append(PageBreak())
+            Story.append(Spacer(0,1*cm))
             
             p = Paragraph('50%表示同年龄段孩子所具备运动能力的平均水平，百分比值越高代表孩子具备的运动能力越突出。百分比只是运动能力的参考值。', styles['Normal'])
             Story.append(p)
@@ -120,6 +80,79 @@ class CertificateGenerator:
             Story.append(PageBreak())
 
         doc.build(Story)
+        
+def get_studentPRChart(studentEvaluation):   
+    pr_items = _get_pr_items(studentEvaluation)
+
+    row_data = []
+    row_barLabel = []
+    categories = []
+    
+    '''这是一个Hack，因为Chart绘制的顺序和预期的不同。'''
+    pr_items = reversed(pr_items)
+    
+    for item in pr_items:
+        row_data.append(item.p_value)
+        row_barLabel.append('%s%%(%s %s)' % (item.p_value, item.e_value, item.e_unit))
+        categories.append(item.name)
+        
+    data = [row_data]
+    labels = [row_barLabel]
+    
+    drawing = Drawing(14*cm, 6*cm)        
+    bc = HorizontalBarChart()
+    bc.x = 1.5*cm
+    bc.y = 0
+    bc.width = drawing.width - bc.x
+    bc.height = drawing.height
+    bc.data = data
+    bc.bars.strokeColor = None
+    bc.bars[0].fillColor = colors.HexColor('#7fd8ff')
+    bc.barLabelFormat = 'values'
+    bc.barLabelArray = labels
+    bc.barLabels.boxAnchor = 'w'
+    bc.barLabels.fixedEnd = LabelOffset()
+    bc.barLabels.fixedEnd.posMode='low'
+    
+    bc.barLabels.fontName = 'Microsoft-YaHei-Light'
+    bc.barLabels.fontSize = 8
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = 100
+    bc.valueAxis.valueStep = 10
+    bc.valueAxis.labels.fontName = 'Microsoft-YaHei-Light'
+    bc.valueAxis.labels.fontSize = 8
+    bc.categoryAxis.categoryNames = categories
+    bc.categoryAxis.labels.boxAnchor = 'w'
+    bc.categoryAxis.labels.dx = -1.5*cm
+    bc.categoryAxis.labels.fontName = 'Microsoft-YaHei-Light'
+    bc.categoryAxis.labels.fontSize = 8
+    bc.categoryAxis.visibleAxis = 0
+    bc.categoryAxis.visibleTicks = 0
+
+    drawing.add(bc)
+    
+    return drawing
+    
+def _get_pr_items(studentEvaluation):
+    pr_items = []
+    pr_items.append(PRItem('平衡', studentEvaluation.student.e_bal, '步', studentEvaluation.p_bal))
+    pr_items.append(PRItem('侧向跳', studentEvaluation.student.e_shh, '次', studentEvaluation.p_shh))
+    pr_items.append(PRItem('跳远', studentEvaluation.student.e_sws, '厘米', studentEvaluation.p_sws))
+    pr_items.append(PRItem('20米冲刺跑', studentEvaluation.student.e_20m, '秒', studentEvaluation.p_20m))
+    pr_items.append(PRItem('仰卧起坐', studentEvaluation.student.e_su, '重复次数', studentEvaluation.p_su))
+    pr_items.append(PRItem('俯卧撑', studentEvaluation.student.e_ls, '重复次数', studentEvaluation.p_ls))
+    pr_items.append(PRItem('直身前屈', studentEvaluation.student.e_rb, '厘米', studentEvaluation.p_rb))
+    pr_items.append(PRItem('六分跑', studentEvaluation.student.e_lauf, '米', studentEvaluation.p_lauf))
+    pr_items.append(PRItem('投掷', studentEvaluation.student.e_ball, '米', studentEvaluation.p_ball))
+    
+    return pr_items
+
+class PRItem:
+    def __init__(self, name, e_value, e_unit, p_value):
+        self.name = name
+        self.e_value = e_value
+        self.e_unit = e_unit
+        self.p_value = p_value
 
 def getShanghaiMovementCheck2015StyleSheet():
     """Returns a stylesheet object"""
@@ -256,69 +289,12 @@ class PdfStudentBasicInfo(Flowable):
         aW = aW-header_w
         c.drawString(self.availableWidth-aW,aH-h,str(student.schoolClass))
 
-class PdfStudentPRChart(Flowable):
-    imagePRChartSkeleton_width, imagePRChartSkeleton_height = 14.12*cm, 6.35*cm
-    imagePRChartSkeletonPath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/PRChartSkeleton.jpg')
-    imagePRChartSkeleton = Image(imagePRChartSkeletonPath, width=imagePRChartSkeleton_width, height=imagePRChartSkeleton_height)
-    
-    def __init__(self, studentEvaluation, style):
-        self.studentEvaluation = studentEvaluation
-        self.style = style
-    def wrap(self, availableWidth, availableHeight):
-        height = self.imagePRChartSkeleton_height
-        self.height = height
-        return (availableWidth, height)
-    def draw(self):
-        c = self.canv
-        c.setFont(self.style.fontName, self.style.fontSize)
-        self.imagePRChartSkeleton.drawOn(c, 0, 0)
-        
-        scoreItem_offset_x = 1.5*cm
-        lineHeight = 0.587*cm
-        stripHeight = 0.4*cm
-        stripWidth = 12.4*cm
-        
-        aH = self.height - 0.85*cm
-
-        for item in PdfStudentPRChart._get_pr_items(self.studentEvaluation):
-            percentage = item.p_value * 0.01
-            c.saveState()
-            c.setFillColor(colors.HexColor('#7fd8ff'))
-            c.rect(scoreItem_offset_x,aH-stripHeight,Decimal(stripWidth)*Decimal(percentage),stripHeight, fill=1, stroke=0)
-            c.restoreState()
-            
-            pr_text = '%s%%(%s %s)' % (item.p_value, item.e_value, item.e_unit)
-            c.drawString(scoreItem_offset_x,aH-stripHeight+0.09*cm,pr_text)
-            
-            aH -= lineHeight
-
-    def _get_pr_items(studentEvaluation):
-        pr_items = []
-        pr_items.append(PdfStudentPRChart.PRItem('平衡', studentEvaluation.student.e_bal, '步', studentEvaluation.p_bal))
-        pr_items.append(PdfStudentPRChart.PRItem('侧向跳', studentEvaluation.student.e_shh, '次', studentEvaluation.p_shh))
-        pr_items.append(PdfStudentPRChart.PRItem('跳远', studentEvaluation.student.e_sws, '厘米', studentEvaluation.p_sws))
-        pr_items.append(PdfStudentPRChart.PRItem('20米冲刺跑', studentEvaluation.student.e_20m, '秒', studentEvaluation.p_20m))
-        pr_items.append(PdfStudentPRChart.PRItem('仰卧起坐', studentEvaluation.student.e_su, '重复次数', studentEvaluation.p_su))
-        pr_items.append(PdfStudentPRChart.PRItem('俯卧撑', studentEvaluation.student.e_ls, '重复次数', studentEvaluation.p_ls))
-        pr_items.append(PdfStudentPRChart.PRItem('直身前屈', studentEvaluation.student.e_rb, '厘米', studentEvaluation.p_rb))
-        pr_items.append(PdfStudentPRChart.PRItem('六分跑', studentEvaluation.student.e_lauf, '米', studentEvaluation.p_lauf))
-        pr_items.append(PdfStudentPRChart.PRItem('投掷', studentEvaluation.student.e_ball, '米', studentEvaluation.p_ball))
-        
-        return pr_items
-
-    class PRItem:
-        def __init__(self, name, e_value, e_unit, p_value):
-            self.name = name
-            self.e_value = e_value
-            self.e_unit = e_unit
-            self.p_value = p_value
-    
 class PdfStudentComment(Flowable):
     def __init__(self, studentEvaluation, style):
         self.studentEvaluation = studentEvaluation
         self.style = style
     def wrap(self, availableWidth, availableHeight):
-        height = 3*cm
+        height = 2.5*cm
         self.availableWidth = availableWidth
         self.height = height
         return (availableWidth, height)
