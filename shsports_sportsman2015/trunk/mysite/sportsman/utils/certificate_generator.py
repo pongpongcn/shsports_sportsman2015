@@ -36,6 +36,8 @@ class CertificateGenerator:
             
             Story.append(DocAssign('doc.certificateSubtitle',"'"+testPlanName+"'"))
 
+            Story.append(FrameBreak('Content'))
+            
             pdfStudentBasicInfo = PdfStudentBasicInfo(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentBasicInfo)
             
@@ -95,56 +97,60 @@ def getShanghaiMovementCheck2015StyleSheet():
 class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     styles  = getShanghaiMovementCheck2015StyleSheet()
 
+    templateDir = os.path.join(os.path.dirname(__file__), '..'+os.sep+'storage'+os.sep+'CertificateTemplates'+os.sep+'ShanghaiMovementCheck2015')
+    
     leftImageWidth, leftImageHeight = 2.82*cm, 14.84*cm
-    leftImagePath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/Left.jpg')
+    leftImagePath = os.path.join(templateDir, 'Left.jpg')
     leftImage = Image(leftImagePath, width=leftImageWidth, height=leftImageHeight)
     
     bottomImageWidth, bottomImageHeight = 18.75*cm, 2.13*cm
-    bottomImagePath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/Bottom.jpg')
+    bottomImagePath = os.path.join(templateDir, 'Bottom.jpg')
     bottomImage = Image(bottomImagePath, width=bottomImageWidth, height=bottomImageHeight)
     
-    headerFrameHeight = 5*cm
+    headerHeight = 5*cm
+    footerHeight = 2.5*cm
+    leftWidth = 3*cm
+    signatureHeight = 2*cm
+    
     certificateTitle = '证书'
     
     def __init__(self, filename, **kw):
+        kw['leftMargin'], kw['rightMargin'], kw['topMargin'], kw['bottomMargin'] = 1.27*cm, 1.27*cm, 1.27*cm, 1.27*cm
         BaseDocTemplate.__init__(self, filename, **kw)
-        self.leftMargin, self.rightMargin, self.topMargin, self.bottomMargin = 1.27*cm, 1.27*cm, 1.27*cm, 1.27*cm
     
     def afterNormalPage(self, canvas, doc):
         canvas.saveState()
         
-        aW = doc.pagesize[0] # available width and height
-        aH = doc.pagesize[1]
+        '''Header Region'''
+        w,h = self.width, self.headerHeight
+        x,y = self.leftMargin, self.pagesize[1] - self.topMargin - h
+        frameHeader = Frame(x, y, w, h, showBoundary=1)
 
-        aH -= doc.topMargin
-        
-        """头部"""
-        w,h = aW - doc.leftMargin - doc.rightMargin, doc.headerFrameHeight
-        x,y = doc.leftMargin, aH - h
-        
-        headerFrame = Frame(x, y, w, h, showBoundary=1)
-        
         drawlist = []
         drawlist.append(Paragraph(doc.certificateTitle, self.styles['Title']))
         drawlist.append(Paragraph(doc.certificateSubtitle, self.styles['Subtitle']))
 
-        headerFrame.addFromList(drawlist, canvas)
+        frameHeader.addFromList(drawlist, canvas)
+        
+        '''Footer Region'''
+        w,h = self.pagesize[0], self.footerHeight
+        x,y = 0, self.bottomMargin
+        frameFooter = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
 
-        aH = aH - h - 1*cm
+        frameFooter.addFromList([self.bottomImage], canvas)
         
-        """左侧"""
-        w,h = doc.leftImageWidth, doc.leftImageHeight
-        x,y = doc.leftMargin, aH - h
-        doc.leftImage.drawOn(canvas, x, y)
         
-        aH -= h
+        '''Left Region'''
+        w,h = self.leftWidth, self.height - self.headerHeight - self.footerHeight
+        x,y = self.leftMargin, self.pagesize[1] - self.topMargin - self.headerHeight - h
+        frameLeft = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
+
+        frameLeft.addFromList([self.leftImage], canvas)
         
-        """底部"""
-        w,h = doc.bottomImageWidth, doc.bottomImageHeight
-        x,y = (aW-w)/2, doc.bottomMargin
-        self.bottomImage.drawOn(canvas, x, y)
         
         canvas.restoreState()
+        
+        return
         
     def build(self,flowables, canvasmaker=canvas.Canvas):
         """build the document using the flowables.  Annotate the first page using the onFirstPage
@@ -160,16 +166,18 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
                the look (for example providing page numbering or section names).
         """
         self._calc()    #in case we changed margins sizes etc
+
+        '''Content Region'''
+        w,h = self.width - self.leftWidth, self.height - self.headerHeight - self.footerHeight - self.signatureHeight
+        x,y = self.leftMargin + self.leftWidth, self.pagesize[1] - self.topMargin - self.headerHeight - h
+        frameContent = Frame(x, y, w, h, id='Content', showBoundary=1)
         
-        w,h = 15 * cm, 16*cm
-        x,y = self.pagesize[0] - self.rightMargin - w, self.pagesize[1] - self.topMargin - self.headerFrameHeight - h
-        frameNormal = Frame(x, y, w, h, id='Normal', showBoundary=1)
-        
-        w,h = 15 * cm, 2*cm
-        x,y = self.pagesize[0] - self.rightMargin - w, self.bottomMargin + self.bottomImageHeight
+        '''Signature Region'''
+        w,h = w, self.signatureHeight
+        x,y = x, y - h
         frameSignature = Frame(x, y, w, h, id='Signature', showBoundary=1)
-        
-        self.addPageTemplates([PageTemplate(id='Normal',frames=(frameNormal, frameSignature), onPageEnd=self.afterNormalPage)])
+
+        self.addPageTemplates([PageTemplate(id='Normal',frames=(frameContent, frameSignature), onPageEnd=self.afterNormalPage)])
         BaseDocTemplate.build(self,flowables, canvasmaker=canvasmaker) 
         
 class PdfStudentBasicInfo(Flowable):
