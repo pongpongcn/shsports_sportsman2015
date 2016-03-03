@@ -8,6 +8,10 @@ from reportlab.lib.fonts import tt2ps
 from reportlab.pdfgen import canvas
 from reportlab.platypus.flowables import Flowable, DocAssign
 from reportlab.platypus.doctemplate import FrameBreak
+from reportlab.graphics.shapes import Drawing, Rect, String
+from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
+from reportlab.graphics.charts.textlabels import LabelOffset
+
 import os, json
 from io import BytesIO
 from reportlab.lib import colors
@@ -25,7 +29,7 @@ class CertificateGenerator:
         self.styles = getShanghaiMovementCheck2015StyleSheet()
     
     def build(self, studentEvaluations):
-        doc = ShanghaiMovementCheck2015DocTemplate(self.filename)
+        doc = ShanghaiMovementCheck2015DocTemplate(self.filename, showBoundary=1)
         
         Story = []
         
@@ -55,6 +59,46 @@ class CertificateGenerator:
             Story.append(pdfStudentPRChart)
             
             Story.append(Spacer(0,0.5*cm))
+            
+            drawing = Drawing(14*cm, 6*cm)
+            
+            data = [(81, 86, 86, 96, 89, 93, 45, 94, 44)]
+            labels = [("81%(36 步)", "86%(30.50 次)", "86%(147.00 厘米)", "96%(3.98 秒)", "89%(20 重复次数)", "93%(17 重复次数)", "45%(4.00 厘米)", "94%(1008 米)", "44%(10.20 米)")]
+            categories = ['平衡','侧向跳','跳远','20米冲刺跑','仰卧起坐','俯卧撑','直身前屈','六分跑','投掷']
+            
+            bc = HorizontalBarChart()
+            bc.x = 1.5*cm
+            bc.y = 0
+            bc.width = drawing.width - bc.x
+            bc.height = drawing.height
+            bc.data = data
+            bc.bars.strokeColor = None
+            bc.bars[0].fillColor = colors.HexColor('#7fd8ff')
+            bc.barLabelFormat = 'values'
+            bc.barLabelArray = labels
+            bc.barLabels.boxAnchor = 'w'
+            bc.barLabels.fixedEnd = LabelOffset()
+            bc.barLabels.fixedEnd.posMode='low'
+            
+            bc.barLabels.fontName = 'Microsoft-YaHei'
+            bc.barLabels.fontSize = 8
+            bc.valueAxis.valueMin = 0
+            bc.valueAxis.valueMax = 100
+            bc.valueAxis.valueStep = 10
+            bc.valueAxis.labels.fontName = 'Microsoft-YaHei'
+            bc.valueAxis.labels.fontSize = 8
+            bc.categoryAxis.categoryNames = categories
+            bc.categoryAxis.labels.boxAnchor = 'w'
+            bc.categoryAxis.labels.dx = -1.5*cm
+            bc.categoryAxis.labels.fontName = 'Microsoft-YaHei'
+            bc.categoryAxis.labels.fontSize = 8
+            bc.categoryAxis.visibleAxis = 0
+            bc.categoryAxis.visibleTicks = 0
+
+            drawing.add(bc)
+                    
+            Story.append(drawing)
+            Story.append(PageBreak())
             
             p = Paragraph('50%表示同年龄段孩子所具备运动能力的平均水平，百分比值越高代表孩子具备的运动能力越突出。百分比只是运动能力的参考值。', styles['Normal'])
             Story.append(p)
@@ -171,7 +215,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
         '''Content Region'''
         w,h = self.width - self.leftWidth, self.height - self.headerHeight - self.footerHeight - self.signatureHeight
         x,y = self.leftMargin + self.leftWidth, self.pagesize[1] - self.topMargin - self.headerHeight - h
-        frameContent = Frame(x, y, w, h, id='Content', showBoundary=1)
+        frameContent = Frame(x, y, w, h, id='Content')
         
         '''Signature Region'''
         w,h = w, self.signatureHeight
