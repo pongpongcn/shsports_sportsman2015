@@ -105,6 +105,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     leftImageWidth, leftImageHeight = 2.82*cm, 14.84*cm
     leftImagePath = os.path.join(templateDir, 'Left.jpg')
     leftImage = Image(leftImagePath, width=leftImageWidth, height=leftImageHeight)
+    leftImage.hAlign = 'LEFT'
     
     bottomImageWidth, bottomImageHeight = 18.75*cm, 2.13*cm
     bottomImagePath = os.path.join(templateDir, 'Bottom.jpg')
@@ -112,7 +113,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     
     headerHeight = 5*cm
     footerHeight = 2.5*cm
-    leftWidth = 3*cm
+    leftWidth = 4*cm
     signatureHeight = 2*cm
 
     def __init__(self, filename, **kw):
@@ -125,13 +126,13 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
         '''Footer Region'''
         w,h = self.pagesize[0], self.footerHeight
         x,y = 0, self.bottomMargin
-        frameFooter = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
+        frameFooter = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
         frameFooter.addFromList([self.bottomImage], canvas)
         
         '''Left Region'''
         w,h = self.leftWidth, self.height - self.headerHeight - self.footerHeight
         x,y = self.leftMargin, self.pagesize[1] - self.topMargin - self.headerHeight - h
-        frameLeft = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=1)
+        frameLeft = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
         frameLeft.addFromList([self.leftImage], canvas)
         
         canvas.restoreState()
@@ -156,7 +157,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
         '''Header Region'''
         w,h = self.width, self.headerHeight
         x,y = self.leftMargin, self.pagesize[1] - self.topMargin - h
-        frameHeader = Frame(x, y, w, h, id='Header', showBoundary=1)
+        frameHeader = Frame(x, y, w, h, id='Header')
 
         '''Content Region'''
         w,h = self.width - self.leftWidth, self.height - self.headerHeight - self.footerHeight - self.signatureHeight
@@ -166,7 +167,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
         '''Signature Region'''
         w,h = w, self.signatureHeight
         x,y = x, y - h
-        frameSignature = Frame(x, y, w, h, id='Signature', showBoundary=1)
+        frameSignature = Frame(x, y, w, h, id='Signature')
 
         self.addPageTemplates([PageTemplate(id='Normal',frames=(frameHeader, frameContent, frameSignature), onPageEnd=self.afterNormalPage)])
         BaseDocTemplate.build(self,flowables, canvasmaker=canvasmaker) 
