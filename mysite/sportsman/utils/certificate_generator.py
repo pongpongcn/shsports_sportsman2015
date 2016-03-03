@@ -7,6 +7,7 @@ from reportlab.lib.units import cm, inch
 from reportlab.lib.fonts import tt2ps
 from reportlab.pdfgen import canvas
 from reportlab.platypus.flowables import Flowable, DocAssign
+from reportlab.platypus.doctemplate import FrameBreak
 import os, json
 from io import BytesIO
 from reportlab.lib import colors
@@ -14,7 +15,9 @@ from decimal import Decimal
 
 pdfmetrics.registerFont(TTFont('Microsoft-YaHei', 'msyh.ttc'))
 pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Bold', 'msyhbd.ttc'))
+pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Light', 'msyhl.ttc'))
 pdfmetrics.registerFontFamily('Microsoft-YaHei',normal='Microsoft-YaHei',bold='Microsoft-YaHei-Bold')
+pdfmetrics.registerFontFamily('Microsoft-YaHei-Light',normal='Microsoft-YaHei-Light',bold='Microsoft-YaHei-Bold')
 
 class CertificateGenerator:
     def __init__(self, filename):
@@ -31,30 +34,27 @@ class CertificateGenerator:
         for studentEvaluation in studentEvaluations:
             testPlanName = studentEvaluation.testPlan.name
             
-            Story.append(DocAssign('doc.SubTitle',"'"+testPlanName+"'"))
+            Story.append(DocAssign('doc.certificateSubtitle',"'"+testPlanName+"'"))
 
             pdfStudentBasicInfo = PdfStudentBasicInfo(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentBasicInfo)
             
-            p = Paragraph('您在%s中的表现' % testPlanName, styles['BodyText'])
+            p = Paragraph('您在%s中的表现' % testPlanName, styles['Normal'])
             Story.append(p)
             
             pdfStudentPRChart = PdfStudentPRChart(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentPRChart)
             
-            p = Paragraph('50%表示同年龄段孩子所具备运动能力的平均水平,百分比值越高代表孩子具备的运动能力越突出。百分比只 是运动能力的参考值。', styles['BodyText'])
+            p = Paragraph('50%表示同年龄段孩子所具备运动能力的平均水平,百分比值越高代表孩子具备的运动能力越突出。百分比只 是运动能力的参考值。', styles['Normal'])
             Story.append(p)
             
-            Story.append(Spacer(0, 2*cm))
-            
-            p = Paragraph('尊敬的家长： 感谢您的孩子参加了我们的运动能力测试！ 您的孩子正处于各项身体素质发展的关键敏感期。这个阶段也是传统意义上的儿童体育运动阶段。让孩子参 加到各种儿童体育运动中去,将为孩子运动机能的全面发展提供重要的机会。跳、跑、踢、抛、接、滑动、转 动等能力,如果得到综合的运用和锻炼,将使孩子的手、眼、脑、四肢、肌肉、神经、心理得到均衡发展,并使 您的孩子茁壮成长。', styles['BodyText'])
+            p = Paragraph('尊敬的家长： 感谢您的孩子参加了我们的运动能力测试！ 您的孩子正处于各项身体素质发展的关键敏感期。这个阶段也是传统意义上的儿童体育运动阶段。让孩子参 加到各种儿童体育运动中去,将为孩子运动机能的全面发展提供重要的机会。跳、跑、踢、抛、接、滑动、转 动等能力,如果得到综合的运用和锻炼,将使孩子的手、眼、脑、四肢、肌肉、神经、心理得到均衡发展,并使 您的孩子茁壮成长。', styles['Normal'])
             Story.append(p)
             
             pdfStudentComment = PdfStudentComment(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentComment)
-
-            Story.append(Spacer(0, 3.5*cm))
             
+            Story.append(FrameBreak('Signature'))
             p = Paragraph('''上海市青少年体育选材育才中心 Shanghai Sports Talent Identification & Development Center
 德国拜罗伊特大学 University of Bayreuth - Training & Movement Science''', styles['Normal'])
             Story.append(p)
@@ -68,63 +68,81 @@ def getShanghaiMovementCheck2015StyleSheet():
     stylesheet = StyleSheet1()
 
     stylesheet.add(ParagraphStyle(name='Normal',
-                                  fontName='Microsoft-YaHei',
-                                  fontSize=10,
+                                  fontName='Microsoft-YaHei-Light',
+                                  fontSize=9,
                                   leading=12)
                    )
 
-    stylesheet.add(ParagraphStyle(name='BodyText',
-                                  parent=stylesheet['Normal'],
-                                  spaceBefore=6)
-                   )
-
     stylesheet.add(ParagraphStyle(name='Title',
-                                  fontName = tt2ps('Microsoft-YaHei',1,0),
+                                  parent=stylesheet['Normal'],
+                                  fontName='Microsoft-YaHei-Bold',
                                   fontSize=44,
-                                  leading=52,
+                                  leading=66,
                                   alignment=TA_CENTER,
-                                  spaceAfter=6),
-                   alias='title')
+                                  spaceBefore=12,
+                                  spaceAfter=3))
 
-    stylesheet.add(ParagraphStyle(name='SubTitle',
-                                  fontName='Microsoft-YaHei',
+    stylesheet.add(ParagraphStyle(name='Subtitle',
+                                  parent=stylesheet['Normal'],
+                                  fontName='Microsoft-YaHei-Light',
                                   fontSize=16,
-                                  leading=20,
+                                  leading=24,
                                   alignment=TA_CENTER,
-                                  spaceAfter=6),
-                   alias='subTitle')
+                                  spaceAfter=3))
                    
     return stylesheet
         
 class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     styles  = getShanghaiMovementCheck2015StyleSheet()
 
-    templateImageLeftPath_width, templateImageLeftPath_height = 2.82*cm, 13.19*cm
-    templateImageLeftPath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/Left.jpg')
-    templateImageLeft = Image(templateImageLeftPath, width=templateImageLeftPath_width, height=templateImageLeftPath_height)
+    leftImageWidth, leftImageHeight = 2.82*cm, 13.19*cm
+    leftImagePath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/Left.jpg')
+    leftImage = Image(leftImagePath, width=leftImageWidth, height=leftImageHeight)
     
-    templateImageBottom_width, templateImageBottom_height = 18.75*cm, 2.13*cm
-    templateImageBottomPath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/Bottom.jpg')
-    templateImageBottom = Image(templateImageBottomPath, width=templateImageBottom_width, height=templateImageBottom_height)
-        
+    bottomImageWidth, bottomImageHeight = 18.75*cm, 2.13*cm
+    bottomImagePath = os.path.join(os.path.dirname(__file__), '../storage/CertificateTemplates/ShanghaiMovementCheck2015/Bottom.jpg')
+    bottomImage = Image(bottomImagePath, width=bottomImageWidth, height=bottomImageHeight)
+    
+    headerFrameHeight = 5*cm
+    certificateTitle = '证书'
+    
+    def __init__(self, filename, **kw):
+        BaseDocTemplate.__init__(self, filename, **kw)
+        self.leftMargin, self.rightMargin, self.topMargin, self.bottomMargin = 1.27*cm, 1.27*cm, 1.27*cm, 1.27*cm
+    
     def afterNormalPage(self, canvas, doc):
         canvas.saveState()
-
+        
         aW = doc.pagesize[0] # available width and height
         aH = doc.pagesize[1]
+
+        aH -= doc.topMargin
         
-        p_title = Paragraph('证书', self.styles['Title'])
-        w,h = p_title.wrap(aW, aH) # find required space
-        p_title.drawOn(canvas,0,aH-h)
-        aH = aH - h
+        """头部"""
+        w,h = aW - doc.leftMargin - doc.rightMargin, doc.headerFrameHeight
+        x,y = doc.leftMargin, aH - h
         
-        p_sub_title = Paragraph(doc.SubTitle, self.styles['SubTitle'])
-        w,h = p_sub_title.wrap(aW, aH) # find required space
-        p_sub_title.drawOn(canvas,0,aH-h)
-        aH = aH - h
+        headerFrame = Frame(x, y, w, h, showBoundary=1)
         
-        self.templateImageLeft.drawOn(canvas, 0.8*cm, aH-self.templateImageLeftPath_height-1*cm)
-        self.templateImageBottom.drawOn(canvas, (aW-self.templateImageBottom_width)/2, 1*cm)
+        drawlist = []
+        drawlist.append(Paragraph(doc.certificateTitle, self.styles['Title']))
+        drawlist.append(Paragraph(doc.certificateSubtitle, self.styles['Subtitle']))
+
+        headerFrame.addFromList(drawlist, canvas)
+
+        aH = aH - h - 1*cm
+        
+        """左侧"""
+        w,h = doc.leftImageWidth, doc.leftImageHeight
+        x,y = doc.leftMargin, aH - h
+        doc.leftImage.drawOn(canvas, x, y)
+        
+        aH -= h
+        
+        """底部"""
+        w,h = doc.bottomImageWidth, doc.bottomImageHeight
+        x,y = (aW-w)/2, doc.bottomMargin
+        self.bottomImage.drawOn(canvas, x, y)
         
         canvas.restoreState()
         
@@ -142,9 +160,16 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
                the look (for example providing page numbering or section names).
         """
         self._calc()    #in case we changed margins sizes etc
-        frameT_leftMargin, frameT_bottomMargin, frameT_topMargin, frameT_rightMargin = 3.8*cm, 4*cm, 4*cm, 0.8*cm
-        frameT = Frame(frameT_leftMargin, frameT_bottomMargin, self.width+self.leftMargin+self.rightMargin-frameT_leftMargin-frameT_rightMargin, self.height+self.bottomMargin+self.topMargin-frameT_bottomMargin-frameT_topMargin)
-        self.addPageTemplates([PageTemplate(id='Normal',frames=frameT, onPageEnd=self.afterNormalPage,pagesize=self.pagesize)])
+        
+        w,h = 15 * cm, 16*cm
+        x,y = self.pagesize[0] - self.rightMargin - w, self.pagesize[1] - self.topMargin - self.headerFrameHeight - h
+        frameNormal = Frame(x, y, w, h, id='Normal', showBoundary=1)
+        
+        w,h = 15 * cm, 2*cm
+        x,y = self.pagesize[0] - self.rightMargin - w, self.bottomMargin + self.bottomImageHeight
+        frameSignature = Frame(x, y, w, h, id='Signature', showBoundary=1)
+        
+        self.addPageTemplates([PageTemplate(id='Normal',frames=(frameNormal, frameSignature), onPageEnd=self.afterNormalPage)])
         BaseDocTemplate.build(self,flowables, canvasmaker=canvasmaker) 
         
 class PdfStudentBasicInfo(Flowable):
