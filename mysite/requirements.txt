@@ -3,11 +3,7 @@ django-extensions
 django-import-export
 tablib
 reportlab
-PyPDF2
 pinyin>=0.3,<0.4
 chardet
-python-dateutil
-numpy
 scipy
-matplotlib
 mysqlclient

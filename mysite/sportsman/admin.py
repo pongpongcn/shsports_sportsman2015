@@ -2,31 +2,18 @@ from django.contrib import admin
 from django import forms
 from django.conf import settings
 from django.conf.urls import url
-from django.http import HttpResponse, HttpResponseRedirect, StreamingHttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.db.models import Q
 from django.db.models.fields import BLANK_CHOICE_DASH
 from import_export import resources, fields
 from import_export.admin import ImportExportModelAdmin, base_formats
 from import_export.formats.base_formats import TextFormat
 from import_export.instance_loaders import ModelInstanceLoader
-import calendar, os, pinyin, json, csv, tempfile, zipfile
+import calendar, os, pinyin, json, csv, tempfile
 from django.utils import timezone
 from statistics import mean
 import scipy.stats
-from reportlab.pdfgen import canvas
-from reportlab.pdfbase import pdfmetrics, ttfonts
 from io import BytesIO
-from reportlab.lib.pagesizes import A4, landscape, letter
-from reportlab.lib.units import cm, inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Table, Image
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus.tables import TableStyle
-from reportlab.rl_config import defaultPageSize
-from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
-from reportlab.platypus.flowables import Flowable
-from PyPDF2 import PdfFileWriter, PdfFileReader
 from decimal import Decimal
 from django.core.validators import *
 from django.utils.encoding import smart_str
@@ -35,6 +22,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.servers.basehttp import FileWrapper
 from .utils.certificate_generator import CertificateGenerator
+from .utils.student_data_form_generator import StudentDataFormGenerator
 
 from .models import Factor
 from .models import Student
@@ -748,8 +736,8 @@ class StudentAdmin(ImportExportModelAdmin):
     def get_urls(self):
         urls = super(StudentAdmin, self).get_urls()
         my_urls = [
-            url(r'^(.+)/gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printable)),
-            url(r'^gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printables)),
+            url(r'^(.+)/data_form_to_fill/$', self.admin_site.admin_view(self.gen_data_form)),
+            url(r'^data_form_to_fill/$', self.admin_site.admin_view(self.gen_data_forms)),
             url(r'^gen_certificate_list/$', self.admin_site.admin_view(self.gen_certificate_list)),
         ]
         #New urls must appear before the exists ones.
@@ -780,61 +768,40 @@ class StudentAdmin(ImportExportModelAdmin):
         except AttributeError:
             return cl.query_set
 
-    def gen_data_sheet_printables(self, request, *args, **kwargs):
+    def gen_data_forms(self, request, *args, **kwargs):
         students = self.get_student_queryset(request)
         
-        return self.gen_data_sheet_printable_response(students)
+        return self._gen_data_forms(students)
     
-    def gen_data_sheet_printable(self, request, object_id):
+    def gen_data_form(self, request, object_id):
         student = Student.objects.get(pk=object_id)
         
-        return self.gen_data_sheet_printable_response((student,))
+        return self._gen_data_forms((student,))
 
-    def gen_data_sheet_printable_response(self, students):
-        pdfmetrics.registerFont(ttfonts.TTFont("simsun", "simsun.ttc"))
-        pagesize = landscape(A4)
-        fontName = 'simsun'
-
-        output = PdfFileWriter()
-
-        dictGenders = dict(Genders)
-
-        templateImagePath = os.path.join(os.path.dirname(__file__), 'resources'+os.sep+'DataSheetTemplate.jpg')
-        templateImage = Image(templateImagePath, width=29.7*cm, height=21*cm)
+    def _gen_data_forms(self, students):
+        '''
+        输出PDF内容到临时文件，随后分段发送到客户端。
+        从而避免内存过多消耗，同时临时文件会自动移除。
+        '''
         
-        buffer = BytesIO()
-        p = canvas.Canvas(buffer, pagesize=pagesize)
-        for student in students:
-            templateImage.drawOn(p, 0, 0)
-            p.setFont("simsun", 12)
-            p.drawString(4.4*cm, pagesize[1]-2.93*cm, '%s, %s' % (student.lastName, student.firstName))
-            p.drawString(11.9*cm, pagesize[1]-2.93*cm, str(student.number))
-            if student.gender:
-                p.drawString(3.9*cm, pagesize[1]-3.63*cm, dictGenders[student.gender])
-            p.drawString(11.9*cm, pagesize[1]-3.63*cm, str(student.dateOfBirth))
-            p.drawString(3.9*cm, pagesize[1]-4.35*cm, student.schoolClass.school.name)
-            p.drawString(11.1*cm, pagesize[1]-4.35*cm, str(student.schoolClass))
-            p.drawString(4.8*cm, pagesize[1]-5.02*cm, str(student.dateOfTesting))
-            p.showPage()
-            
-        p.save()
+        fp = tempfile.TemporaryFile()
+        
+        generator = StudentDataFormGenerator(fp)
+        
+        generator.build(students)
+        
+        filesize = fp.tell()
+        fp.seek(0)
         
         if len(students) == 1:
-            student = students[0]
-            if student.dateOfTesting and student.number:
-                filename = 'Data Sheet %s %s.pdf' % (student.dateOfTesting, student.number)
-            else:
-                filename = 'Data Sheet.pdf'
+            filename = 'Data_Form.pdf'
         else:
-            filename = 'Data Sheet.pdf'
-
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
-
-        pdf = buffer.getvalue()
-        buffer.close()
-        response.write(pdf)
-
+            filename = 'Data_Forms.pdf'
+        
+        response = StreamingHttpResponse(FileWrapper(fp), content_type='application/pdf')
+        response['Content-Length'] = filesize
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        
         return response
 
     def getscoreItems(self, student):
@@ -1396,7 +1363,6 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
         fp.seek(0)
         
         if len(studentEvaluations) == 1:
-            studentEvaluation = studentEvaluations[0]
             filename = 'Certificate.pdf'
         else:
             filename = 'Certificates.pdf'
