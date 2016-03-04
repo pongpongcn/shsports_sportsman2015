@@ -1,6 +1,6 @@
 {% extends "admin/change_list.html" %}
 {% load i18n %}
 {% block object-tools-items %}
-	<li><a href="gen_certificate_printable/{{ cl.get_query_string }}" class="historylink">获取证书</a></li>
+	<li><a href="certificate/{{ cl.get_query_string }}" class="historylink">获取证书</a></li>
 	{{ block.super }}
 {% endblock %}

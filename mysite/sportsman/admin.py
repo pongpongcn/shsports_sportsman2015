@@ -1237,8 +1237,8 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super(StudentEvaluationAdmin, self).get_urls()
         my_urls = [
-            url(r'^(.+)/gen_certificate_printable/$', self.admin_site.admin_view(self.gen_certificate_printable)),
-            url(r'^gen_certificate_printable/$', self.admin_site.admin_view(self.gen_certificate_printables)),
+            url(r'^(.+)/certificate/$', self.admin_site.admin_view(self.gen_certificate)),
+            url(r'^certificate/$', self.admin_site.admin_view(self.gen_certificates)),
         ]
         return my_urls + urls 
     
@@ -1370,17 +1370,17 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
         return obj.student.bmi
     bmi.short_description = 'BMI'
 
-    def gen_certificate_printable(self, request, object_id):
+    def gen_certificate(self, request, object_id):
         studentEvaluation = StudentEvaluation.objects.get(pk=object_id)
         
-        return self._gen_certificate((studentEvaluation,))
+        return self._gen_certificates((studentEvaluation,))
     
-    def gen_certificate_printables(self, request, *args, **kwargs):
+    def gen_certificates(self, request, *args, **kwargs):
         studentEvaluations = self.get_student_evaluation_queryset(request)
         
-        return self._gen_certificate(studentEvaluations)
+        return self._gen_certificates(studentEvaluations)
 
-    def _gen_certificate(self, studentEvaluations):
+    def _gen_certificates(self, studentEvaluations):
         '''
         输出PDF内容到临时文件，随后分段发送到客户端。
         从而避免内存过多消耗，同时临时文件会自动移除。
