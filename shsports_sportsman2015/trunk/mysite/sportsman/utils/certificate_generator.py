@@ -3,7 +3,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Table, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
-from reportlab.lib.units import cm, inch
+from reportlab.lib.units import cm
 from reportlab.lib.fonts import tt2ps
 from reportlab.pdfgen import canvas
 from reportlab.platypus.flowables import Flowable, DocAssign
@@ -13,7 +13,6 @@ from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarC
 from reportlab.graphics.charts.textlabels import LabelOffset
 
 import os, json
-from io import BytesIO
 from reportlab.lib import colors
 from decimal import Decimal
 
@@ -199,7 +198,7 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     
     headerHeight = 5*cm
     footerHeight = 2.5*cm
-    leftWidth = 4*cm
+    leftWidth = 3.2*cm
     signatureHeight = 2*cm
 
     def __init__(self, filename, **kw):
@@ -212,13 +211,13 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
         '''Footer Region'''
         w,h = self.pagesize[0], self.footerHeight
         x,y = 0, self.bottomMargin
-        frameFooter = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
+        frameFooter = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=self.showBoundary)
         frameFooter.addFromList([self.bottomImage], canvas)
         
         '''Left Region'''
         w,h = self.leftWidth, self.height - self.headerHeight - self.footerHeight
         x,y = self.leftMargin, self.pagesize[1] - self.topMargin - self.headerHeight - h
-        frameLeft = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
+        frameLeft = Frame(x, y, w, h, leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0, showBoundary=self.showBoundary)
         frameLeft.addFromList([self.leftImage], canvas)
         
         canvas.restoreState()
@@ -309,6 +308,8 @@ class PdfStudentComment(Flowable):
         else:
             c.drawString(0,aH-h,'基于本次测试的综合表现，您的孩子在以下这几个项目中具有较好的运动潜质：')
             aH = aH-h
+            
+            c.setFont(self.style.fontName, self.style.fontSize)
             
             certificate_data = json.loads(studentEvaluation.certificate_data)
             potential_items = certificate_data['potential_items']

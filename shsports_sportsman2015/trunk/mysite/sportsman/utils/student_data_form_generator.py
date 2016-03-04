@@ -1,22 +1,10 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Table, Image
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
-from reportlab.lib.units import cm, inch
-from reportlab.lib.fonts import tt2ps
-from reportlab.lib.pagesizes import A4, landscape, letter
+from reportlab.lib.units import cm
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import Image
 from reportlab.pdfgen import canvas
-from reportlab.platypus.flowables import Flowable, DocAssign
-from reportlab.platypus.doctemplate import FrameBreak
-from reportlab.graphics.shapes import Drawing, Rect, String
-from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
-from reportlab.graphics.charts.textlabels import LabelOffset
-
-import os, json
-from io import BytesIO
-from reportlab.lib import colors
-from decimal import Decimal
+import os
 
 pdfmetrics.registerFont(TTFont("SimSun", "simsun.ttc"))
 
