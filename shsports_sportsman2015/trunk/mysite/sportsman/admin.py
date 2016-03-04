@@ -39,10 +39,6 @@ from .utils.certificate_generator import CertificateGenerator
 from .models import Factor
 from .models import Student
 from .models import StudentEvaluation
-from .models import TestRefData
-from .models import TestRefDataItem
-from .models import TestSummaryData
-from .models import TestSummaryDataItem
 from .models import UserProfile
 from .models import District
 from .models import School
@@ -53,31 +49,22 @@ from .models import StandardParameter
 from .models import TestPlan
 
 # Register your models here.
-MovementTypeKeys = (
-        ('20m_1', '20米冲刺跑 - 第1次跑'),
-        ('20m_2', '20米冲刺跑 - 第2次跑'),
-        ('bal60_1', '平衡 - 6.0厘米 第1次'),
-        ('bal60_2', '平衡 - 6.0厘米 第2次'),
-        ('bal45_1', '平衡 - 4.5厘米 第1次'),
-        ('bal45_2', '平衡 - 4.5厘米 第2次'),
-        ('bal30_1', '平衡 - 3.0厘米 第1次'),
-        ('bal30_2', '平衡 - 3.0厘米 第2次'),
-        ('shh_1s', '侧向跳 - 第1次跳 成功'),
-        ('shh_1f', '侧向跳 - 第1次跳 失败'),
-        ('shh_2s', '侧向跳 - 第2次跳 成功'),
-        ('shh_2f', '侧向跳 - 第2次跳 失败'),
-        ('rb_1', '直身前驱 - 第1次'),
-        ('rb_2', '直身前驱 - 第2次'),
-        ('ball_1', '投掷 - 第1次'),
-        ('ball_2', '投掷 - 第2次'),
-        ('ball_3', '投掷 - 第3次'),
-        ('ls', '俯卧撑'),
-        ('su', '仰卧起坐'),
-        ('sws_1', '跳远 - 第1次'),
-        ('sws_2', '跳远 - 第2次'),
-        ('lauf_runden', '六分跑 - 圈数'),
-        ('lauf_rest', '六分跑 - 剩余距离'),
-    )
+
+# Define an inline admin descriptor for Employee model
+# which acts a bit like a singleton
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = '用户资料'
+
+# Define a new User admin
+class UserAdmin(BaseUserAdmin):
+    inlines = (UserProfileInline,)
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
+
 
 class StandardParameterResource(resources.ModelResource):
     class Meta:
@@ -763,8 +750,6 @@ class StudentAdmin(ImportExportModelAdmin):
         my_urls = [
             url(r'^(.+)/gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printable)),
             url(r'^gen_data_sheet_printable/$', self.admin_site.admin_view(self.gen_data_sheet_printables)),
-            url(r'^(.+)/gen_certificate_printable/$', self.admin_site.admin_view(self.gen_certificate_printable)),
-            url(r'^gen_certificate_printable/$', self.admin_site.admin_view(self.gen_certificate_printables)),
             url(r'^gen_certificate_list/$', self.admin_site.admin_view(self.gen_certificate_list)),
         ]
         #New urls must appear before the exists ones.
@@ -805,16 +790,6 @@ class StudentAdmin(ImportExportModelAdmin):
         
         return self.gen_data_sheet_printable_response((student,))
 
-    def gen_certificate_printables(self, request, *args, **kwargs):
-        students = self.get_student_queryset(request)
-        
-        return self.gen_certificate_printable_response(students)
-    
-    def gen_certificate_printable(self, request, object_id):
-        student = Student.objects.get(pk=object_id)
-        
-        return self.gen_certificate_printable_response((student,))
-
     def gen_data_sheet_printable_response(self, students):
         pdfmetrics.registerFont(ttfonts.TTFont("simsun", "simsun.ttc"))
         pagesize = landscape(A4)
@@ -824,7 +799,7 @@ class StudentAdmin(ImportExportModelAdmin):
 
         dictGenders = dict(Genders)
 
-        templateImagePath = os.path.join(os.path.dirname(__file__), 'storage/DataSheetTemplate.jpg')
+        templateImagePath = os.path.join(os.path.dirname(__file__), 'resources'+os.sep+'DataSheetTemplate.jpg')
         templateImage = Image(templateImagePath, width=29.7*cm, height=21*cm)
         
         buffer = BytesIO()
@@ -862,76 +837,6 @@ class StudentAdmin(ImportExportModelAdmin):
 
         return response
 
-    def gen_certificate_printable_response(self, students):
-        pdfmetrics.registerFont(ttfonts.TTFont("simsun", "simsun.ttc"))
-        pagesize = A4
-        fontName = 'simsun'
-
-        output = PdfFileWriter()
-
-        dictGenders = dict(Genders)
-
-        templateImagePath = os.path.join(os.path.dirname(__file__), 'storage/CertificateTemplate.jpg')
-        templateImage = Image(templateImagePath, width=21*cm, height=29.7*cm)
-
-        lineHeight = 0.582*cm
-        stripHeight = 0.4*cm
-        stripWidth = 10.47*cm
-        
-        buffer = BytesIO()
-        p = canvas.Canvas(buffer, pagesize=pagesize)
-        for student in students:
-            if check_student_error(student) != None:
-                continue
-            
-            try:
-                scoreItems = self.getscoreItems(student)
-            except:
-                continue
-            
-            templateImage.drawOn(p, 0, 0)
-            p.setFont("simsun", 9)
-            p.drawString(6*cm, pagesize[1]-7.5*cm, student.lastName)
-            p.drawString(6*cm, pagesize[1]-8.05*cm, student.firstName)
-            p.drawString(14*cm, pagesize[1]-7.5*cm, student.schoolClass.school.name)
-            p.drawString(14*cm, pagesize[1]-8.05*cm, str(student.schoolClass))
-
-            scoreItem_offset_x = 8.225*cm
-            scoreItem_offset_y = pagesize[1]-11.1*cm
-
-            for scoreItem in scoreItems:
-                p.saveState()
-                p.setFillColor(colors.HexColor('#7fd8ff'))
-                p.rect(scoreItem_offset_x,scoreItem_offset_y-stripHeight,Decimal(stripWidth)*Decimal(scoreItem.percentage),stripHeight, fill=1, stroke=0)
-                p.restoreState()
-
-                formatString = '%d%%(%0.'+str(scoreItem.precision)+'f %s)'
-                p.drawString(scoreItem_offset_x, scoreItem_offset_y-stripHeight+0.1*cm, formatString % (scoreItem.percentage*Decimal(100), scoreItem.original_score, scoreItem.unit))
-                
-                scoreItem_offset_y -= lineHeight
-            
-            p.showPage()
-            
-        p.save()
-        
-        if len(students) == 1:
-            student = students[0]
-            if student.dateOfTesting and student.number:
-                filename = 'Certificate_%s_%s.pdf' % (student.dateOfTesting, student.number)
-            else:
-                filename = 'Certificate.pdf'
-        else:
-            filename = 'Certificates.pdf'
-
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="' + filename +'"'
-
-        pdf = buffer.getvalue()
-        buffer.close()
-        response.write(pdf)
-
-        return response
-
     def getscoreItems(self, student):
         # 评分方式，'standardParameter'或'factor'
         score_method = 'standardParameter'
@@ -953,7 +858,7 @@ class StudentAdmin(ImportExportModelAdmin):
     def getscoreItems_standardParameter(self, student):
         version = 'for_china_by_german_at_201510'
 
-        age = calculate_age(student.dateOfBirth, student.dateOfTesting)
+        age = student.age
             
         standardParameters = StandardParameter.objects.filter(version=version, gender=student.gender, age=age)
 
@@ -1021,7 +926,7 @@ class StudentAdmin(ImportExportModelAdmin):
     def getscoreItems_factor(self, student):
         version = 'for_china_by_chinese_at_201509'
 
-        month_age = calculate_monthdelta(student.dateOfBirth, student.dateOfTesting)
+        month_age = student.months_of_age
 
         factors = Factor.objects.filter(version=version, gender=student.gender, month_age=month_age)
 
@@ -1134,9 +1039,9 @@ class StudentAdmin(ImportExportModelAdmin):
                 continue
 
             try:
-                age = calculate_age(student.dateOfBirth, student.dateOfTesting)
-                month_age = calculate_monthdelta(student.dateOfBirth, student.dateOfTesting)
-                day_age = calculate_daydelta(student.dateOfBirth, student.dateOfTesting)
+                age = student.age
+                month_age = student.months_of_age
+                day_age = student.days_of_age
                 
                 BMI = round(student.weight / (student.height * Decimal(0.01)) ** 2, 1)
 
@@ -1221,15 +1126,9 @@ class StudentAdmin(ImportExportModelAdmin):
             if check_student_error(student) != None:
                 continue
 
-            try:
-                age = calculate_age(student.dateOfBirth, student.dateOfTesting)
-            except:
-                age = None
+            age = student.age
 
-            try:
-                month_age = calculate_monthdelta(student.dateOfBirth, student.dateOfTesting)
-            except:
-                month_age = None
+            month_age = student.months_of_age
 
             BMI = round(student.weight / (student.height * Decimal(0.01)) ** 2, 1)
             
@@ -1324,21 +1223,6 @@ class StudentCertificateScoreItem:
         self.original_score = original_score
         self.unit = unit
         self.precision = precision
-
-# Define an inline admin descriptor for Employee model
-# which acts a bit like a singleton
-class UserProfileInline(admin.StackedInline):
-    model = UserProfile
-    can_delete = False
-    verbose_name_plural = '用户资料'
-
-# Define a new User admin
-class UserAdmin(BaseUserAdmin):
-    inlines = (UserProfileInline,)
-
-# Re-register UserAdmin
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
 
 class StudentEvaluationAdmin(admin.ModelAdmin):
     list_display = ('testPlan','noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','is_talent','is_frail')
@@ -1562,87 +1446,6 @@ class TestPlanAdmin(admin.ModelAdmin):
 class SequenceNumberAdmin(admin.ModelAdmin):
     list_display = ('code', 'value', 'prefix', 'suffix')
     ordering = ('code',)
-
-class TestRefDataItemForm(forms.ModelForm):
-    key = forms.ChoiceField(label='数据项',
-         choices=BLANK_CHOICE_DASH + list(MovementTypeKeys))
-
-class TestRefDataItemInline(admin.TabularInline):
-    model = TestRefDataItem
-    form = TestRefDataItemForm
-
-def calculate_monthdelta(date1, date2):
-    def is_last_day_of_the_month(date):
-        days_in_month = calendar.monthrange(date.year, date.month)[1]
-        return date.day == days_in_month
-    imaginary_day_2 = 31 if is_last_day_of_the_month(date2) else date2.day
-    monthdelta = (
-        (date2.month - date1.month) +
-        (date2.year - date1.year) * 12 +
-        (-1 if date1.day > imaginary_day_2 else 0)
-        )
-    return monthdelta
-
-def calculate_age(date1, date2):
-    return date2.year - date1.year - ((date2.month, date2.day) < (date1.month, date1.day))
-
-def calculate_daydelta(date1, date2):
-    return (date2 - date1).days
-
-def evaluate_for_summary_item_20m(testSummaryData):
-    movement_type = '20m'
-    testRefData = testSummaryData.test_ref_data
-    testRefDataItems_20m = TestRefDataItem.objects.filter(test_ref_data=testRefData, movement_type=movement_type)
-    factors_20m = Factor.objects.filter(movement_type=movement_type ,gender=testSummaryData.student.gender, month_age=testSummaryData.month_age)
-    if testRefDataItems_20m.exists() and factors_20m.exists():
-        testSummaryDataItem = TestSummaryDataItem(test_summary_data=testSummaryData, movement_type=movement_type)
-        testSummaryDataItem.value = min([testRefDataItems_20m.get(key='20m_1').value, testRefDataItems_20m.get(key='20m_2').value])
-        testSummaryDataItem.evaluate_date = timezone.now()
-        factor_20m = factors_20m[0]
-        testSummaryDataItem.evaluate_value = round(1 - scipy.stats.norm(factor_20m.mean, factor_20m.standard_deviation).cdf(testSummaryDataItem.value), 2)
-        testSummaryDataItem.save()
-
-def evaluate_for_summary_item_ls(testSummaryData):
-    movement_type = 'ls'
-    testRefData = testSummaryData.test_ref_data
-    testRefDataItems_ls = TestRefDataItem.objects.filter(test_ref_data=testRefData, movement_type=movement_type)
-    factors_ls = Factor.objects.filter(movement_type=movement_type ,gender=testSummaryData.student.gender, month_age=testSummaryData.month_age)
-    if testRefDataItems_ls.exists() and factors_ls.exists():
-        testSummaryDataItem = TestSummaryDataItem(test_summary_data=testSummaryData, movement_type=movement_type)
-        testSummaryDataItem.value = testRefDataItems_ls.get(key='ls').value
-        testSummaryDataItem.evaluate_date = timezone.now()
-        factor_ls = factors_ls[0]
-        testSummaryDataItem.evaluate_value = round(scipy.stats.norm(factor_ls.mean, factor_ls.standard_deviation).cdf(testSummaryDataItem.value), 2)
-        testSummaryDataItem.save()    
-
-class TestRefDataAdmin(admin.ModelAdmin):
-    list_display = ('testing_date','testing_number','student', 'school_name')
-    list_filter = ('student__school_name',)
-    inlines = [
-        TestRefDataItemInline,
-    ]
-    def school_name(self, obj):
-        return obj.student.school_name
-    school_name.short_description = '学校'
-    school_name.admin_order_field = 'student__school_name'
-
-class TestRefDataItemAdmin(admin.ModelAdmin):
-    list_display = ('test_ref_data','movement_type','key', 'value')
-
-class TestSummaryDataItemInline(admin.TabularInline):
-    model = TestSummaryDataItem
-
-class TestSummaryDataAdmin(admin.ModelAdmin):
-    list_display = ('testing_date','student', 'month_age', 'school_name')
-    list_filter = ('student__school_name',)
-    inlines = [
-        TestSummaryDataItemInline,
-    ]
-    def school_name(self, obj):
-        return obj.student.school_name
-    school_name.short_description = '学校'
-    school_name.admin_order_field = 'student__school_name'
-
 
 admin.site.register(SequenceNumber, SequenceNumberAdmin)
 admin.site.register(StandardParameter,StandardParameterAdmin)
