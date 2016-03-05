@@ -19,7 +19,8 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index),
-    url(r'^accounts/login/$', 'django.contrib.auth.views.login'),
+    url(r'^accounts/login/$', views.login, name="login"),
+    url(r'^accounts/logout/$', 'django.contrib.auth.views.login'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^polls/', include('polls.urls', namespace="polls")),
     url(r'^sportsman/', include('sportsman.urls', namespace="sportsman")),

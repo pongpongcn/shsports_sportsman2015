@@ -1,6 +1,7 @@
 Django>=1.8,<1.9
 django-extensions
 django-import-export
+django-widget-tweaks
 tablib
 reportlab
 pinyin>=0.3,<0.4
