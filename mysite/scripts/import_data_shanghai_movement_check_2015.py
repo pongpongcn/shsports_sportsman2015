@@ -2,7 +2,6 @@ import tablib, os, datetime, json
 from import_export import resources, fields, widgets
 from decimal import *
 from sportsman.models import Student, School, SchoolClass, StudentEvaluation
-from sportsman.admin import calculate_age, calculate_monthdelta, calculate_daydelta
 
 class StudentResource(resources.ModelResource):
     def before_import(self, dataset, dry_run, **kwargs):
