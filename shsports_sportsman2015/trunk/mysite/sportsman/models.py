@@ -368,6 +368,10 @@ class StudentEvaluation(models.Model):
     
     is_talent = models.BooleanField('运动天赋优秀', default=False)
     is_frail = models.BooleanField('需要健康干预', default=False)
+    '''排名均基于测试批次'''
+    overall_score = models.PositiveSmallIntegerField('总分', null=True, blank=True)
+    talent_rank_number = models.PositiveSmallIntegerField('运动天赋优秀排名', null=True, blank=True)
+    frail_rank_number = models.PositiveSmallIntegerField('需要健康干预排名', null=True, blank=True)
     certificate_data = models.TextField('证书数据', null=True, blank=True)
     certificate_file = models.FileField('证书文件', upload_to='certificates/%Y/%m/%d/', null=True, blank=True)
     
