@@ -414,7 +414,7 @@ class StudentAdmin(ImportExportModelAdmin):
         从而避免内存过多消耗，同时临时文件会自动移除。
         '''
         
-        fp = tempfile.TemporaryFile()
+        fp = tempfile.NamedTemporaryFile()
         
         generator = StudentDataFormGenerator(fp)
         
@@ -983,7 +983,7 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
         从而避免内存过多消耗，同时临时文件会自动移除。
         '''
         
-        fp = tempfile.TemporaryFile()
+        fp = tempfile.NamedTemporaryFile()
         
         generator = CertificateGenerator(fp)
         
