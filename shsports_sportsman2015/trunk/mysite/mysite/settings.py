@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django_extensions',
     'import_export',
+    'widget_tweaks',
     'polls',
     'sportsman',
 )
@@ -113,6 +114,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = 'static'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'mysite_static')]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = 'media'
