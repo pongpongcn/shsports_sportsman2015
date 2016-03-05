@@ -10,4 +10,4 @@ def login(request):
     return auth_views.login(request)
 
 def logout(request):   
-    return auth_views.logout_then_login(request)
+    return auth_views.logout(request)

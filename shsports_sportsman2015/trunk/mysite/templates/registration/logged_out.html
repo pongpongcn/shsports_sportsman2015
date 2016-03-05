@@ -1,0 +1,37 @@
+{% load staticfiles %}<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>运动能力筛查 | 已注销</title>
+
+    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "font-awesome/css/font-awesome.css" %}" rel="stylesheet">
+
+    <link href="{% static "css/animate.css" %}" rel="stylesheet">
+    <link href="{% static "css/style.css" %}" rel="stylesheet">
+
+</head>
+
+<body class="gray-bg">
+
+            <div class="wrapper wrapper-content">
+                <div class="middle-box text-center animated fadeInDownBig">
+                    <h3 class="font-bold">已注销</h3>
+                    <div class="error-desc">
+                        您已成功注销，可以安全离开。
+                        <br/><a href="{% url 'index' %}" class="btn btn-primary m-t">再次访问</a>
+                    </div>
+                </div>
+            </div>
+			
+    <!-- Mainly scripts -->
+    <script src="{% static "js/jquery-2.1.1.js" %}"></script>
+    <script src="{% static "js/bootstrap.min.js" %}"></script>
+
+</body>
+
+</html>
