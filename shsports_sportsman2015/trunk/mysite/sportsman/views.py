@@ -81,7 +81,7 @@ class IndexView(TemplateView):
         if test_plan == None:
             return []
         
-        ranking_query = StudentEvaluation.objects.filter(testPlan=test_plan, is_talent=True)
+        ranking_query = StudentEvaluation.objects.select_related('student','student__schoolClass','student__schoolClass__school','student__schoolClass__school__district').filter(testPlan=test_plan, is_talent=True)
         if district != None:
             ranking_query = ranking_query.filter(student__schoolClass__school__district=district)
             
@@ -93,7 +93,7 @@ class IndexView(TemplateView):
         if test_plan == None:
             return []
         
-        ranking_query = StudentEvaluation.objects.filter(testPlan=test_plan, is_frail=True)
+        ranking_query = StudentEvaluation.objects.select_related('student','student__schoolClass','student__schoolClass__school','student__schoolClass__school__district').filter(testPlan=test_plan, is_frail=True)
         if district != None:
             ranking_query = ranking_query.filter(student__schoolClass__school__district=district)
             
@@ -102,7 +102,6 @@ class IndexView(TemplateView):
         return self.get_rankings(talent_ranking_list, 'frail')
     
     def get_rankings(self, studentEvaluationsOrdered, category):
-        '''为了提高性能，Hard Code数量限制'''
         studentEvaluationsOrdered = studentEvaluationsOrdered[:10]
     
         studentRankings = []
@@ -242,7 +241,7 @@ class StudentEvaluationListView(TemplateView):
         if test_plan == None:
             return []
         
-        ranking_query = StudentEvaluation.objects.filter(testPlan=test_plan)
+        ranking_query = StudentEvaluation.objects.select_related('student','student__schoolClass','student__schoolClass__school','student__schoolClass__school__district').filter(testPlan=test_plan)
         if district != None:
             ranking_query = ranking_query.filter(student__schoolClass__school__district=district)
             
@@ -335,7 +334,10 @@ def get_student_evaluation_queryset(request):
     test_plan = get_current_test_plan(request)
     district = get_current_district(request)
     
-    studentEvaluations = StudentEvaluation.objects.filter(testPlan=test_plan, student__schoolClass__school__district=district)
+    studentEvaluations = StudentEvaluation.objects.select_related('student','student__schoolClass','student__schoolClass__school','student__schoolClass__school__district').filter(testPlan=test_plan)
+    
+    if district is not None:
+        studentEvaluations = StudentEvaluation.filter(student__schoolClass__school__district=district)
     
     return studentEvaluations
 
