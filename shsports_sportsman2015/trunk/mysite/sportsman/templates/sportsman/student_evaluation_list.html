@@ -1,0 +1,93 @@
+{% extends "sportsman/base.html" %}
+{% load staticfiles %}
+
+{% block title %}运动能力筛查 | 测试成绩{% endblock %}
+
+{% block content %}
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="ibox float-e-margins">
+						<div class="ibox-title">
+							<span class="label label-success pull-right">{% if district == None %}全市{% else %}{{ district }}{% endif %}</span>
+							<a class="button button-primary pull-right" href="{%url 'sportsman:studentEvaluationCertificate'%}?{{ test_plan_id_field_name }}={{ test_plan.id }}"><i class="fa fa-file-pdf-o text-navy"></i></a>
+							<h5>测试成绩</h5>
+						</div>
+						<div class="ibox-content">
+							<div class="row">
+                                <div class="col-sm-5 m-b-xs">
+									<select data-placeholder="选取一个批次..." class="form-control" style="width:350px;" onchange="location='{%url 'sportsman:studentEvaluations'%}?{{ test_plan_id_field_name }}='+this.options[this.selectedIndex].value">
+										{% for item in available_test_plans %}
+										<option value="{{ item.id }}" {% if test_plan.id == item.id %}selected{% endif %} >{{ item.name }}</option>
+										{% endfor %}
+									</select>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>姓名</th>
+                                        <th>性别</th>
+                                        <th>出生年月</th>
+                                        <th>学校</th>
+                                        <th>班级</th>
+                                        <th>总成绩</th>
+										{% if district == None %}
+										<th>区县</th>
+										{% else %}
+										<th>区排名</th>
+										{% endif %}
+                                        <th>市排名</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for ranking in overall_score_rankings %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td class="{% if ranking.is_talent %}talent{% endif %} {% if ranking.is_frail %}frail{% endif %}">{{ ranking.name }}</td>
+                                        <td>{{ ranking.gender }}</td>
+                                        <td>{{ ranking.birthdate }}</td>
+                                        <td>{{ ranking.school }}</td>
+                                        <td>{{ ranking.schoolClass }}</td>
+                                        <td>{{ ranking.overall_score }}</td>
+										{% if district == None %}
+										<td>{{ ranking.district }}</td>
+										{% else %}
+										<td>{{ ranking.district_rank_number }}</td>
+										{% endif %}
+                                        <td>
+										{% if ranking.rank_number != None%}
+											{{ ranking.rank_number }}
+										{% endif %}
+										</td>
+										<td><a href="{%url 'sportsman:studentEvaluationCertificate' ranking.student_evaluation_id%}?{{ test_plan_id_field_name }}={{ test_plan.id }}"><i class="fa fa-file-pdf-o text-navy"></i></a></td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+						</div>
+					</div>
+				</div>
+            </div>
+{% endblock %}
+
+{% block script %}
+    <!-- Flot -->
+    <script src="{% static "sportsman/js/plugins/flot/jquery.flot.js" %} "></script>
+    <script src="{% static "sportsman/js/plugins/flot/jquery.flot.tooltip.min.js" %} "></script>
+    <script src="{% static "sportsman/js/plugins/flot/jquery.flot.spline.js" %} "></script>
+    <script src="{% static "sportsman/js/plugins/flot/jquery.flot.resize.js" %} "></script>
+    <script src="{% static "sportsman/js/plugins/flot/jquery.flot.pie.js" %} "></script>
+    <script src="{% static "sportsman/js/plugins/flot/jquery.flot.symbol.js" %} "></script>
+    <script src="{% static "sportsman/js/plugins/flot/curvedLines.js" %} "></script>
+
+    <!-- Custom and plugin javascript -->
+    <script src="{% static "sportsman/js/inspinia.js" %} "></script>
+    <script src="{% static "sportsman/js/plugins/pace/pace.min.js" %} "></script>
+
+    <!-- jQuery UI -->
+    <script src="{% static "sportsman/js/plugins/jquery-ui/jquery-ui.min.js" %} "></script>
+{% endblock %}

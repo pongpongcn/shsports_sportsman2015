@@ -69,7 +69,7 @@
                         <div class="ibox-title">
                             <h5>运动天赋优秀名单</h5>
                             <div class="ibox-tools">
-                                <a href="{%url 'sportsman:index'%}">
+                                <a href="{%url 'sportsman:studentEvaluations'%}?{{ test_plan_id_field_name }}={{ test_plan.id }}">
                                     more
                                 </a>
                             </div>
@@ -135,7 +135,7 @@
                         <div class="ibox-title">
                             <h5>健康干预名单</h5>
                             <div class="ibox-tools">
-                                <a href="#">
+                                <a href="{%url 'sportsman:studentEvaluations'%}?{{ test_plan_id_field_name }}={{ test_plan.id }}">
                                     more
                                 </a>
                             </div>

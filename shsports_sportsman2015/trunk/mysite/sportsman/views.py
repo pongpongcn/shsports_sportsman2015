@@ -2,15 +2,21 @@ from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.shortcuts import render
+from django.http import StreamingHttpResponse
+from django.core.servers.basehttp import FileWrapper
+import tempfile
 
 from .models import District
 from .models import TestPlan
 from .models import StudentEvaluation
 
+from .utils.certificate_generator import CertificateGenerator
+
+test_plan_id_field_name = 'p_id'
+
 # Create your views here.
 class IndexView(TemplateView):
     template_name = "sportsman/index.html"
-    test_plan_id_field_name = 'p'
     
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
@@ -26,7 +32,7 @@ class IndexView(TemplateView):
         context['test_plan'] = test_plan
         context['district'] = district
         context['available_test_plans'] = available_test_plans
-        context['test_plan_id_field_name'] = self.test_plan_id_field_name
+        context['test_plan_id_field_name'] = test_plan_id_field_name
         context['talent_rankings'] = self.get_talent_rankings(test_plan=test_plan, district=district)
         context['frail_rankings'] = self.get_frail_rankings(test_plan=test_plan, district=district)
         context['local_statistics'] = self.get_statistics(test_plan=test_plan,district=district)
@@ -36,7 +42,7 @@ class IndexView(TemplateView):
     
     def get_current_test_plan(self):
         try:
-            test_plan_id = int(self.request.GET.get(self.test_plan_id_field_name))
+            test_plan_id = int(self.request.GET.get(test_plan_id_field_name))
         except:
             test_plan_id = None
 
@@ -184,10 +190,205 @@ class IndexView(TemplateView):
                                 female_talent=female_talent,
                                 female_frail=female_frail,
                                 female_other=female_other)
+
+                                
+class StudentEvaluationListView(TemplateView):
+    template_name = "sportsman/student_evaluation_list.html"
     
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(StudentEvaluationListView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(StudentEvaluationListView, self).get_context_data(**kwargs)
+        
+        test_plan = self.get_current_test_plan()
+        district = self.get_current_district()
+        available_test_plans = self.get_available_test_plans()
+        
+        context['test_plan'] = test_plan
+        context['district'] = district
+        context['available_test_plans'] = available_test_plans
+        context['test_plan_id_field_name'] = test_plan_id_field_name
+        context['overall_score_rankings'] = self.get_overall_score_rankings(test_plan=test_plan, district=district)
+        
+        return context
+        
+    def get_current_test_plan(self):
+        try:
+            test_plan_id = int(self.request.GET.get(test_plan_id_field_name))
+        except:
+            test_plan_id = None
+
+        available_test_plans = self.get_available_test_plans()
+        
+        if test_plan_id != None:
+            for test_plan in available_test_plans:
+                if test_plan.id == test_plan_id:
+                    return test_plan
+            return None
+        else:
+            if len(available_test_plans) > 0:
+                return available_test_plans[0]
+            else:
+                return None
+
+    def get_current_district(self):
+        currentUser = self.request.user
+        if currentUser.groups.filter(name='district_users').count() > 0:
+            district = None
+            try:
+                userprofile = currentUser.userprofile
+                if userprofile.district != None:
+                    district = currentUser.userprofile.district
+            except:
+                pass
+            return district
+        else:
+            return None
+    
+    def get_available_test_plans(self):
+        test_plans = list(TestPlan.objects.filter(isPublished=True).order_by('-startDate', '-endDate'))
+        return test_plans
+    
+    def get_overall_score_rankings(self, test_plan, district=None):
+        if test_plan == None:
+            return []
+        
+        ranking_query = StudentEvaluation.objects.filter(testPlan=test_plan)
+        if district != None:
+            ranking_query = ranking_query.filter(student__schoolClass__school__district=district)
+            
+        talent_ranking_list = ranking_query.order_by('-overall_score')
+        
+        return self.get_rankings(talent_ranking_list)
+
+    def get_rankings(self, studentEvaluationsOrdered):
+        studentRankings = []
+        
+        lastScore = None
+        lastNumber = 0
+        lastSameCount = 1
+        
+        for studentEvaluation in studentEvaluationsOrdered:
+            student = studentEvaluation.student
+            name = '%s%s' % (student.lastName, student.firstName)
+            
+            if studentEvaluation.talent_rank_number is not None:
+                rank_number = studentEvaluation.talent_rank_number
+            elif studentEvaluation.frail_rank_number is not None:
+                rank_number = -1 * studentEvaluation.frail_rank_number
+            else:
+                rank_number = None
+                
+            if studentEvaluation.overall_score == lastScore:
+                district_rank_number = lastNumber
+                lastSameCount += 1
+            else:
+                district_rank_number = lastNumber + lastSameCount
+                lastScore = studentEvaluation.overall_score
+                lastNumber = district_rank_number
+                lastSameCount = 1
+                
+            studentRanking = StudentRanking(name=name,
+                                gender=student.get_gender_display(),
+                                birthdate=student.dateOfBirth,
+                                school=student.schoolClass.school,
+                                schoolClass=student.schoolClass,
+                                overall_score=studentEvaluation.overall_score,
+                                rank_number=rank_number,
+                                district = student.schoolClass.school.district,
+                                district_rank_number=district_rank_number,
+                                is_talent = studentEvaluation.is_talent,
+                                is_frail = studentEvaluation.is_frail,
+                                student_evaluation_id = studentEvaluation.id)
+            studentRankings.append(studentRanking)
+            
+        return studentRankings
+
+def gen_certificate(request, student_evaluation_id):
+    studentEvaluations = get_student_evaluation_queryset(request)
+    
+    studentEvaluations = studentEvaluations.filter(pk=student_evaluation_id)
+    
+    return _gen_certificates(studentEvaluations)
+
+def gen_certificates(request):
+    studentEvaluations = get_student_evaluation_queryset(request)
+    
+    return _gen_certificates(studentEvaluations)
+
+def _gen_certificates(studentEvaluations):
+    '''
+    输出PDF内容到临时文件，随后分段发送到客户端。
+    从而避免内存过多消耗，同时临时文件会自动移除。
+    '''
+    
+    fp = tempfile.NamedTemporaryFile()
+    
+    generator = CertificateGenerator(fp)
+    
+    generator.build(studentEvaluations)
+    
+    filesize = fp.tell()
+    fp.seek(0)
+    
+    if len(studentEvaluations) == 1:
+        filename = 'Certificate.pdf'
+    else:
+        filename = 'Certificates.pdf'
+    
+    response = StreamingHttpResponse(FileWrapper(fp), content_type='application/pdf')
+    response['Content-Length'] = filesize
+    response['Content-Disposition'] = "attachment; filename=%s" % filename
+    
+    return response
+
+def get_student_evaluation_queryset(request):
+    test_plan = get_current_test_plan(request)
+    district = get_current_district(request)
+    
+    studentEvaluations = StudentEvaluation.objects.filter(testPlan=test_plan, student__schoolClass__school__district=district)
+    
+    return studentEvaluations
+
+def get_current_test_plan(request):
+    try:
+        test_plan_id = int(request.GET.get(test_plan_id_field_name))
+    except:
+        test_plan_id = None
+    
+    available_test_plans = get_available_test_plans()
+    
+    if test_plan_id != None:
+        for test_plan in available_test_plans:
+            if test_plan.id == test_plan_id:
+                return test_plan
+        return None
+    else:
+        return None
+
+def get_current_district(request):
+    currentUser = request.user
+    if currentUser.groups.filter(name='district_users').count() > 0:
+        district = None
+        try:
+            userprofile = currentUser.userprofile
+            if userprofile.district != None:
+                district = currentUser.userprofile.district
+        except:
+            pass
+        return district
+    else:
+        return None    
+
+def get_available_test_plans():
+    test_plans = list(TestPlan.objects.filter(isPublished=True).order_by('-startDate', '-endDate'))
+    return test_plans
+        
 '''View Models'''
 class StudentRanking():
-    def __init__(self, name, gender, birthdate, school, schoolClass, overall_score, rank_number, district, district_rank_number = None):
+    def __init__(self, name, gender, birthdate, school, schoolClass, overall_score, rank_number, district, district_rank_number = None, is_talent = None, is_frail = None, student_evaluation_id = None):
         self.name = name
         self.gender = gender
         self.birthdate = birthdate
@@ -197,6 +398,9 @@ class StudentRanking():
         self.rank_number = rank_number
         self.district = district
         self.district_rank_number = district_rank_number
+        self.is_talent = is_talent
+        self.is_frail = is_frail
+        self.student_evaluation_id = student_evaluation_id
 
 class StudentStatistics():
     def __init__(self, male_talent, male_frail, male_other, female_talent, female_frail, female_other):

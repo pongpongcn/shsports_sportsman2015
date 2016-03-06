@@ -8258,3 +8258,11 @@ body.md-skin {
   height: 100%;
   border-radius: 5px;
 }
+
+.table > tbody > tr > td.talent {
+  color: #FDB45C;
+}
+
+.table > tbody > tr > td.frail {
+  color: #F7464A;
+}
