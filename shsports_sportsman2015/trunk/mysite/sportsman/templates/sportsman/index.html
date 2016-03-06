@@ -255,7 +255,11 @@
             <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars"></i> </a>
             <form role="search" class="navbar-form-custom" action="search_results.html">
                 <div class="form-group">
-                    <input type="text" placeholder="Search for something..." class="form-control" name="top-search" id="top-search">
+					<select data-placeholder="选取一个批次..." class="form-control" style="width:350px;" onchange="location='{%url 'sportsman:index'%}?{{ test_plan_id_field_name }}='+this.options[this.selectedIndex].value">
+						{% for item in available_test_plans %}
+						<option value="{{ item.id }}" {% if test_plan.id == item.id %}selected{% endif %} >{{ item.name }}</option>
+						{% endfor %}
+					</select>
                 </div>
             </form>
         </div>
@@ -382,7 +386,7 @@
                         <div class="ibox-title">
                             <h5>运动天赋优秀名单</h5>
                             <div class="ibox-tools">
-                                <a href="#">
+                                <a href="{%url 'sportsman:index'%}">
                                     more
                                 </a>
                             </div>
@@ -398,7 +402,11 @@
                                         <th>学校</th>
                                         <th>班级</th>
                                         <th>总成绩</th>
-                                        <th>区排名</th>
+										{% if district == None %}
+										<th>区县</th>
+										{% else %}
+										<th>区排名</th>
+										{% endif %}
                                         <th>市排名</th>
                                     </tr>
                                 </thead>
@@ -412,7 +420,11 @@
                                         <td>{{ ranking.school }}</td>
                                         <td>{{ ranking.schoolClass }}</td>
                                         <td>{{ ranking.overall_score }}</td>
-                                        <td>{{ ranking.local_rank_number }}</td>
+										{% if district == None %}
+										<td>{{ ranking.district }}</td>
+										{% else %}
+										<td>{{ ranking.district_rank_number }}</td>
+										{% endif %}
                                         <td>{{ ranking.rank_number }}</td>
                                     </tr>
                                     {% endfor %}
@@ -444,6 +456,9 @@
                                         <th>学校</th>
                                         <th>班级</th>
                                         <th>总成绩</th>
+										{% if district == None %}
+										<th>区县</th>
+										{% endif %}
                                         <th>市排名</th>
                                     </tr>
                                 </thead>
@@ -457,6 +472,9 @@
                                         <td>{{ ranking.school }}</td>
                                         <td>{{ ranking.schoolClass }}</td>
                                         <td>{{ ranking.overall_score }}</td>
+										{% if district == None %}
+										<td>{{ ranking.district }}</td>
+										{% endif %}
                                         <td>{{ ranking.rank_number }}</td>
                                     </tr>
                                     {% endfor %}

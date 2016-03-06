@@ -10,6 +10,7 @@ from .models import StudentEvaluation
 # Create your views here.
 class IndexView(TemplateView):
     template_name = "sportsman/index.html"
+    test_plan_id_field_name = 'p'
     
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
@@ -20,22 +21,49 @@ class IndexView(TemplateView):
         
         test_plan = self.get_current_test_plan()
         district = self.get_current_district()
+        available_test_plans = self.get_available_test_plans()
 
         context['test_plan'] = test_plan
+        context['district'] = district
+        context['available_test_plans'] = available_test_plans
+        context['test_plan_id_field_name'] = self.test_plan_id_field_name
         context['talent_rankings'] = self.get_talent_rankings(test_plan=test_plan, district=district)
         context['frail_rankings'] = self.get_frail_rankings(test_plan=test_plan, district=district)
         
         return context
     
     def get_current_test_plan(self):
+        try:
+            test_plan_id = int(self.request.GET.get(self.test_plan_id_field_name))
+        except:
+            test_plan_id = None
+
         available_test_plans = self.get_available_test_plans()
-        if len(available_test_plans) > 0:
-            return available_test_plans[0]
+        
+        if test_plan_id != None:
+            for test_plan in available_test_plans:
+                if test_plan.id == test_plan_id:
+                    return test_plan
+            return None
+        else:
+            if len(available_test_plans) > 0:
+                return available_test_plans[0]
+            else:
+                return None
+
+    def get_current_district(self):
+        currentUser = self.request.user
+        if currentUser.groups.filter(name='district_users').count() > 0:
+            district = None
+            try:
+                userprofile = currentUser.userprofile
+                if userprofile.district != None:
+                    district = currentUser.userprofile.district
+            except:
+                pass
+            return district
         else:
             return None
-    
-    def get_current_district(self):
-        return District.objects.filter(name='杨浦区')[0]
     
     def get_available_test_plans(self):
         test_plans = list(TestPlan.objects.filter(isPublished=True).order_by('-startDate', '-endDate'))
@@ -84,12 +112,12 @@ class IndexView(TemplateView):
                 rank_number = None
                 
             if studentEvaluation.overall_score == lastScore:
-                local_rank_number = lastNumber
+                district_rank_number = lastNumber
                 lastSameCount += 1
             else:
-                local_rank_number = lastNumber + lastSameCount
+                district_rank_number = lastNumber + lastSameCount
                 lastScore = studentEvaluation.overall_score
-                lastNumber = local_rank_number
+                lastNumber = district_rank_number
                 lastSameCount = 1
                 
             studentRanking = StudentRanking(name=name,
@@ -99,14 +127,15 @@ class IndexView(TemplateView):
                                 schoolClass=student.schoolClass,
                                 overall_score=studentEvaluation.overall_score,
                                 rank_number=rank_number,
-                                local_rank_number=local_rank_number)
+                                district = student.schoolClass.school.district,
+                                district_rank_number=district_rank_number)
             studentRankings.append(studentRanking)
             
         return studentRankings
         
 '''View Models'''
 class StudentRanking():
-    def __init__(self, name, gender, birthdate, school, schoolClass, overall_score, rank_number, local_rank_number = None):
+    def __init__(self, name, gender, birthdate, school, schoolClass, overall_score, rank_number, district, district_rank_number = None):
         self.name = name
         self.gender = gender
         self.birthdate = birthdate
@@ -114,4 +143,5 @@ class StudentRanking():
         self.schoolClass = schoolClass
         self.overall_score = overall_score
         self.rank_number = rank_number
-        self.local_rank_number = local_rank_number
+        self.district = district
+        self.district_rank_number = district_rank_number
