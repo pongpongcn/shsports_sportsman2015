@@ -253,20 +253,21 @@
         <nav class="navbar navbar-static-top white-bg" role="navigation" style="margin-bottom: 0">
         <div class="navbar-header">
             <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars"></i> </a>
-            <form role="search" class="navbar-form-custom" action="search_results.html">
-                <div class="form-group">
+        </div>
+            <ul class="nav navbar-top-links navbar-right">
+				<li>{% if district == None %}
+					<span class="badge badge-info">全市</span>
+					{% else %}
+					<span class="badge badge-info">{{ district }}</span>
+					{% endif %}
+				</li>
+				<li>
 					<select data-placeholder="选取一个批次..." class="form-control" style="width:350px;" onchange="location='{%url 'sportsman:index'%}?{{ test_plan_id_field_name }}='+this.options[this.selectedIndex].value">
 						{% for item in available_test_plans %}
 						<option value="{{ item.id }}" {% if test_plan.id == item.id %}selected{% endif %} >{{ item.name }}</option>
 						{% endfor %}
 					</select>
-                </div>
-            </form>
-        </div>
-            <ul class="nav navbar-top-links navbar-right">
-                <li>
-                    <span class="m-r-sm text-muted welcome-message">Welcome to INSPINIA+ Admin Theme.</span>
-                </li>
+				</li>
                 <li class="dropdown">
                     <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
                         <i class="fa fa-envelope"></i>  <span class="label label-warning">16</span>
@@ -528,7 +529,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a1.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="{% static "sportsman/img/a1.jpg" %} ">
 
                                         <div class="m-t-xs">
                                             <i class="fa fa-star text-warning"></i>
@@ -546,7 +547,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a2.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="{% static "sportsman/img/a2.jpg" %} ">
                                     </div>
                                     <div class="media-body">
                                         The point of using Lorem Ipsum is that it has a more-or-less normal.
@@ -558,7 +559,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a3.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="{% static "sportsman/img/a3.jpg" %} ">
 
                                         <div class="m-t-xs">
                                             <i class="fa fa-star text-warning"></i>
@@ -576,7 +577,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a4.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="{% static "sportsman/img/a4.jpg" %} ">
                                     </div>
 
                                     <div class="media-body">
@@ -589,7 +590,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a8.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="{% static "sportsman/img/a8.jpg" %} ">
                                     </div>
                                     <div class="media-body">
 
@@ -602,7 +603,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a7.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="{% static "sportsman/img/a7.jpg" %} ">
                                     </div>
                                     <div class="media-body">
                                         Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
@@ -614,7 +615,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a3.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="{% static "sportsman/img/a3.jpg" %} ">
 
                                         <div class="m-t-xs">
                                             <i class="fa fa-star text-warning"></i>
@@ -632,7 +633,7 @@
                             <div class="sidebar-message">
                                 <a href="#">
                                     <div class="pull-left text-center">
-                                        <img alt="image" class="img-circle message-avatar" src="img/a4.jpg">
+                                        <img alt="image" class="img-circle message-avatar" src="{% static "sportsman/img/a4.jpg" %} ">
                                     </div>
                                     <div class="media-body">
                                         Uncover many web sites still in their infancy. Various versions have.
