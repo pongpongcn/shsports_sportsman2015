@@ -36,7 +36,7 @@
                             <li><a href="contacts.html">Contacts</a></li>
                             <li><a href="mailbox.html">Mailbox</a></li>
                             <li class="divider"></li>
-                            <li><a href="login.html">Logout</a></li>
+                            <li><a href="{%url 'logout'%}">Logout</a></li>
                         </ul>
                     </div>
                     <div class="logo-element">
@@ -361,7 +361,7 @@
 
 
                 <li>
-                    <a href="login.html">
+                    <a href="{%url 'logout'%}">
                         <i class="fa fa-sign-out"></i> Log out
                     </a>
                 </li>
@@ -375,8 +375,98 @@
         </nav>
         </div>
 
-
-        <div class="wrapper wrapper-content">
+		<div class="wrapper wrapper-content">
+		<div class="row">
+            <div class="col-lg-8">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>运动天赋优秀名单</h5>
+                        <div class="ibox-tools">
+                            <a href="#">
+                                more
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ibox-content">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>姓名</th>
+                                <th>性别</th>
+                                <th>出生年月</th>
+								<th>学校</th>
+								<th>班级</th>
+								<th>总成绩</th>
+								<th>区排名</th>
+								<th>市排名</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+							{% for ranking in talent_rankings|slice:":6" %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+								<td>{{ ranking.name }}</td>
+								<td>{{ ranking.gender }}</td>
+								<td>{{ ranking.birthdate }}</td>
+								<td>{{ ranking.school }}</td>
+								<td>{{ ranking.schoolClass }}</td>
+                                <td>{{ ranking.overall_score }}</td>
+                                <td>{{ ranking.local_rank_number }}</td>
+                                <td>{{ ranking.rank_number }}</td>
+                            </tr>
+							{% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+			</div>
+        </div>
+		<div class="row">
+            <div class="col-lg-8">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>健康干预名单</h5>
+                        <div class="ibox-tools">
+                            <a href="#">
+                                more
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ibox-content">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>姓名</th>
+                                <th>性别</th>
+                                <th>出生年月</th>
+								<th>学校</th>
+								<th>班级</th>
+								<th>总成绩</th>
+								<th>市排名</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+							{% for ranking in frail_rankings|slice:":6" %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+								<td>{{ ranking.name }}</td>
+								<td>{{ ranking.gender }}</td>
+								<td>{{ ranking.birthdate }}</td>
+								<td>{{ ranking.school }}</td>
+								<td>{{ ranking.schoolClass }}</td>
+                                <td>{{ ranking.overall_score }}</td>
+                                <td>{{ ranking.rank_number }}</td>
+                            </tr>
+							{% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+			</div>
+        </div>
+		
         <div class="row">
             <div class="col-lg-2">
                 <div class="ibox float-e-margins">
