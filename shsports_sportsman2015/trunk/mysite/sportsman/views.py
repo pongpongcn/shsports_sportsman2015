@@ -102,6 +102,9 @@ class IndexView(TemplateView):
         return self.get_rankings(talent_ranking_list, 'frail')
     
     def get_rankings(self, studentEvaluationsOrdered, category):
+        '''为了提高性能，Hard Code数量限制'''
+        studentEvaluationsOrdered = studentEvaluationsOrdered[:10]
+    
         studentRankings = []
         
         lastScore = None
@@ -161,28 +164,12 @@ class IndexView(TemplateView):
             if district is not None:
                studentEvaluations = studentEvaluations.filter(student__schoolClass__school__district=district)
         
-        male_talent=0
-        male_frail=0
-        male_other=0
-        female_talent=0
-        female_frail=0
-        female_other=0
-        
-        for studentEvaluation in studentEvaluations:
-            if studentEvaluation.student.gender == 'MALE':
-                if studentEvaluation.is_talent:
-                    male_talent += 1
-                elif studentEvaluation.is_frail:
-                    male_frail += 1
-                else:
-                    male_other += 1
-            elif studentEvaluation.student.gender == 'FEMALE':
-                if studentEvaluation.is_talent:
-                    female_talent += 1
-                elif studentEvaluation.is_frail:
-                    female_frail += 1
-                else:
-                    female_other += 1
+        male_talent=studentEvaluations.filter(student__gender='MALE', is_talent=True).count()
+        male_frail=studentEvaluations.filter(student__gender='MALE', is_frail=True).count()
+        male_other=studentEvaluations.filter(student__gender='MALE').count() - male_talent - male_frail
+        female_talent=studentEvaluations.filter(student__gender='FEMALE', is_talent=True).count()
+        female_frail=studentEvaluations.filter(student__gender='FEMALE', is_frail=True).count()
+        female_other=studentEvaluations.filter(student__gender='FEMALE').count() - female_talent - female_frail
         
         return StudentStatistics(male_talent=male_talent,
                                 male_frail=male_frail,
