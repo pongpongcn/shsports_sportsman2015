@@ -254,6 +254,22 @@
 			}
 		];
 
+		{% if district == None %}
+		var talent_local_global_percentage_data = [
+			{
+				value: {{ local_statistics.male_talent }},
+				color: "#46BFBD",
+				highlight: "#5AD3D1",
+				label: "全市 - 男"
+			},
+			{
+				value: {{ local_statistics.female_talent }},
+				color: "#F7464A",
+				highlight: "#FF5A5E",
+				label: "全市 - 女"
+			}
+		];
+		{% else %}
 		var talent_local_global_percentage_data = [
 			{
 				value: {{ local_statistics.male_talent }},
@@ -280,7 +296,24 @@
 				label: "全市其它区县 - 男"
 			}
 		];
+		{% endif %}
 
+		{% if district == None %}
+		var frail_local_global_percentage_data = [
+			{
+				value: {{ local_statistics.male_frail }},
+				color: "#46BFBD",
+				highlight: "#5AD3D1",
+				label: "全市 - 男"
+			},
+			{
+				value: {{ local_statistics.female_frail }},
+				color: "#F7464A",
+				highlight: "#FF5A5E",
+				label: "全市 - 女"
+			}
+		];
+		{% else %}
 		var frail_local_global_percentage_data = [
 			{
 				value: {{ local_statistics.male_frail }},
@@ -307,5 +340,6 @@
 				label: "全市其它区县 - 男"
 			}
 		];
+		{% endif %}
     </script>
 {% endblock %}
