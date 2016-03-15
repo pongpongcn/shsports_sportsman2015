@@ -10,10 +10,11 @@ $(function () {
         animateRotate: true,
         animateScale: false,
         responsive: true,
-		tooltipTemplate : "<%if (label){%><%=label%>: <%}%><%= value %>人",
+		tooltipTemplate : "<%= value %>人",
 		onAnimationComplete: function () {
 			this.showTooltip(this.segments, true);
 		},
+		tooltipFillColor: "rgba(0,0,0,0.1)",
 		tooltipEvents: [],
 		showTooltips: true
     };
