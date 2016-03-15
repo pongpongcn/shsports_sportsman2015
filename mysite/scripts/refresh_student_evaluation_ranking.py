@@ -35,12 +35,12 @@ studentEvaluation.p_ball,)
     isTalentStudentEvaluations = []
     studentEvaluations.sort(key=lambda item: item.overall_score, reverse=True)
     for studentEvaluation in studentEvaluations:
-        if studentEvaluation.is_talent:
+        if not studentEvaluation.is_frail:
             isTalentStudentEvaluations.append(studentEvaluation)
         else:
             break
     
-    calc_talent_rank_number(isTalentStudentEvaluations)
+    calc_rank_number(isTalentStudentEvaluations, 'talent')
     
     isFrailStudentEvaluations = []
     studentEvaluations.sort(key=lambda item: item.overall_score)
@@ -50,36 +50,34 @@ studentEvaluation.p_ball,)
         else:
             break
     
-    calc_frail_rank_number(isFrailStudentEvaluations)
+    calc_rank_number(isFrailStudentEvaluations, 'frail')
     
     with transaction.atomic():
         for studentEvaluation in studentEvaluations:
             studentEvaluation.save()
         
-def calc_talent_rank_number(studentEvaluations):
+def calc_rank_number(studentEvaluations, type):
     lastScore = None
     lastNumber = 0
     lastSameCount = 1
     for studentEvaluation in studentEvaluations:
         if studentEvaluation.overall_score == lastScore:
-            studentEvaluation.talent_rank_number = lastNumber
+            current_rank_number = lastNumber
+            if type == 'talent':
+                studentEvaluation.talent_rank_number = current_rank_number
+                if studentEvaluation.talent_rank_number <= 50 and not studentEvaluation.is_talent:
+                    studentEvaluation.is_talent = True
+            elif type == 'frail':
+                studentEvaluation.frail_rank_number = current_rank_number
             lastSameCount += 1
         else:
-            studentEvaluation.talent_rank_number = lastNumber + lastSameCount
+            current_rank_number = lastNumber + lastSameCount
+            if type == 'talent':
+                studentEvaluation.talent_rank_number = current_rank_number
+                if studentEvaluation.talent_rank_number <= 50 and not studentEvaluation.is_talent:
+                    studentEvaluation.is_talent = True
+            elif type == 'frail':
+                studentEvaluation.frail_rank_number = current_rank_number
             lastScore = studentEvaluation.overall_score
-            lastNumber = studentEvaluation.talent_rank_number
-            lastSameCount = 1
-            
-def calc_frail_rank_number(studentEvaluations):
-    lastScore = None
-    lastNumber = 0
-    lastSameCount = 1
-    for studentEvaluation in studentEvaluations:
-        if studentEvaluation.overall_score == lastScore:
-            studentEvaluation.frail_rank_number = lastNumber
-            lastSameCount += 1
-        else:
-            studentEvaluation.frail_rank_number = lastNumber + lastSameCount
-            lastScore = studentEvaluation.overall_score
-            lastNumber = studentEvaluation.frail_rank_number
+            lastNumber = current_rank_number
             lastSameCount = 1

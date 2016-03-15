@@ -337,7 +337,7 @@ def get_student_evaluation_queryset(request):
     studentEvaluations = StudentEvaluation.objects.select_related('student','student__schoolClass','student__schoolClass__school','student__schoolClass__school__district').filter(testPlan=test_plan)
     
     if district is not None:
-        studentEvaluations = StudentEvaluation.filter(student__schoolClass__school__district=district)
+        studentEvaluations = studentEvaluations.filter(student__schoolClass__school__district=district)
     
     return studentEvaluations
 
