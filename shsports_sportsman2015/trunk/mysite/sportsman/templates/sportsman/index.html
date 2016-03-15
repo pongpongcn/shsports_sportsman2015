@@ -218,22 +218,31 @@
     <script src="{% static "sportsman/js/pages-addon/index.js" %} "></script>
 	
 	<script>
+		var colors = {
+					'talent': "#ffa037",
+					'frail': "#f74877",
+					'other': "#00c2d1",
+					'male': "#00c2d1",
+					'female': "#f74877",
+					'male_other': "#bdf0f5",
+					'female_other': "#ff9eb6"
+					}
 		var talent_frail_other_percentage_data = [
 			{
 				value: {{ local_statistics.talent }},
-				color: "#FDB45C",
+				color: colors['talent'],
 				highlight: "#FFC870",
 				label: "优秀"
 			},
 			{
 				value: {{ local_statistics.frail }},
-				color: "#F7464A",
+				color: colors['frail'],
 				highlight: "#FF5A5E",
 				label: "干预"
 			},
 			{
 				value: {{ local_statistics.other }},
-				color: "#46BFBD",
+				color: colors['other'],
 				highlight: "#5AD3D1",
 				label: "正常"
 			}
@@ -242,13 +251,13 @@
 		var male_female_percentage_data = [
 			{
 				value: {{ local_statistics.male }},
-				color: "#46BFBD",
+				color: colors['male'],
 				highlight: "#5AD3D1",
 				label: "男"
 			},
 			{
 				value: {{ local_statistics.female }},
-				color: "#F7464A",
+				color: colors['female'],
 				highlight: "#FF5A5E",
 				label: "女"
 			}
@@ -258,13 +267,13 @@
 		var talent_local_global_percentage_data = [
 			{
 				value: {{ local_statistics.male_talent }},
-				color: "#46BFBD",
+				color: colors['male'],
 				highlight: "#5AD3D1",
 				label: "全市 - 男"
 			},
 			{
 				value: {{ local_statistics.female_talent }},
-				color: "#F7464A",
+				color: colors['female'],
 				highlight: "#FF5A5E",
 				label: "全市 - 女"
 			}
@@ -273,25 +282,25 @@
 		var talent_local_global_percentage_data = [
 			{
 				value: {{ local_statistics.male_talent }},
-				color: "#46BFBD",
+				color: colors['male'],
 				highlight: "#5AD3D1",
 				label: "本区 - 男"
 			},
 			{
 				value: {{ local_statistics.female_talent }},
-				color: "#F7464A",
+				color: colors['female'],
 				highlight: "#FF5A5E",
 				label: "本区 - 女"
 			},
 			{
 				value: {{ global_statistics.female_talent }} - {{ local_statistics.female_talent }},
-				color: "#D7262A",
+				color: colors['female_other'],
 				highlight: "#FF5A5E",
 				label: "全市其它区县 - 女"
 			},
 			{
 				value: {{ global_statistics.male_talent }} - {{ local_statistics.male_talent }},
-				color: "#269F9D",
+				color: colors['male_other'],
 				highlight: "#5AD3D1",
 				label: "全市其它区县 - 男"
 			}
@@ -302,13 +311,13 @@
 		var frail_local_global_percentage_data = [
 			{
 				value: {{ local_statistics.male_frail }},
-				color: "#46BFBD",
+				color: colors['male'],
 				highlight: "#5AD3D1",
 				label: "全市 - 男"
 			},
 			{
 				value: {{ local_statistics.female_frail }},
-				color: "#F7464A",
+				color: colors['female'],
 				highlight: "#FF5A5E",
 				label: "全市 - 女"
 			}
@@ -317,25 +326,25 @@
 		var frail_local_global_percentage_data = [
 			{
 				value: {{ local_statistics.male_frail }},
-				color: "#46BFBD",
+				color: colors['male'],
 				highlight: "#5AD3D1",
 				label: "本区 - 男"
 			},
 			{
 				value: {{ local_statistics.female_frail }},
-				color: "#F7464A",
+				color: colors['female'],
 				highlight: "#FF5A5E",
 				label: "本区 - 女"
 			},
 			{
 				value: {{ global_statistics.female_frail }} - {{ local_statistics.female_frail }},
-				color: "#D7262A",
+				color: colors['female_other'],
 				highlight: "#FF5A5E",
 				label: "全市其它区县 - 女"
 			},
 			{
 				value: {{ global_statistics.male_frail }} - {{ local_statistics.male_frail }},
-				color: "#269F9D",
+				color: colors['male_other'],
 				highlight: "#5AD3D1",
 				label: "全市其它区县 - 男"
 			}

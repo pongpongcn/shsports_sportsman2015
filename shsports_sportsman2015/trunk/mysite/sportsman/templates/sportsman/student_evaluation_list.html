@@ -39,7 +39,8 @@
 										<th>区排名</th>
 										{% endif %}
                                         <th>市排名</th>
-                                        <th>操作</th>
+                                        <th>证书</th>
+										<th>选项证书</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -63,6 +64,11 @@
 										{% endif %}
 										</td>
 										<td><a href="{%url 'sportsman:studentEvaluationCertificate' ranking.student_evaluation_id%}?{{ test_plan_id_field_name }}={{ test_plan.id }}"><i class="fa fa-file-pdf-o text-navy"></i></a></td>
+										<td>
+										{% if ranking.certificate_file %}
+											<a href="{%url 'sportsman:studentEvaluationCertificate' ranking.student_evaluation_id%}?{{ test_plan_id_field_name }}={{ test_plan.id }}&options=true"><i class="fa fa-file-pdf-o text-navy"></i></a>
+										{% endif %}
+										</td>
                                     </tr>
                                     {% endfor %}
                                     </tbody>

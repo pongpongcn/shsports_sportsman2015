@@ -4,7 +4,7 @@ from django.utils.decorators import method_decorator
 from django.shortcuts import render
 from django.http import StreamingHttpResponse
 from django.core.servers.basehttp import FileWrapper
-import tempfile
+import tempfile, os
 
 from .models import District
 from .models import TestPlan
@@ -287,18 +287,41 @@ class StudentEvaluationListView(TemplateView):
                                 district_rank_number=district_rank_number,
                                 is_talent = studentEvaluation.is_talent,
                                 is_frail = studentEvaluation.is_frail,
-                                student_evaluation_id = studentEvaluation.id)
+                                student_evaluation_id = studentEvaluation.id,
+                                certificate_file = studentEvaluation.certificate_file)
             studentRankings.append(studentRanking)
             
         return studentRankings
 
+@login_required
 def gen_certificate(request, student_evaluation_id):
     studentEvaluations = get_student_evaluation_queryset(request)
     
     studentEvaluations = studentEvaluations.filter(pk=student_evaluation_id)
     
-    return _gen_certificates(studentEvaluations)
+    '''若有options参数，则输出选项证书'''
+    try:
+        options = request.GET.get('options')
+    except:
+        options = None
+    
+    if options is not None:
+        if len(studentEvaluations) == 1:
+            studentEvaluation = studentEvaluations[0]
+            
+            fp = open(studentEvaluation.certificate_file.path, 'rb')
+            filesize = os.path.getsize(studentEvaluation.certificate_file.path)
+            filename = 'Certificate.pdf'
+            
+            response = StreamingHttpResponse(FileWrapper(fp), content_type='application/pdf')
+            response['Content-Length'] = filesize
+            response['Content-Disposition'] = "attachment; filename=%s" % filename
+            
+            return response
+    else:
+        return _gen_certificates(studentEvaluations)
 
+@login_required
 def gen_certificates(request):
     studentEvaluations = get_student_evaluation_queryset(request)
     
@@ -377,7 +400,7 @@ def get_available_test_plans():
         
 '''View Models'''
 class StudentRanking():
-    def __init__(self, name, gender, birthdate, school, schoolClass, overall_score, rank_number, district, district_rank_number = None, is_talent = None, is_frail = None, student_evaluation_id = None):
+    def __init__(self, name, gender, birthdate, school, schoolClass, overall_score, rank_number, district, district_rank_number = None, is_talent = None, is_frail = None, student_evaluation_id = None, certificate_file = None):
         self.name = name
         self.gender = gender
         self.birthdate = birthdate
@@ -390,6 +413,7 @@ class StudentRanking():
         self.is_talent = is_talent
         self.is_frail = is_frail
         self.student_evaluation_id = student_evaluation_id
+        self.certificate_file = certificate_file
 
 class StudentStatistics():
     def __init__(self, male_talent, male_frail, male_other, female_talent, female_frail, female_other):

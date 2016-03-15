@@ -672,7 +672,7 @@ class StudentAdmin(ImportExportModelAdmin):
                 studentEvaluation.p_lauf = scoreItems[7].percentage
                 studentEvaluation.e_ball = scoreItems[8].original_score
                 studentEvaluation.p_ball = scoreItems[8].percentage
-                studentEvaluation.score_sum = stand_score_sum
+                studentEvaluation.overall_score = stand_score_sum
                 
                 studentEvaluation.save()
             except Exception as e:
@@ -830,6 +830,7 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
     temp_readonly_fields = list(fields)
     temp_readonly_fields.remove('certificate_file')
     readonly_fields = tuple(temp_readonly_fields)
+    search_fields = ('student__lastName', 'student__firstName', 'student__universalLastName', 'student__universalFirstName')
 
     def get_urls(self):
         urls = super(StudentEvaluationAdmin, self).get_urls()
@@ -871,20 +872,20 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
                 
                 districtStudentEvaluation = StudentEvaluation.objects.filter(student__schoolClass__school__district=district)
 
-                studentEvaluations_low = districtStudentEvaluation.order_by('score_sum')[:15]
+                studentEvaluations_low = districtStudentEvaluation.order_by('overall_score')[:15]
                 if studentEvaluations_low.count() > 0:
-                    studentEvaluation_score_sum_low_max = list(studentEvaluations_low)[-1].score_sum
+                    studentEvaluation_score_sum_low_max = list(studentEvaluations_low)[-1].overall_score
                 else:
                     studentEvaluation_score_sum_low_max = None
 
-                studentEvaluations_high = districtStudentEvaluation.order_by('-score_sum')[:15]
+                studentEvaluations_high = districtStudentEvaluation.order_by('-overall_score')[:15]
                 if studentEvaluations_high.count() > 0:
-                    studentEvaluation_score_sum_high_min = list(studentEvaluations_high)[-1].score_sum
+                    studentEvaluation_score_sum_high_min = list(studentEvaluations_high)[-1].overall_score
                 else:
                     studentEvaluation_score_sum_high_min = None
                 
                 if studentEvaluation_score_sum_low_max != None and studentEvaluation_score_sum_high_min != None:
-                    queryset = queryset.filter(Q(score_sum__gte=studentEvaluation_score_sum_high_min)|Q(score_sum__lte=studentEvaluation_score_sum_low_max))
+                    queryset = queryset.filter(Q(overall_score__gte=studentEvaluation_score_sum_high_min)|Q(overall_score__lte=studentEvaluation_score_sum_low_max))
             else:
                 queryset=StudentEvaluation.objects.none()
         return queryset
