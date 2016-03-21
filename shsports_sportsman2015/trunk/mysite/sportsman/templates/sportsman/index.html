@@ -33,7 +33,7 @@
 						</div>
 						<div class="ibox-content">
 							<div>
-								<canvas id="talent_frail_other_percentage_chart" height="200"></canvas>
+								<div id="talent_frail_other_percentage_chart" height="200"></div>
 							</div>
 						</div>
 					</div>
@@ -45,7 +45,7 @@
 						</div>
 						<div class="ibox-content">
 							<div>
-								<canvas id="male_female_percentage_chart" height="200"></canvas>
+								<div id="male_female_percentage_chart" height="200"></div>
 							</div>
 						</div>
 					</div>
@@ -59,7 +59,7 @@
 						</div>
 						<div class="ibox-content">
 							<div>
-								<canvas id="talent_local_global_percentage_chart" height="200"></canvas>
+								<div id="talent_local_global_percentage_chart" height="200"></div>
 							</div>
 						</div>
 					</div>
@@ -125,7 +125,7 @@
 						</div>
 						<div class="ibox-content">
 							<div>
-								<canvas id="frail_local_global_percentage_chart" height="200"></canvas>
+								<div id="frail_local_global_percentage_chart" height="200"></div>
 							</div>
 						</div>
 					</div>
@@ -212,8 +212,8 @@
     <!-- Sparkline demo data  -->
     <script src="{% static "sportsman/js/demo/sparkline-demo.js" %} "></script>
 
-    <!-- ChartJS-->
-    <script src="{% static "sportsman/js/plugins/chartJs/Chart.min.js" %} "></script>
+    <!-- Highcharts -->
+    <script src="{% static "sportsman/js/plugins/highcharts/highcharts.js" %} "></script>
 
     <script src="{% static "sportsman/js/pages-addon/index.js" %} "></script>
 	
@@ -227,82 +227,69 @@
 					'male_other': "#bdf0f5",
 					'female_other': "#ff9eb6"
 					}
+					
 		var talent_frail_other_percentage_data = [
 			{
-				value: {{ local_statistics.talent }},
 				color: colors['talent'],
-				highlight: "#FFC870",
-				label: "优秀"
-			},
-			{
-				value: {{ local_statistics.frail }},
+                name: '优秀',
+                y: {{ local_statistics.talent }}
+            }, {
 				color: colors['frail'],
-				highlight: "#FF5A5E",
-				label: "干预"
-			},
-			{
-				value: {{ local_statistics.other }},
+                name: '干预',
+                y: {{ local_statistics.frail }}
+            }, {
 				color: colors['other'],
-				highlight: "#5AD3D1",
-				label: "正常"
-			}
+                name: '正常',
+                y: {{ local_statistics.other }}
+            }
 		];
 
 		var male_female_percentage_data = [
 			{
-				value: {{ local_statistics.male }},
 				color: colors['male'],
-				highlight: "#5AD3D1",
-				label: "男"
-			},
-			{
-				value: {{ local_statistics.female }},
+				name: "男",
+				y: {{ local_statistics.male }}
+			}, {
 				color: colors['female'],
-				highlight: "#FF5A5E",
-				label: "女"
+				name: "女",
+				y: {{ local_statistics.female }}
 			}
 		];
 
 		{% if district == None %}
 		var talent_local_global_percentage_data = [
 			{
-				value: {{ local_statistics.male_talent }},
 				color: colors['male'],
-				highlight: "#5AD3D1",
-				label: "全市 - 男"
+				name: "全市 - 男",
+				y: {{ local_statistics.male_talent }}
 			},
 			{
-				value: {{ local_statistics.female_talent }},
 				color: colors['female'],
-				highlight: "#FF5A5E",
-				label: "全市 - 女"
+				name: "全市 - 女",
+				y: {{ local_statistics.female_talent }}
 			}
 		];
 		{% else %}
 		var talent_local_global_percentage_data = [
 			{
-				value: {{ local_statistics.male_talent }},
 				color: colors['male'],
-				highlight: "#5AD3D1",
-				label: "本区 - 男"
+				name: "本区 - 男",
+				y: {{ local_statistics.male_talent }}
 			},
 			{
-				value: {{ local_statistics.female_talent }},
 				color: colors['female'],
-				highlight: "#FF5A5E",
-				label: "本区 - 女"
+				name: "本区 - 女",
+				y: {{ local_statistics.female_talent }}
 			},
 			{
-				value: {{ global_statistics.female_talent }} - {{ local_statistics.female_talent }},
-				color: colors['female_other'],
-				highlight: "#FF5A5E",
-				label: "全市其它区县 - 女"
-			},
-			{
-				value: {{ global_statistics.male_talent }} - {{ local_statistics.male_talent }},
 				color: colors['male_other'],
-				highlight: "#5AD3D1",
-				label: "全市其它区县 - 男"
+				name: "全市其它区县 - 男",
+				y: {{ global_statistics.male_talent }} - {{ local_statistics.male_talent }}
+			},
+			{
+				color: colors['female_other'],
+				name: "全市其它区县 - 女",
+				y: {{ global_statistics.female_talent }} - {{ local_statistics.female_talent }}
 			}
 		];
 		{% endif %}
@@ -310,43 +297,37 @@
 		{% if district == None %}
 		var frail_local_global_percentage_data = [
 			{
-				value: {{ local_statistics.male_frail }},
 				color: colors['male'],
-				highlight: "#5AD3D1",
-				label: "全市 - 男"
+				name: "全市 - 男",
+				y: {{ local_statistics.male_frail }}
 			},
 			{
-				value: {{ local_statistics.female_frail }},
 				color: colors['female'],
-				highlight: "#FF5A5E",
-				label: "全市 - 女"
+				name: "全市 - 女",
+				y: {{ local_statistics.female_frail }}
 			}
 		];
 		{% else %}
 		var frail_local_global_percentage_data = [
 			{
-				value: {{ local_statistics.male_frail }},
 				color: colors['male'],
-				highlight: "#5AD3D1",
-				label: "本区 - 男"
+				name: "本区 - 男",
+				y: {{ local_statistics.male_frail }}
 			},
 			{
-				value: {{ local_statistics.female_frail }},
 				color: colors['female'],
-				highlight: "#FF5A5E",
-				label: "本区 - 女"
+				name: "本区 - 女",
+				y: {{ local_statistics.female_frail }}
 			},
 			{
-				value: {{ global_statistics.female_frail }} - {{ local_statistics.female_frail }},
-				color: colors['female_other'],
-				highlight: "#FF5A5E",
-				label: "全市其它区县 - 女"
-			},
-			{
-				value: {{ global_statistics.male_frail }} - {{ local_statistics.male_frail }},
 				color: colors['male_other'],
-				highlight: "#5AD3D1",
-				label: "全市其它区县 - 男"
+				name: "全市其它区县 - 男",
+				y: {{ global_statistics.male_frail }} - {{ local_statistics.male_frail }}
+			},
+						{
+				color: colors['female_other'],
+				name: "全市其它区县 - 女",
+				y: {{ global_statistics.female_frail }} - {{ local_statistics.female_frail }}
 			}
 		];
 		{% endif %}
