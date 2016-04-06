@@ -23,8 +23,9 @@ pdfmetrics.registerFontFamily('Microsoft-YaHei',normal='Microsoft-YaHei',bold='M
 pdfmetrics.registerFontFamily('Microsoft-YaHei-Light',normal='Microsoft-YaHei-Light',bold='Microsoft-YaHei-Bold')
 
 class CertificateGenerator:
-    def __init__(self, filename):
+    def __init__(self, filename, isAdmin=False):
         self.filename = filename
+        self.isAdmin = isAdmin
         self.styles = getShanghaiMovementCheck2015StyleSheet()
     
     def build(self, studentEvaluations):
@@ -54,7 +55,7 @@ class CertificateGenerator:
             
             Story.append(Spacer(0,0.5*cm))
             
-            pdfStudentPRChart = get_studentPRChart(studentEvaluation)
+            pdfStudentPRChart = get_studentPRChart(studentEvaluation, showPercentValue=self.isAdmin)
             Story.append(pdfStudentPRChart)
             
             Story.append(Spacer(0,1*cm))
@@ -80,7 +81,7 @@ class CertificateGenerator:
 
         doc.build(Story)
         
-def get_studentPRChart(studentEvaluation):   
+def get_studentPRChart(studentEvaluation, showPercentValue=False):   
     pr_items = _get_pr_items(studentEvaluation)
 
     row_data = []
@@ -92,7 +93,11 @@ def get_studentPRChart(studentEvaluation):
     
     for item in pr_items:
         row_data.append(item.p_value)
-        row_barLabel.append('%s%%(%s %s)' % (item.p_value, item.e_value, item.e_unit))
+        if showPercentValue:
+            barLabel = '%s%%(%s %s)' % (item.p_value, item.e_value, item.e_unit)
+        else:
+            barLabel = '%s %s' % (item.e_value, item.e_unit)
+        row_barLabel.append(barLabel)
         categories.append(item.name)
         
     data = [row_data]
