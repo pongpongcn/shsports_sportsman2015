@@ -9,7 +9,7 @@
 					<div class="ibox float-e-margins">
 						<div class="ibox-title">
 							<span class="label label-success pull-right">{% if district == None %}全市{% else %}{{ district }}{% endif %}</span>
-							<a class="button button-primary pull-right" href="{%url 'sportsman:studentEvaluationCertificate'%}?{{ test_plan_id_field_name }}={{ test_plan.id }}"><i class="fa fa-file-pdf-o text-navy"></i></a>
+							<a class="button button-primary pull-right" href="{%url 'sportsman:studentEvaluationCertificate'%}?{{ test_plan_id_field_name }}={{ test_plan.id }}" target="_blank"><i class="fa fa-file-pdf-o text-navy"></i></a>
 							<h5>测试成绩</h5>
 						</div>
 						<div class="ibox-content">
@@ -63,10 +63,10 @@
 											{{ ranking.rank_number }}
 										{% endif %}
 										</td>
-										<td><a href="{%url 'sportsman:studentEvaluationCertificate' ranking.student_evaluation_id%}?{{ test_plan_id_field_name }}={{ test_plan.id }}"><i class="fa fa-file-pdf-o text-navy"></i></a></td>
+										<td><a href="{%url 'sportsman:studentEvaluationCertificate' ranking.student_evaluation_id%}?{{ test_plan_id_field_name }}={{ test_plan.id }}" target="_blank"><i class="fa fa-file-pdf-o text-navy"></i></a></td>
 										<td>
 										{% if ranking.certificate_file %}
-											<a href="{%url 'sportsman:studentEvaluationCertificate' ranking.student_evaluation_id%}?{{ test_plan_id_field_name }}={{ test_plan.id }}&options=true"><i class="fa fa-file-pdf-o text-navy"></i></a>
+											<a href="{%url 'sportsman:studentEvaluationCertificate' ranking.student_evaluation_id%}?{{ test_plan_id_field_name }}={{ test_plan.id }}&options=true" target="_blank"><i class="fa fa-file-pdf-o text-navy"></i></a>
 										{% endif %}
 										</td>
                                     </tr>

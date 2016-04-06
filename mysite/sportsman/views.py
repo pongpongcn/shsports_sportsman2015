@@ -315,27 +315,30 @@ def gen_certificate(request, student_evaluation_id):
             
             response = StreamingHttpResponse(FileWrapper(fp), content_type='application/pdf')
             response['Content-Length'] = filesize
-            response['Content-Disposition'] = "attachment; filename=%s" % filename
+            response['Content-Disposition'] = "inline; filename=%s" % filename
             
             return response
     else:
-        return _gen_certificates(studentEvaluations)
+        isAdmin = _is_admin(request)
+        
+        return _gen_certificates(studentEvaluations, isAdmin)
 
 @login_required
 def gen_certificates(request):
     studentEvaluations = get_student_evaluation_queryset(request)
+    isAdmin = _is_admin(request)
     
-    return _gen_certificates(studentEvaluations)
+    return _gen_certificates(studentEvaluations, isAdmin)
 
-def _gen_certificates(studentEvaluations):
+def _gen_certificates(studentEvaluations, isAdmin):
     '''
     输出PDF内容到临时文件，随后分段发送到客户端。
     从而避免内存过多消耗，同时临时文件会自动移除。
     '''
     
     fp = tempfile.NamedTemporaryFile()
-    
-    generator = CertificateGenerator(fp)
+
+    generator = CertificateGenerator(fp, isAdmin)
     
     generator.build(studentEvaluations)
     
@@ -349,7 +352,7 @@ def _gen_certificates(studentEvaluations):
     
     response = StreamingHttpResponse(FileWrapper(fp), content_type='application/pdf')
     response['Content-Length'] = filesize
-    response['Content-Disposition'] = "attachment; filename=%s" % filename
+    response['Content-Disposition'] = "inline; filename=%s" % filename
     
     return response
 
@@ -364,6 +367,13 @@ def get_student_evaluation_queryset(request):
     
     return studentEvaluations
 
+def _is_admin(request):
+    district = get_current_district(request)
+    if district is None:
+        return True
+    else:
+        return False
+    
 def get_current_test_plan(request):
     try:
         test_plan_id = int(request.GET.get(test_plan_id_field_name))
