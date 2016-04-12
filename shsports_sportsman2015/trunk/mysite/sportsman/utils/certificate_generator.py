@@ -96,7 +96,7 @@ def get_studentPRChart(studentEvaluation, showPercentValue=False):
         if showPercentValue:
             barLabel = '%s%%(%s %s)' % (item.p_value, item.e_value, item.e_unit)
         else:
-            barLabel = '%s %s' % (item.e_value, item.e_unit)
+            barLabel = '%s%%' % (item.p_value,)
         row_barLabel.append(barLabel)
         categories.append(item.name)
         
