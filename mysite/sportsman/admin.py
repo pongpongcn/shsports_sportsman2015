@@ -62,7 +62,7 @@ class StandardParameterAdmin(ImportExportModelAdmin):
 
 class FactorAdmin(ImportExportModelAdmin):
     resource_class = FactorResource
-    list_display = ('version', 'gender', 'month_age', 'mean_20m', 'standard_deviation_20m', 'mean_bal', 'standard_deviation_bal', 'mean_shh', 'standard_deviation_shh', 'mean_rb', 'standard_deviation_rb', 'mean_ls', 'standard_deviation_ls', 'mean_su', 'standard_deviation_su', 'mean_sws', 'standard_deviation_sws', 'mean_ball', 'standard_deviation_ball', 'mean_lauf', 'standard_deviation_lauf')
+    list_display = ('version', 'gender', 'month_age', 'mean_20m', 'standard_deviation_20m', 'mean_bal', 'standard_deviation_bal', 'mean_shh', 'standard_deviation_shh', 'mean_rb', 'standard_deviation_rb', 'mean_ls', 'standard_deviation_ls', 'mean_su', 'standard_deviation_su', 'mean_sws', 'standard_deviation_sws', 'mean_ball', 'standard_deviation_ball', 'mean_lauf', 'standard_deviation_lauf', 'mean_weight', 'standard_deviation_weight', 'mean_height', 'standard_deviation_height', 'mean_bmi', 'standard_deviation_bmi')
     list_filter = ('version', 'gender', 'month_age')
     ordering = ('version', 'gender', 'month_age')
     

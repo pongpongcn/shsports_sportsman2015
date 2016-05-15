@@ -130,6 +130,9 @@ class Factor(models.Model):
     standard_deviation_height = models.DecimalField('身高（厘米）标准偏差', max_digits=10, decimal_places=4)
     mean_bmi = models.DecimalField('BMI平均值', max_digits=3, decimal_places=1)
     standard_deviation_bmi = models.DecimalField('BMI标准偏差', max_digits=10, decimal_places=4)
+
+    def __str__(self):
+        return '%s months, %s(%s)' % (self.month_age, self.gender, self.version)
     
     class Meta:
         verbose_name = "测试项目成绩分布参数"
@@ -164,7 +167,7 @@ class SportPotentialFactor(models.Model):
     const = models.DecimalField('常量', max_digits=6, decimal_places=4)
 
     def __str__(self):
-        return str(self.sport)
+        return '%s 潜质参数' % str(self.sport)
     
     class Meta:
         verbose_name = "体育项目潜质参数"
