@@ -29,8 +29,10 @@ from .models import SequenceNumber
 from .models import Genders
 from .models import StandardParameter
 from .models import TestPlan
+from .models import Sport
+from .models import SportPotentialFactor
 
-from .import_export_resources import StudentResource, StandardParameterResource, FactorResource, StudentImportResource
+from .import_export_resources import StudentResource, StandardParameterResource, FactorResource, StudentImportResource, SportPotentialFactorImportResource, SportPotentialFactorExportResource
 from .utils.certificate_generator import CertificateGenerator
 from .utils.student_data_form_generator import StudentDataFormGenerator
 
@@ -1043,10 +1045,22 @@ class TestPlanAdmin(admin.ModelAdmin):
 class SequenceNumberAdmin(admin.ModelAdmin):
     list_display = ('code', 'value', 'prefix', 'suffix')
     ordering = ('code',)
+    
+class SportAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'universalName')
+
+class SportPotentialFactorAdmin(ImportExportModelAdmin):
+    def get_import_resource_class(self):
+        return SportPotentialFactorImportResource
+    def get_export_resource_class(self):
+        return SportPotentialFactorExportResource
+    list_display = ('sport', 'weight_p_bal', 'weight_p_shh', 'weight_p_sws', 'weight_p_20m', 'weight_p_su', 'weight_p_ls', 'weight_p_rb', 'weight_p_lauf', 'weight_p_ball', 'weight_p_height', 'weight_p_weight', 'weight_p_bmi', 'const')
 
 admin.site.register(SequenceNumber, SequenceNumberAdmin)
 admin.site.register(StandardParameter,StandardParameterAdmin)
 admin.site.register(Factor,FactorAdmin)
+admin.site.register(Sport,SportAdmin)
+admin.site.register(SportPotentialFactor,SportPotentialFactorAdmin)
 admin.site.register(District, DistrictAdmin)
 admin.site.register(School, SchoolAdmin)
 admin.site.register(SchoolClass, SchoolClassAdmin)
