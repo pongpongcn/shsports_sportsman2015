@@ -7,6 +7,8 @@ from .models import StandardParameter
 from .models import Factor
 from .models import School
 from .models import SchoolClass
+from .models import Sport
+from .models import SportPotentialFactor
 
 class StandardParameterResource(resources.ModelResource):
     class Meta:
@@ -20,6 +22,36 @@ class FactorResource(resources.ModelResource):
         import_id_fields = ('version', 'gender','month_age')
         exclude = ('id',)
 
+class SportPotentialFactorImportResource(resources.ModelResource):
+    def before_import(self, dataset, dry_run, **kwargs):
+        sport_ids = []
+        for row in dataset.dict:
+            sport_code = row['sport']
+            sport = self.get_sport_by_code(sport_code)
+            sport_ids.append(sport.id)
+        dataset.append_col(sport_ids, header='sport_id')
+    def get_sport_by_code(self, code):
+        sportQuery = Sport.objects.filter(code=code)
+        if sportQuery.exists():
+            sport = sportQuery[0]
+        else:
+            sport = None
+        return sport
+    sport_id = fields.Field(attribute='sport_id')
+    class Meta:
+        model = SportPotentialFactor
+        import_id_fields = ('sport_id',)
+        exclude = ('id',)
+        fields = ('weight_p_bal', 'weight_p_shh', 'weight_p_sws', 'weight_p_20m', 'weight_p_su', 'weight_p_ls', 'weight_p_rb', 'weight_p_lauf', 'weight_p_ball', 'weight_p_height', 'weight_p_weight', 'weight_p_bmi', 'const')
+
+class SportPotentialFactorExportResource(resources.ModelResource):
+    sport = fields.Field()
+    class Meta:
+        model = SportPotentialFactor
+        exclude = ('id',)
+    def dehydrate_sport(self, sportPotentialFactor):
+        return sportPotentialFactor.sport.code
+    
 class StudentResource(resources.ModelResource):
     numberTalentCheck = fields.Field()
     className = fields.Field()

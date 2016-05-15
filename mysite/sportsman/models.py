@@ -124,11 +124,52 @@ class Factor(models.Model):
     standard_deviation_ball = models.DecimalField('投掷球标准偏差', max_digits=10, decimal_places=4)
     mean_lauf = models.DecimalField('6分钟跑平均值', max_digits=10, decimal_places=2)
     standard_deviation_lauf = models.DecimalField('6分钟跑标准偏差', max_digits=10, decimal_places=4)
+    mean_weight = models.DecimalField('体重（公斤）平均值', max_digits=5, decimal_places=2)
+    standard_deviation_weight = models.DecimalField('体重（公斤）标准偏差', max_digits=10, decimal_places=4)
+    mean_height = models.DecimalField('身高（厘米）平均值', max_digits=4, decimal_places=1)
+    standard_deviation_height = models.DecimalField('身高（厘米）标准偏差', max_digits=10, decimal_places=4)
+    mean_bmi = models.DecimalField('BMI平均值', max_digits=3, decimal_places=1)
+    standard_deviation_bmi = models.DecimalField('BMI标准偏差', max_digits=10, decimal_places=4)
     
     class Meta:
-        verbose_name = "分布因素"
-        verbose_name_plural = "分布因素"
+        verbose_name = "测试项目成绩分布参数"
+        verbose_name_plural = "测试项目成绩分布参数"
 
+class Sport(models.Model):
+    code = models.CharField('代码', max_length=50, unique=True)
+    name = models.CharField('名称', max_length=50)
+    universalName = models.CharField('名称（英文）', max_length=50)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = "体育项目"
+        verbose_name_plural = "体育项目"
+
+class SportPotentialFactor(models.Model):
+    sport = models.ForeignKey(Sport, verbose_name="体育项目")
+    weight_p_bal = models.DecimalField('权重 平衡', max_digits=6, decimal_places=4)
+    weight_p_shh = models.DecimalField('权重 侧向跳', max_digits=6, decimal_places=4)
+    weight_p_sws = models.DecimalField('权重 跳远', max_digits=6, decimal_places=4)
+    weight_p_20m = models.DecimalField('权重 20米冲刺跑', max_digits=6, decimal_places=4)
+    weight_p_su = models.DecimalField('权重 仰卧起坐', max_digits=6, decimal_places=4)
+    weight_p_ls = models.DecimalField('权重 俯卧撑', max_digits=6, decimal_places=4)
+    weight_p_rb = models.DecimalField('权重 直身前屈', max_digits=6, decimal_places=4)
+    weight_p_lauf = models.DecimalField('权重 六分跑', max_digits=6, decimal_places=4)
+    weight_p_ball = models.DecimalField('权重 投掷', max_digits=6, decimal_places=4)
+    weight_p_height = models.DecimalField('权重 身高', max_digits=6, decimal_places=4)
+    weight_p_weight = models.DecimalField('权重 体重', max_digits=6, decimal_places=4)
+    weight_p_bmi = models.DecimalField('权重 BMI', max_digits=6, decimal_places=4)
+    const = models.DecimalField('常量', max_digits=6, decimal_places=4)
+
+    def __str__(self):
+        return str(self.sport)
+    
+    class Meta:
+        verbose_name = "体育项目潜质参数"
+        verbose_name_plural = "体育项目潜质参数"
+        
 class TestPlan(models.Model):
     name = models.CharField('名称', max_length=255)
     startDate = models.DateField('开始日期', null=True, blank=True)
