@@ -14,7 +14,7 @@ def runx():
     patch = PathPatch(path, facecolor='none')
     plt.gca().add_patch(patch)
 
-    im = plt.imshow(xx.reshape(yy.size,1),  cmap=plt.cm.gist_rainbow,interpolation="bicubic",
+    im = plt.imshow(np.vstack((xx, xx)),  cmap=plt.cm.gist_rainbow,interpolation="bicubic",
                     origin='lower',extent=[0,10,-0.0,0.40],aspect="auto", clip_path=patch, clip_on=True)
 
     plt.show()
@@ -38,10 +38,9 @@ def run():
     
     #plt.figure(figsize=(1,1))
     
-    z = [[z] * 10 for z in range(10)]
-    num_bars = 100  # more bars = smoother gradient
-    
-    path = Path(np.array([x,y]).transpose())
+    pathPoints = np.array([x,y]).transpose()
+    pathPoints = np.concatenate((pathPoints,[(900,0), (0,0)]))
+    path = Path(pathPoints)
     patch = PathPatch(path, edgecolor='none', facecolor='none')
     plt.gca().add_patch(patch)
 
@@ -61,7 +60,7 @@ def run():
         
     '''plt.axis([0, 6, 0, 20])'''
     #plt.ylim(0,ylimmax * 2)
-    plt.legend()
+    #plt.legend()
     plt.axis('off')
     
     plt.text(100, -1*ylimmax*0.01, 'BELOW STANDARD',
@@ -74,7 +73,7 @@ def run():
         verticalalignment='top', horizontalalignment='center', fontsize=15)
     
     #plt.show()
-    plt.savefig('x1')
+    plt.savefig('demo')
 
 def rect(x,y,w,h,c):
     ax = plt.gca()
