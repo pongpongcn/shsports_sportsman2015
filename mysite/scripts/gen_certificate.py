@@ -73,7 +73,7 @@ def run():
         verticalalignment='top', horizontalalignment='center', fontsize=15)
     
     #plt.show()
-    plt.savefig('demo')
+    plt.savefig('demo', transparent=True)
 
 def rect(x,y,w,h,c):
     ax = plt.gca()
