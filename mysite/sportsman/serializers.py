@@ -1,6 +1,7 @@
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 
-from .models import Student, Genders, School, SchoolClass
+from .models import Student, Genders, School, SchoolClass, StudentEvaluation
 
 class StudentEntry(object):
     def __init__(self, *args, **kwargs):
@@ -141,3 +142,16 @@ class StudentSerializer(serializers.ModelSerializer):
         'e_lauf_runden','e_lauf_rest',
         'e_ball_1','e_ball_2','e_ball_3',
         'x_jirou', 'x_shuifen', 'x_jichudaixie')
+
+class StudentEvaluationSerializer(serializers.ModelSerializer):
+    student = serializers.HyperlinkedIdentityField(view_name='sportsman:Student-detail', format='html')
+    certificate = serializers.SerializerMethodField()
+    
+    def get_certificate(self, obj):
+        request = self.context.get('request', None)
+        student_evaluation_id = obj.id
+        return reverse('sportsman:studentEvaluationCertificateForAPI', args=[student_evaluation_id], request=request)
+
+    class Meta:
+        model = StudentEvaluation
+        fields = ('id', 'student', 'certificate', 'p_bal', 'p_shh', 'p_sws', 'p_20m', 'p_su', 'p_ls', 'p_rb', 'p_lauf', 'p_ball', 'p_height', 'p_weight', 'p_bmi', 'is_talent', 'is_frail', 'overall_score')
