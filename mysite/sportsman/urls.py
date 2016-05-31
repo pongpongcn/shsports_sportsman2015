@@ -4,16 +4,12 @@ from rest_framework import routers
 from . import views
 
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
-router.register(r'groups', views.GroupViewSet)
-router.register(r'districts', views.DistrictViewSet)
-router.register(r'students', views.StudentViewSet)
+router.register(r'students', views.StudentViewSet, base_name='Student')
 
 urlpatterns = [
     # ex: /sportsman/
     url(r'^$', views.IndexView.as_view(), name='index'),
     url(r'^api/', include(router.urls)),
-    url(r'^api/snippets/$', views.SnippetList.as_view()),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^thisurlshouldbechanged123/$', views.StudentEvaluationListView.as_view(), name='studentEvaluations'),
     url(r'^thisurlshouldbechanged123/certificate/$', views.gen_certificates, name='studentEvaluationCertificate'),
