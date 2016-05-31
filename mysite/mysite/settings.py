@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'django_extensions',
     'import_export',
     'widget_tweaks',
+    'rest_framework',
     'polls',
     'sportsman',
 )
@@ -114,6 +115,13 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'mysite_static')]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = 'media'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'PAGE_SIZE': 10
+}
 
 from .extras import import_export
 

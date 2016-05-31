@@ -8,3 +8,4 @@ pinyin>=0.3,<0.4
 chardet
 scipy
 mysqlclient
+djangorestframework
