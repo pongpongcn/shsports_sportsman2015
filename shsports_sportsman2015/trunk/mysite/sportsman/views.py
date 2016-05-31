@@ -15,7 +15,7 @@ from .models import TestPlan
 from .models import StudentEvaluation
 from .models import Student
 from django.contrib.auth.models import User, Group
-from .serializers import StudentSerializer, StudentCreateSerializer
+from .serializers import StudentSerializer, StudentCreateSerializer, StudentEvaluationSerializer
 
 from .utils.certificate_generator import CertificateGenerator
 
@@ -331,6 +331,16 @@ def gen_certificate(request, student_evaluation_id):
         return _gen_certificates(studentEvaluations, isAdmin)
 
 @login_required
+def gen_certificate_for_api(request, student_evaluation_id):
+    studentEvaluations = StudentEvaluation.objects.filter(student__creator=request.user)
+    studentEvaluations = studentEvaluations.filter(pk=student_evaluation_id)
+    
+    if len(studentEvaluations) == 1:
+        return _gen_certificates(studentEvaluations, True)
+    else:
+        raise Http404()
+        
+@login_required
 def gen_certificates(request):
     studentEvaluations = get_student_evaluation_queryset(request)
     isAdmin = _is_admin(request)
@@ -463,7 +473,6 @@ class StudentViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
-    #queryset = Student.objects.all()
     serializer_class = StudentSerializer
     
     def get_queryset(self):
@@ -479,3 +488,14 @@ class StudentViewSet(viewsets.ModelViewSet):
             
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+        
+class StudentEvaluationViewSet(viewsets.ModelViewSet):
+    serializer_class = StudentEvaluationSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        queryset = StudentEvaluation.objects.filter(student__creator=user)
+        studentId = self.request.query_params.get('student_id', None)
+        if(studentId is not None):
+            queryset = queryset.filter(student__id=studentId)
+        return queryset
