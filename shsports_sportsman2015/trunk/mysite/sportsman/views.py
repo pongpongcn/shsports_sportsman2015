@@ -15,7 +15,7 @@ from .models import TestPlan
 from .models import StudentEvaluation
 from .models import Student
 from django.contrib.auth.models import User, Group
-from .serializers import UserSerializer, GroupSerializer, DistrictSerializer, StudentSerializer, StudentCreateSerializer
+from .serializers import StudentSerializer, StudentCreateSerializer
 
 from .utils.certificate_generator import CertificateGenerator
 
@@ -458,35 +458,19 @@ class StudentStatistics():
     def _get_female(self):
         return sum((self.female_talent, self.female_frail, self.female_other))
     female = property(_get_female, None, None, '女')
-    
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
-    queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer
-
-
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-    
-class DistrictViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-    queryset = District.objects.all()
-    serializer_class = DistrictSerializer
 
 class StudentViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
-    queryset = Student.objects.all()
+    #queryset = Student.objects.all()
     serializer_class = StudentSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Student.objects.filter(creator=user)
+        return queryset
+    
     def get_serializer_class(self):
         if self.action == 'create':
             return StudentCreateSerializer
@@ -495,17 +479,3 @@ class StudentViewSet(viewsets.ModelViewSet):
             
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
-    
-class SnippetList(mixins.ListModelMixin,
-                  mixins.CreateModelMixin,
-                  generics.GenericAPIView):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        noOfStudentStatus = request.POST.get('noOfStudentStatus', None)
-        print('noOfStudentStatus: ' + noOfStudentStatus)
-        return self.create(request, *args, **kwargs)

@@ -341,6 +341,11 @@ class Student(models.Model):
     school_name = models.CharField('学校名称', max_length=100, null=True, blank=True)
     class_name = models.CharField('班级名称', max_length=100, null=True, blank=True)
     external_id = models.CharField('外部标识', max_length=10, null=True, blank=True)
+    
+    x_jirou = models.CharField('肌肉', max_length=255, null=True, blank=True)
+    x_shuifen = models.CharField('水分', max_length=255, null=True, blank=True)
+    x_jichudaixie = models.CharField('基础代谢', max_length=255, null=True, blank=True)
+    
     def __str__(self):
         return self.lastName + ' ' + self.firstName
 
