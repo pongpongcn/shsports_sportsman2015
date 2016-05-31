@@ -2,11 +2,13 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('sportsman', '0001_initial'),
     ]
 
@@ -14,10 +16,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Sport',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
-                ('code', models.CharField(unique=True, max_length=50, verbose_name='代码')),
-                ('name', models.CharField(max_length=50, verbose_name='名称')),
-                ('universalName', models.CharField(max_length=50, verbose_name='名称（英文）')),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
+                ('code', models.CharField(verbose_name='代码', unique=True, max_length=50)),
+                ('name', models.CharField(verbose_name='名称', max_length=50)),
+                ('universalName', models.CharField(verbose_name='名称（英文）', max_length=50)),
             ],
             options={
                 'verbose_name': '体育项目',
@@ -27,7 +29,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='SportPotentialFactor',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
+                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
                 ('weight_p_bal', models.DecimalField(max_digits=6, verbose_name='权重 平衡', decimal_places=4)),
                 ('weight_p_shh', models.DecimalField(max_digits=6, verbose_name='权重 侧向跳', decimal_places=4)),
                 ('weight_p_sws', models.DecimalField(max_digits=6, verbose_name='权重 跳远', decimal_places=4)),
@@ -50,7 +52,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='factor',
-            options={'verbose_name_plural': '测试项目成绩分布参数', 'verbose_name': '测试项目成绩分布参数'},
+            options={'verbose_name': '测试项目成绩分布参数', 'verbose_name_plural': '测试项目成绩分布参数'},
         ),
         migrations.AddField(
             model_name='factor',
@@ -87,5 +89,25 @@ class Migration(migrations.Migration):
             name='standard_deviation_weight',
             field=models.DecimalField(max_digits=10, verbose_name='体重（公斤）标准偏差', default=0, decimal_places=4),
             preserve_default=False,
+        ),
+        migrations.AddField(
+            model_name='student',
+            name='creator',
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name='创建者', null=True, blank=True),
+        ),
+        migrations.AddField(
+            model_name='student',
+            name='x_jichudaixie',
+            field=models.CharField(verbose_name='基础代谢', blank=True, null=True, max_length=255),
+        ),
+        migrations.AddField(
+            model_name='student',
+            name='x_jirou',
+            field=models.CharField(verbose_name='肌肉', blank=True, null=True, max_length=255),
+        ),
+        migrations.AddField(
+            model_name='student',
+            name='x_shuifen',
+            field=models.CharField(verbose_name='水分', blank=True, null=True, max_length=255),
         ),
     ]
