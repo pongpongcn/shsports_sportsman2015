@@ -205,6 +205,7 @@ class Student(models.Model):
     zip = models.CharField('邮政编码（地址）', max_length=255, null=True, blank=True)
     city = models.CharField('城市（地址）', max_length=255, null=True, blank=True)
     addressClearance = models.BooleanField('地址Clearance', default=False)
+    creator = models.ForeignKey(User, verbose_name="创建者", null=True, blank=True)
     
     def _get_age(self):
         values = (self.dateOfBirth, self.dateOfTesting)
