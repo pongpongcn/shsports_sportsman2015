@@ -166,6 +166,9 @@ def _gen_norm_chart(studentEvaluation):
 
     mean = 457.3
     dev = 149.01
+    lq_value = int(norm.ppf(0.2,loc=mean,scale=dev))
+    uq_value = int(norm.ppf(0.8,loc=mean,scale=dev))
+    self_value = studentEvaluation.overall_score
     
     x = np.arange(0, 900, 1)
     y = norm.pdf(x,loc=mean,scale=dev)#正态曲线的概率密度函数
@@ -182,16 +185,17 @@ def _gen_norm_chart(studentEvaluation):
 
     im = plt.imshow(np.vstack((x, x)),  cmap=plt.cm.gist_rainbow, origin='lower',extent=[0,900,0,max(y)],aspect="auto", alpha=0.8, clip_path=patch, clip_on=True)
     
-    plt.plot([200,200],[0,ylimmax * 1.2],'r')#作一条直线
-    plt.text(200, ylimmax * 1.2, 'LQ',
+
+    plt.plot([lq_value,lq_value],[0,ylimmax * 1.2],'r')#作一条直线
+    plt.text(lq_value, ylimmax * 1.2, 'LQ('+str(lq_value)+')',
         verticalalignment='bottom', horizontalalignment='center', fontsize=15)
     
-    plt.plot([700,700],[0,ylimmax * 1.5],'y')#作一条直线
-    plt.text(700, ylimmax * 1.5, 'UQ',
+    plt.plot([uq_value,uq_value],[0,ylimmax * 1.5],'y')#作一条直线
+    plt.text(uq_value, ylimmax * 1.5, 'UQ('+str(uq_value)+')',
         verticalalignment='bottom', horizontalalignment='center', fontsize=15)
     
-    plt.plot([500,500],[0,ylimmax],'k')#作一条直线
-    plt.text(500, ylimmax, 'SELF',
+    plt.plot([self_value,self_value],[0,ylimmax],'k')#作一条直线
+    plt.text(self_value, ylimmax, 'SELF('+str(self_value)+')',
         verticalalignment='bottom', horizontalalignment='center', fontsize=15)
         
     plt.axis('off')
