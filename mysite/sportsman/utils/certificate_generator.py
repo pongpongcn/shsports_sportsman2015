@@ -12,9 +12,16 @@ from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
 from reportlab.graphics.charts.textlabels import LabelOffset
 
-import os, json
+import os, json, tempfile
 from reportlab.lib import colors
 from decimal import Decimal
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import norm
+from matplotlib.path import Path
+from matplotlib.patches import PathPatch
+from reportlab.lib.utils import ImageReader
 
 pdfmetrics.registerFont(TTFont('Microsoft-YaHei', 'MSYH.TTC'))
 pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Bold', 'MSYHBD.TTC'))
@@ -48,27 +55,30 @@ class CertificateGenerator:
             pdfStudentBasicInfo = PdfStudentBasicInfo(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentBasicInfo)
             
-            Story.append(Spacer(0,0.5*cm))
+            Story.append(Spacer(0,0.25*cm))
             
             p = Paragraph('您在%s中的表现' % testPlanName, styles['Normal'])
             Story.append(p)
             
-            Story.append(Spacer(0,0.5*cm))
+            Story.append(Spacer(0,0.25*cm))
             
             pdfStudentPRChart = get_studentPRChart(studentEvaluation, showPercentValue=self.isAdmin)
             Story.append(pdfStudentPRChart)
             
-            Story.append(Spacer(0,1*cm))
+            Story.append(Spacer(0,0.5*cm))
             
             p = Paragraph('50%表示同年龄段孩子所具备运动能力的平均水平，百分比值越高代表孩子具备的运动能力越突出。百分比只是运动能力的参考值。', styles['Normal'])
             Story.append(p)
             
-            Story.append(Spacer(0,0.5*cm))
+            normChart = _gen_norm_chart(studentEvaluation)
+            Story.append(normChart)
+            
+            Story.append(Spacer(0,0.25*cm))
             
             p = Paragraph('尊敬的家长：<br/>感谢您的孩子参加了我们的运动能力测试！<br/>您的孩子正处于各项身体素质发展的关键敏感期。这个阶段也是传统意义上的儿童体育运动阶段。让孩子参加到各种儿童体育运动中去，将为孩子运动机能的全面发展提供重要的机会。跳、跑、踢、抛、接、滑动、转动等能力，如果得到综合的运用和锻炼，将使孩子的手、眼、脑、四肢、肌肉、神经、心理得到均衡发展，并使您的孩子茁壮成长。', styles['Normal'])
             Story.append(p)
             
-            Story.append(Spacer(0,0.5*cm))
+            Story.append(Spacer(0,0.25*cm))
             
             pdfStudentComment = PdfStudentComment(studentEvaluation, style=styles['Normal'])
             Story.append(pdfStudentComment)
@@ -151,6 +161,58 @@ def _get_pr_items(studentEvaluation):
     
     return pr_items
 
+def _gen_norm_chart(studentEvaluation):
+    fig = plt.figure(figsize=(14, 3))
+
+    mean = 457.3
+    dev = 149.01
+    
+    x = np.arange(0, 900, 1)
+    y = norm.pdf(x,loc=mean,scale=dev)#正态曲线的概率密度函数
+    
+    ylimmax = max(y) * 1.2
+    
+    plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
+    
+    pathPoints = np.array([x,y]).transpose()
+    pathPoints = np.concatenate((pathPoints,[(900,0), (0,0)]))
+    path = Path(pathPoints)
+    patch = PathPatch(path, edgecolor='none', facecolor='none')
+    plt.gca().add_patch(patch)
+
+    im = plt.imshow(np.vstack((x, x)),  cmap=plt.cm.gist_rainbow, origin='lower',extent=[0,900,0,max(y)],aspect="auto", alpha=0.8, clip_path=patch, clip_on=True)
+    
+    plt.plot([200,200],[0,ylimmax * 1.2],'r')#作一条直线
+    plt.text(200, ylimmax * 1.2, 'LQ',
+        verticalalignment='bottom', horizontalalignment='center', fontsize=15)
+    
+    plt.plot([700,700],[0,ylimmax * 1.5],'y')#作一条直线
+    plt.text(700, ylimmax * 1.5, 'UQ',
+        verticalalignment='bottom', horizontalalignment='center', fontsize=15)
+    
+    plt.plot([500,500],[0,ylimmax],'k')#作一条直线
+    plt.text(500, ylimmax, 'SELF',
+        verticalalignment='bottom', horizontalalignment='center', fontsize=15)
+        
+    plt.axis('off')
+    
+    plt.text(100, -1*ylimmax*0.01, 'BELOW STANDARD',
+        verticalalignment='top', horizontalalignment='center', fontsize=15)
+        
+    plt.text(mean, -1*ylimmax*0.01, 'PASS',
+        verticalalignment='top', horizontalalignment='center', fontsize=15)
+    
+    plt.text(800, -1*ylimmax*0.01, 'OPTIMAL',
+        verticalalignment='top', horizontalalignment='center', fontsize=15)
+    
+    fp = tempfile.NamedTemporaryFile()
+    fig.savefig(fp, format='png', transparent=True)
+    fp.seek(0)
+
+    image = Image(fp, width=14*cm, height=3*cm)
+    
+    return image
+    
 class PRItem:
     def __init__(self, name, e_value, e_unit, p_value):
         self.name = name
@@ -201,10 +263,10 @@ class ShanghaiMovementCheck2015DocTemplate(BaseDocTemplate):
     bottomImagePath = os.path.join(templateDir, 'Bottom.jpg')
     bottomImage = Image(bottomImagePath, width=bottomImageWidth, height=bottomImageHeight)
     
-    headerHeight = 5*cm
-    footerHeight = 2.5*cm
+    headerHeight = 4*cm
+    footerHeight = 2.13*cm
     leftWidth = 3.2*cm
-    signatureHeight = 2*cm
+    signatureHeight = 1.5*cm
 
     def __init__(self, filename, **kw):
         kw['leftMargin'], kw['rightMargin'], kw['topMargin'], kw['bottomMargin'] = 1.27*cm, 1.27*cm, 1.27*cm, 1.27*cm
