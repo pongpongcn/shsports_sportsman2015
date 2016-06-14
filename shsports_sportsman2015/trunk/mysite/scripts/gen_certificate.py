@@ -1,58 +1,9 @@
 from sportsman.models import StudentEvaluation
 from sportsman.utils.certificate_generator import CertificateGenerator
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.stats import norm
-from matplotlib.path import Path
-from matplotlib.patches import PathPatch
 
 def run():
     studentEvaluation = StudentEvaluation.objects.all()[0]
     _gen_certificates([studentEvaluation,], True)
-    
-    mean = 457.3
-    dev = 149.01
-    
-    x = np.arange(0, 900, 1)
-    y = norm.pdf(x,loc=mean,scale=dev)#正态曲线的概率密度函数
-    
-    ylimmax = max(y) * 1.2
-    
-    plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
-    
-    pathPoints = np.array([x,y]).transpose()
-    pathPoints = np.concatenate((pathPoints,[(900,0), (0,0)]))
-    path = Path(pathPoints)
-    patch = PathPatch(path, edgecolor='none', facecolor='none')
-    plt.gca().add_patch(patch)
-
-    im = plt.imshow(np.vstack((x, x)),  cmap=plt.cm.gist_rainbow, origin='lower',extent=[0,900,0,max(y)],aspect="auto", alpha=0.8, clip_path=patch, clip_on=True)
-    
-    plt.plot([200,200],[0,ylimmax * 1.2],'r')#作一条直线
-    plt.text(200, ylimmax * 1.2, 'LQ',
-        verticalalignment='bottom', horizontalalignment='center', fontsize=15)
-    
-    plt.plot([700,700],[0,ylimmax * 1.5],'y')#作一条直线
-    plt.text(700, ylimmax * 1.5, 'UQ',
-        verticalalignment='bottom', horizontalalignment='center', fontsize=15)
-    
-    plt.plot([500,500],[0,ylimmax],'k')#作一条直线
-    plt.text(500, ylimmax, 'SELF',
-        verticalalignment='bottom', horizontalalignment='center', fontsize=15)
-        
-    plt.axis('off')
-    
-    plt.text(100, -1*ylimmax*0.01, 'BELOW STANDARD',
-        verticalalignment='top', horizontalalignment='center', fontsize=15)
-        
-    plt.text(mean, -1*ylimmax*0.01, 'PASS',
-        verticalalignment='top', horizontalalignment='center', fontsize=15)
-    
-    plt.text(800, -1*ylimmax*0.01, 'OPTIMAL',
-        verticalalignment='top', horizontalalignment='center', fontsize=15)
-    
-    plt.show()
-    #plt.savefig('demo', transparent=True)
     
 def _gen_certificates(studentEvaluations, isAdmin):
     '''
