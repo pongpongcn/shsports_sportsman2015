@@ -162,7 +162,7 @@ def _get_pr_items(studentEvaluation):
     return pr_items
 
 def _gen_norm_chart(studentEvaluation):
-    fig = plt.figure(figsize=(14, 3))
+    fig = plt.figure(figsize=(14, 3.5))
 
     mean = 457.3
     dev = 149.01
@@ -188,32 +188,32 @@ def _gen_norm_chart(studentEvaluation):
 
     plt.plot([lq_value,lq_value],[0,ylimmax * 1.2],'r')#作一条直线
     plt.text(lq_value, ylimmax * 1.2, 'LQ('+str(lq_value)+')',
-        verticalalignment='bottom', horizontalalignment='center', fontsize=15)
+        verticalalignment='bottom', horizontalalignment='center', fontsize=18)
     
     plt.plot([uq_value,uq_value],[0,ylimmax * 1.5],'y')#作一条直线
     plt.text(uq_value, ylimmax * 1.5, 'UQ('+str(uq_value)+')',
-        verticalalignment='bottom', horizontalalignment='center', fontsize=15)
+        verticalalignment='bottom', horizontalalignment='center', fontsize=18)
     
     plt.plot([self_value,self_value],[0,ylimmax],'k')#作一条直线
     plt.text(self_value, ylimmax, 'SELF('+str(self_value)+')',
-        verticalalignment='bottom', horizontalalignment='center', fontsize=15)
+        verticalalignment='bottom', horizontalalignment='center', fontsize=18)
         
     plt.axis('off')
     
     plt.text(100, -1*ylimmax*0.01, 'BELOW STANDARD',
-        verticalalignment='top', horizontalalignment='center', fontsize=15)
+        verticalalignment='top', horizontalalignment='center', fontsize=18)
         
     plt.text(mean, -1*ylimmax*0.01, 'PASS',
-        verticalalignment='top', horizontalalignment='center', fontsize=15)
+        verticalalignment='top', horizontalalignment='center', fontsize=18)
     
     plt.text(800, -1*ylimmax*0.01, 'OPTIMAL',
-        verticalalignment='top', horizontalalignment='center', fontsize=15)
+        verticalalignment='top', horizontalalignment='center', fontsize=18)
     
     fp = tempfile.NamedTemporaryFile()
-    fig.savefig(fp, format='png', transparent=True)
+    fig.savefig(fp, format='jpg', dpi=300)
     fp.seek(0)
 
-    image = Image(fp, width=14*cm, height=3*cm)
+    image = Image(fp, width=14*cm, height=3.5*cm)
     
     return image
     
