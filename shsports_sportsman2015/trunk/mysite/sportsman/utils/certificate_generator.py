@@ -43,7 +43,10 @@ class CertificateGenerator:
         styles = self.styles
         
         for studentEvaluation in studentEvaluations:
-            testPlanName = studentEvaluation.testPlan.name
+            if studentEvaluation.testPlan is not None:
+                testPlanName = studentEvaluation.testPlan.name
+            else:
+                testPlanName = '运动能力测试'
             
             Story.append(FrameBreak('Header'))
             
