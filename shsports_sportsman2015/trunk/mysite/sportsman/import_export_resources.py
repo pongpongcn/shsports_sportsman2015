@@ -366,8 +366,8 @@ class StudentImportResource(resources.ModelResource):
     lastName = fields.Field(attribute='lastName', column_name='姓')
     dateOfBirth = fields.Field(attribute='dateOfBirth', column_name='出生日期')
     dateOfTesting = fields.Field(attribute='dateOfTesting', column_name='测试日期')
-    schoolClass = fields.Field(attribute='schoolClass', column_name='班级(内部对象)')
-    gender = fields.Field(attribute='gender', column_name='性别(内部值)')
+    schoolClass = fields.Field(attribute='schoolClass')
+    gender = fields.Field(attribute='gender')
     universalFirstName = fields.Field(attribute='universalFirstName', column_name='First Name')
     universalLastName = fields.Field(attribute='universalLastName', column_name='Last Name')
     class Meta:
