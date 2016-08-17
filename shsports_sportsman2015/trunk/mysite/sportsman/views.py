@@ -8,6 +8,9 @@ from rest_framework import viewsets
 from django.http import Http404
 from rest_framework import mixins
 from rest_framework import generics
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 import tempfile, os
 
 from .models import District
@@ -329,16 +332,6 @@ def gen_certificate(request, student_evaluation_id):
         isAdmin = _is_admin(request)
         
         return _gen_certificates(studentEvaluations, isAdmin)
-
-@login_required
-def gen_certificate_for_api(request, student_evaluation_id):
-    studentEvaluations = StudentEvaluation.objects.filter(student__creator=request.user)
-    studentEvaluations = studentEvaluations.filter(pk=student_evaluation_id)
-    
-    if len(studentEvaluations) == 1:
-        return _gen_certificates(studentEvaluations, True)
-    else:
-        raise Http404()
         
 @login_required
 def gen_certificates(request):
@@ -499,3 +492,13 @@ class StudentEvaluationViewSet(viewsets.ModelViewSet):
         if(studentId is not None):
             queryset = queryset.filter(student__id=studentId)
         return queryset
+        
+@api_view(['GET'])
+def gen_certificate_for_api(request, student_evaluation_id):
+    studentEvaluations = StudentEvaluation.objects.filter(student__creator=request.user)
+    studentEvaluations = studentEvaluations.filter(pk=student_evaluation_id)
+    
+    if len(studentEvaluations) == 1:
+        return _gen_certificates(studentEvaluations, True)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)

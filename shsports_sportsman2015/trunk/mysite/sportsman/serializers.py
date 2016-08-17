@@ -144,7 +144,7 @@ class StudentSerializer(serializers.ModelSerializer):
         'x_jirou', 'x_shuifen', 'x_jichudaixie')
 
 class StudentEvaluationSerializer(serializers.ModelSerializer):
-    student = serializers.HyperlinkedIdentityField(view_name='sportsman:Student-detail', format='html')
+    student = serializers.HyperlinkedRelatedField(read_only=True, view_name='sportsman:Student-detail', format='html')
     certificate = serializers.SerializerMethodField()
     
     def get_certificate(self, obj):
