@@ -16,6 +16,8 @@ import os, json, tempfile
 from reportlab.lib import colors
 from decimal import Decimal
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
