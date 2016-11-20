@@ -1,19 +1,7 @@
 from scipy.stats import norm
-from decimal import *
+from decimal import Decimal
 
-from .models import Factor
-from .models import Student
 from .models import StudentEvaluation
-from .models import UserProfile
-from .models import District
-from .models import School
-from .models import SchoolClass
-from .models import SequenceNumber
-from .models import Genders
-from .models import StandardParameter
-from .models import TestPlan
-from .models import Sport
-from .models import SportPotentialFactor
 
 def calc_percentile(original_score, mean, standard_deviation):
     r = norm.cdf(float(original_score), float(mean), float(standard_deviation))
