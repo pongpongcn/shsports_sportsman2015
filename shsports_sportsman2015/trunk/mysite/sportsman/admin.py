@@ -1,15 +1,13 @@
 from django import forms
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth import get_permission_codename
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.servers.basehttp import FileWrapper
-from django.core.validators import *
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Q
 from django.http import HttpResponse, StreamingHttpResponse
-from django.utils import timezone
 from django.utils.encoding import smart_str
 from import_export.admin import ImportExportModelAdmin, base_formats
 from import_export.formats.base_formats import TextFormat
@@ -26,13 +24,12 @@ from .models import District
 from .models import School
 from .models import SchoolClass
 from .models import SequenceNumber
-from .models import Genders
 from .models import StandardParameter
 from .models import TestPlan
 from .models import Sport
 from .models import SportPotentialFactor
 
-from .import_export_resources import StudentResource, StandardParameterResource, FactorResource, StudentImportResource, SportPotentialFactorImportResource, SportPotentialFactorExportResource
+from .import_export_resources import StudentResource, StandardParameterResource, FactorResource, StudentImportResource, SportPotentialFactorImportResource, SportPotentialFactorExportResource, check_student_error
 from .utils.certificate_generator import CertificateGenerator
 from .utils.student_data_form_generator import StudentDataFormGenerator
 
@@ -177,6 +174,11 @@ class StudentForm(forms.ModelForm):
                 self.add_error('e_shh_2f', msg)
 
 
+def evaluate_selected(modeladmin, request, queryset):
+    modeladmin.gen_student_evaluation_data(queryset)
+    
+evaluate_selected.short_description = "评价所选的 学生"
+
 class StudentAdmin(ImportExportModelAdmin):
     form = StudentForm
     resource_class = StudentResource
@@ -192,7 +194,7 @@ class StudentAdmin(ImportExportModelAdmin):
             if 'evaluate_selected' in actions:
                 del actions['evaluate_selected']
         return actions
-    actions = ['evaluate_selected']
+    actions = [evaluate_selected]
     
     def get_import_resource_class(self):
         return StudentImportResource
@@ -260,7 +262,7 @@ class StudentAdmin(ImportExportModelAdmin):
         return instance.schoolClass.school
     school.short_description = '学校'
     school.admin_order_field = 'schoolClass__school'
-	
+
     def district(self, instance):
         return instance.schoolClass.school.district
     district.short_description = '区县'
@@ -618,11 +620,6 @@ class StudentAdmin(ImportExportModelAdmin):
             scoreItems.append(StudentCertificateScoreItem(Decimal(0), student.e_ball, '米'))
 
         return scoreItems
-
-    def evaluate_selected(modeladmin, request, queryset):
-        modeladmin.gen_student_evaluation_data(queryset)
-        
-    evaluate_selected.short_description = "评价所选的 学生"
 
     def gen_student_evaluation_data(self, students):
         for student in students:
