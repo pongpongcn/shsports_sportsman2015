@@ -85,8 +85,10 @@ class CertificateGenerator:
             
             Story.append(Spacer(0,0.25*cm))
             
-            pdfStudentComment = PdfStudentComment(studentEvaluation, style=styles['Normal'])
-            Story.append(pdfStudentComment)
+            #只有在测试数据完整时才做出评价
+            if studentEvaluation.studentDataComplete:
+                pdfStudentComment = PdfStudentComment(studentEvaluation, style=styles['Normal'])
+                Story.append(pdfStudentComment)
             
             Story.append(FrameBreak('Signature'))
             p = Paragraph('''上海市青少年体育选材育才中心&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Shanghai Sports Talent Identification & Development Center<br/>德国拜罗伊特大学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;University of Bayreuth - Training & Movement Science''', styles['Normal'])
@@ -391,44 +393,44 @@ class PdfStudentComment(Flowable):
             potential_items = certificate_data['potential_items']
             potential_item_index = 0
             for potential_item in potential_items:
-                potential_item_text = PdfStudentComment._get_potential_item_text(studentEvaluation, potential_item)
+                potential_item_text = self._get_potential_item_text(studentEvaluation, potential_item)
                 c.drawString(self.availableWidth-aW,aH-h,potential_item_text)
                 potential_item_index += 1
                 if potential_item_index % 2 == 0:
                     aW, aH = self.availableWidth, aH-h
                 else:
                     aW = aW-data_w
-    def _get_potential_item_text(studentEvaluation, potential_item):
+    def _get_potential_item_text(self, studentEvaluation, potential_item):
         if potential_item == 'badminton':
-           potential_value = studentEvaluation.potential_badminton
-           potential_name = '羽毛球(badminton)'
+            potential_value = studentEvaluation.potential_badminton
+            potential_name = '羽毛球(badminton)'
         elif potential_item == 'basketball':
-           potential_value = studentEvaluation.potential_basketball
-           potential_name = '篮球(basketball)'
+            potential_value = studentEvaluation.potential_basketball
+            potential_name = '篮球(basketball)'
         elif potential_item == 'soccer':
-           potential_value = studentEvaluation.potential_soccer
-           potential_name = '足球(soccer)'
+            potential_value = studentEvaluation.potential_soccer
+            potential_name = '足球(soccer)'
         elif potential_item == 'gymnastics':
-           potential_value = studentEvaluation.potential_gymnastics
-           potential_name = '体操(gymnastics)'
+            potential_value = studentEvaluation.potential_gymnastics
+            potential_name = '体操(gymnastics)'
         elif potential_item == 'canoe':
-           potential_value = studentEvaluation.potential_canoe
-           potential_name = '皮艇/划艇(canoe/kayak)'
+            potential_value = studentEvaluation.potential_canoe
+            potential_name = '皮艇/划艇(canoe/kayak)'
         elif potential_item == 'discus':
-           potential_value = studentEvaluation.potential_discus
-           potential_name = '铁饼(discus)'
+            potential_value = studentEvaluation.potential_discus
+            potential_name = '铁饼(discus)'
         elif potential_item == 'shot_put':
-           potential_value = studentEvaluation.potential_shot_put
-           potential_name = '铅球(shot put)'
+            potential_value = studentEvaluation.potential_shot_put
+            potential_name = '铅球(shot put)'
         elif potential_item == 'pole_vault':
-           potential_value = studentEvaluation.potential_pole_vault
-           potential_name = '撑杆跳(pole vault)'
+            potential_value = studentEvaluation.potential_pole_vault
+            potential_name = '撑杆跳(pole vault)'
         elif potential_item == 'high_jump':
-           potential_value = studentEvaluation.potential_high_jump
-           potential_name = '跳高(high jump)'
+            potential_value = studentEvaluation.potential_high_jump
+            potential_name = '跳高(high jump)'
         elif potential_item == 'javelin':
-           potential_value = studentEvaluation.potential_javelin
-           potential_name = '标枪(javelin)'
+            potential_value = studentEvaluation.potential_javelin
+            potential_name = '标枪(javelin)'
         elif potential_item == 'long_jump':
            potential_value = studentEvaluation.potential_long_jump
            potential_name = '跳远(long jump)'
