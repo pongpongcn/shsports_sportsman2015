@@ -346,6 +346,8 @@ class Student(models.Model):
     x_shuifen = models.CharField('水分', max_length=255, null=True, blank=True)
     x_jichudaixie = models.CharField('基础代谢', max_length=255, null=True, blank=True)
     
+    dataVersion = models.IntegerField('数据版本, 从1开始, 每保存一次便增加1.', null=True, blank=True)
+    
     def __str__(self):
         return self.lastName + ' ' + self.firstName
 
@@ -365,6 +367,11 @@ class Student(models.Model):
                 self.number = GetNextSequenceNumberValue(sequenceNumberCodeOfNumber)
             else:
                 self.number = None
+
+        if self.dataVersion is not None:
+            self.dataVersion = self.dataVersion + 1;
+        else:
+            self.dataVersion = 1;
 
         super(Student, self).save(*args, **kw)
     
@@ -424,6 +431,9 @@ class StudentEvaluation(models.Model):
     frail_rank_number = models.PositiveSmallIntegerField('需要健康干预排名', null=True, blank=True)
     certificate_data = models.TextField('证书数据', null=True, blank=True)
     certificate_file = models.FileField('证书文件', upload_to='certificates/%Y/%m/%d/', null=True, blank=True)
+    
+    correspondWithStudentDataVersion = models.IntegerField('本评价对应的学生数据版本.(若小于当前关联学生数据的版本号, 则表明此评价可能不匹配.)', null=True, blank=True)
+    studentDataComplete = models.BooleanField('本评价对应的学生数据是否完整')
     
     def __str__(self):
         return str(self.student) + ' 的评价'

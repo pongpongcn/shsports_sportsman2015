@@ -3,9 +3,9 @@ from sportsman.services import evaluation_student, potential_student
 import csv, json
 
 from sportsman.models import Student
-from sportsman.models import StudentEvaluation
 from sportsman.models import Factor
 from sportsman.models import SportPotentialFactor
+from django.db.models import Q,F
 
 class PotentialItem:
     def __init__(self, name, value):
@@ -20,10 +20,8 @@ def run():
         writer = csv.writer(csvfile, delimiter=',', quotechar='\'', quoting=csv.QUOTE_MINIMAL)
 
         writer.writerow(['noOfStudentStatus', 'firstName', 'lastName', 'gender', 'dateOfTesting', 'number', 'badminton', 'basketball', 'soccer', 'gymnastics', 'canoe', 'athletics_running', 'athletics_sprinting_jumping_throwing', 'swimming', 'table_tennis', 'volleyball'])
-        for student in Student.objects.filter(studentevaluation=None).order_by('testPlan', 'dateOfTesting', 'number'):
-            if(dataCompleted(student) == False):
-                continue
-            
+        #for student in Student.objects.filter(dataVersion=None):
+        for student in Student.objects.filter(Q(studentevaluation=None) | Q(studentevaluation__correspondWithStudentDataVersion__lt=F('dataVersion')) | (~Q(dataVersion=None) & Q(studentevaluation__correspondWithStudentDataVersion=None))).order_by('testPlan', 'dateOfTesting', 'number'):            
             gender = student.gender
             months_of_age = student.months_of_age
             
@@ -33,6 +31,12 @@ def run():
             else:
                 factor = factors_matched[0]
             
+            try:
+                studentEvaluation = student.studentevaluation
+                studentEvaluation.delete()
+            except:
+                pass
+                
             evaluation_student(student, factor)
             studentevaluation = student.studentevaluation
             
@@ -102,35 +106,4 @@ def run():
                                 studentevaluation.potential_athletics_sprinting_jumping_throwing,
                                 studentevaluation.potential_swimming,
                                 studentevaluation.potential_table_tennis,
-                                studentevaluation.potential_volleyball])
-
-def dataCompleted(instance):
-    values = (instance.height,
-              instance.weight,
-              instance.e_20m_1,
-              instance.e_20m_2,
-              instance.e_bal60_1,
-              instance.e_bal60_2,
-              instance.e_bal45_1,
-              instance.e_bal45_2,
-              instance.e_bal30_1,
-              instance.e_bal30_2,
-              instance.e_shh_1s,
-              instance.e_shh_1f,
-              instance.e_shh_2s,
-              instance.e_shh_2f,
-              instance.e_rb_1,
-              instance.e_rb_2,
-              instance.e_ls,
-              instance.e_su,
-              instance.e_sws_1,
-              instance.e_sws_2,
-              instance.e_lauf_runden,
-              instance.e_lauf_rest,
-              instance.e_ball_1,
-              instance.e_ball_2,
-              instance.e_ball_3)
-    if all(value != None for value in values):
-        return True
-    else:
-        return False                                
+                                studentevaluation.potential_volleyball])                      

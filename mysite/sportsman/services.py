@@ -78,54 +78,81 @@ def evaluation_student(student, factor):
     studentEvaluation = StudentEvaluation()
     studentEvaluation.student = student
     studentEvaluation.testPlan = student.testPlan
+    studentEvaluation.correspondWithStudentDataVersion = student.dataVersion
 
     stand_score_sum = 0
+    studentDataComplete = True
     
     if student.e_bal is not None:
         studentEvaluation.p_bal = calc_percentile(student.e_bal, factor.mean_bal, factor.standard_deviation_bal)
         stand_score_sum += studentEvaluation.p_bal
+    else:
+        studentDataComplete = False
         
     if student.e_shh is not None:
         studentEvaluation.p_shh = calc_percentile(student.e_shh, factor.mean_shh, factor.standard_deviation_shh)
         stand_score_sum += studentEvaluation.p_shh
+    else:
+        studentDataComplete = False
         
     if student.e_sws is not None:
         studentEvaluation.p_sws = calc_percentile(student.e_sws, factor.mean_sws, factor.standard_deviation_sws)
         stand_score_sum += studentEvaluation.p_sws
+    else:
+        studentDataComplete = False
         
     if student.e_20m is not None:
         studentEvaluation.p_20m = 100 - calc_percentile(student.e_20m, factor.mean_20m, factor.standard_deviation_20m)
         stand_score_sum += studentEvaluation.p_20m
+    else:
+        studentDataComplete = False
         
     if student.e_su is not None:
         studentEvaluation.p_su = calc_percentile(student.e_su, factor.mean_su, factor.standard_deviation_su)
         stand_score_sum += studentEvaluation.p_su
+    else:
+        studentDataComplete = False
         
     if student.e_ls is not None:
         studentEvaluation.p_ls = calc_percentile(student.e_ls, factor.mean_ls, factor.standard_deviation_ls)
         stand_score_sum += studentEvaluation.p_ls
+    else:
+        studentDataComplete = False
         
     if student.e_rb is not None:
         studentEvaluation.p_rb = calc_percentile(student.e_rb, factor.mean_rb, factor.standard_deviation_rb)
         stand_score_sum += studentEvaluation.p_rb
+    else:
+        studentDataComplete = False
         
     if student.e_lauf is not None:
         studentEvaluation.p_lauf = calc_percentile(student.e_lauf, factor.mean_lauf, factor.standard_deviation_lauf)
         stand_score_sum += studentEvaluation.p_lauf
+    else:
+        studentDataComplete = False
         
     if student.e_ball is not None:
         studentEvaluation.p_ball = calc_percentile(student.e_ball, factor.mean_ball, factor.standard_deviation_ball)
         stand_score_sum += studentEvaluation.p_ball
+    else:
+        studentDataComplete = False
         
     if student.height is not None:
         studentEvaluation.p_height = calc_percentile(student.height, factor.mean_height, factor.standard_deviation_height)
+    else:
+        studentDataComplete = False
     if student.weight is not None:
         studentEvaluation.p_weight = calc_percentile(student.weight, factor.mean_weight, factor.standard_deviation_weight)
+    else:
+        studentDataComplete = False
     if student.bmi is not None:
         studentEvaluation.p_bmi = calc_percentile(student.bmi, factor.mean_bmi, factor.standard_deviation_bmi)
+    else:
+        studentDataComplete = False
 
         
     studentEvaluation.overall_score = stand_score_sum
+    studentEvaluation.studentDataComplete = studentDataComplete;
             
     studentEvaluation.save()
 
