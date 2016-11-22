@@ -9,3 +9,4 @@ chardet
 scipy
 mysqlclient
 djangorestframework
+matplotlib

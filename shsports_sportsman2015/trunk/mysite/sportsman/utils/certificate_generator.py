@@ -1,20 +1,18 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Table, Image
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
+from reportlab.platypus import Paragraph, Spacer, BaseDocTemplate, Frame, PageBreak, PageTemplate, Image
+from reportlab.lib.styles import ParagraphStyle, StyleSheet1
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.units import cm
-from reportlab.lib.fonts import tt2ps
 from reportlab.pdfgen import canvas
-from reportlab.platypus.flowables import Flowable, DocAssign
+from reportlab.platypus.flowables import Flowable
 from reportlab.platypus.doctemplate import FrameBreak
-from reportlab.graphics.shapes import Drawing, Rect, String
-from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.barcharts import HorizontalBarChart
 from reportlab.graphics.charts.textlabels import LabelOffset
 
 import os, json, tempfile
 from reportlab.lib import colors
-from decimal import Decimal
 
 import matplotlib
 matplotlib.use('Agg')
@@ -23,7 +21,6 @@ import numpy as np
 from scipy.stats import norm
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
-from reportlab.lib.utils import ImageReader
 
 pdfmetrics.registerFont(TTFont('Microsoft-YaHei', 'MSYH.TTC'))
 pdfmetrics.registerFont(TTFont('Microsoft-YaHei-Bold', 'MSYHBD.TTC'))
@@ -190,20 +187,21 @@ def _gen_norm_chart(studentEvaluation):
     patch = PathPatch(path, edgecolor='none', facecolor='none')
     plt.gca().add_patch(patch)
 
-    im = plt.imshow(np.vstack((x, x)),  cmap=plt.cm.gist_rainbow, origin='lower',extent=[0,900,0,max(y)],aspect="auto", alpha=0.8, clip_path=patch, clip_on=True)
+    plt.imshow(np.vstack((x, x)),  cmap=plt.get_cmap('gist_rainbow'), origin='lower',extent=[0,900,0,max(y)],aspect="auto", alpha=0.8, clip_path=patch, clip_on=True)
     
 
     plt.plot([lq_value,lq_value],[0,ylimmax * 1.2],'r')#作一条直线
-    plt.text(lq_value, ylimmax * 1.2, 'LQ('+str(lq_value)+')',
-        verticalalignment='bottom', horizontalalignment='center', fontsize=18)
+    plt.text(lq_value, ylimmax * 1.2, 'LQ',
+             verticalalignment='bottom', horizontalalignment='center', fontsize=18)
     
     plt.plot([uq_value,uq_value],[0,ylimmax * 1.5],'y')#作一条直线
-    plt.text(uq_value, ylimmax * 1.5, 'UQ('+str(uq_value)+')',
-        verticalalignment='bottom', horizontalalignment='center', fontsize=18)
+    plt.text(uq_value, ylimmax * 1.5, 'UQ',
+             verticalalignment='bottom', horizontalalignment='center', fontsize=18)
     
-    plt.plot([self_value,self_value],[0,ylimmax],'k')#作一条直线
-    plt.text(self_value, ylimmax, 'SELF('+str(self_value)+')',
-        verticalalignment='bottom', horizontalalignment='center', fontsize=18)
+    if studentEvaluation.studentDataComplete:
+        plt.plot([self_value,self_value],[0,ylimmax],'k')#作一条直线
+        plt.text(self_value, ylimmax, 'SELF', 
+                 verticalalignment='bottom', horizontalalignment='center', fontsize=18)
         
     plt.axis('off')
     
@@ -432,33 +430,33 @@ class PdfStudentComment(Flowable):
             potential_value = studentEvaluation.potential_javelin
             potential_name = '标枪(javelin)'
         elif potential_item == 'long_jump':
-           potential_value = studentEvaluation.potential_long_jump
-           potential_name = '跳远(long jump)'
+            potential_value = studentEvaluation.potential_long_jump
+            potential_name = '跳远(long jump)'
         elif potential_item == 'huerdles':
-           potential_value = studentEvaluation.potential_huerdles
-           potential_name = '跨栏(huerdles)'
+            potential_value = studentEvaluation.potential_huerdles
+            potential_name = '跨栏(huerdles)'
         elif potential_item == 'sprint':
-           potential_value = studentEvaluation.potential_sprint
-           potential_name = '短跑(sprint)'
+            potential_value = studentEvaluation.potential_sprint
+            potential_name = '短跑(sprint)'
         elif potential_item == 'rowing':
-           potential_value = studentEvaluation.potential_rowing
-           potential_name = '赛艇(rowing)'
+            potential_value = studentEvaluation.potential_rowing
+            potential_name = '赛艇(rowing)'
         elif potential_item == 'swimming':
-           potential_value = studentEvaluation.potential_swimming
-           potential_name = '游泳(swimming)'
+            potential_value = studentEvaluation.potential_swimming
+            potential_name = '游泳(swimming)'
         elif potential_item == 'tennis':
-           potential_value = studentEvaluation.potential_tennis
-           potential_name = '网球(tennis)'
+            potential_value = studentEvaluation.potential_tennis
+            potential_name = '网球(tennis)'
         elif potential_item == 'table_tennis':
-           potential_value = studentEvaluation.potential_table_tennis
-           potential_name = '乒乓球(table tennis)'
+            potential_value = studentEvaluation.potential_table_tennis
+            potential_name = '乒乓球(table tennis)'
         elif potential_item == 'volleyball':
-           potential_value = studentEvaluation.potential_volleyball
-           potential_name = '排球(volleyball)'
+            potential_value = studentEvaluation.potential_volleyball
+            potential_name = '排球(volleyball)'
         elif potential_item == 'athletics_running':
-           potential_value = studentEvaluation.potential_athletics_running
-           potential_name = '耐力跑(athletics - running)'
+            potential_value = studentEvaluation.potential_athletics_running
+            potential_name = '耐力跑(athletics - running)'
         elif potential_item == 'athletics_sprinting_jumping_throwing':
-           potential_value = studentEvaluation.potential_athletics_sprinting_jumping_throwing
-           potential_name = '跑跳投(athletics - sprinting/jumping/throwing)'
+            potential_value = studentEvaluation.potential_athletics_sprinting_jumping_throwing
+            potential_name = '跑跳投(athletics - sprinting/jumping/throwing)'
         return '%s %s' % ("{0:.0%}".format(potential_value), potential_name)
