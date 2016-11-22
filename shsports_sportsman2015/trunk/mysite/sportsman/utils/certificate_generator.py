@@ -187,7 +187,7 @@ def _gen_norm_chart(studentEvaluation):
     patch = PathPatch(path, edgecolor='none', facecolor='none')
     plt.gca().add_patch(patch)
 
-    plt.imshow(np.vstack((x, x)),  cmap=plt.get_cmap('gist_rainbow'), origin='lower',extent=[0,900,0,max(y)],aspect="auto", alpha=0.8, clip_path=patch, clip_on=True)
+    plt.imshow(np.vstack((x, x)),  cmap=plt.get_cmap('gist_ncar'), origin='lower',extent=[0,900,0,max(y)],aspect="auto", alpha=0.8, clip_path=patch, clip_on=True)
     
 
     plt.plot([lq_value,lq_value],[0,ylimmax * 1.2],'r')#作一条直线
