@@ -72,8 +72,10 @@ class CertificateGenerator:
             p = Paragraph('50%表示同年龄段孩子所具备运动能力的平均水平，百分比值越高代表孩子具备的运动能力越突出。百分比只是运动能力的参考值。', styles['Normal'])
             Story.append(p)
             
-            normChart = _gen_norm_chart(studentEvaluation)
-            Story.append(normChart)
+            #正态分布图非常耗内存，因此只在单个证书中输出。
+            if len(studentEvaluations) == 1:
+                normChart = _gen_norm_chart(studentEvaluation)
+                Story.append(normChart)
             
             Story.append(Spacer(0,0.25*cm))
             
