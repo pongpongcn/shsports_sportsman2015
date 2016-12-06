@@ -41,6 +41,7 @@ class CertificateGenerator:
         
         styles = self.styles
         
+        fig = plt.figure(figsize=(14, 3.5))
         for studentEvaluation in studentEvaluations:
             if studentEvaluation.testPlan is not None:
                 testPlanName = studentEvaluation.testPlan.name
@@ -72,10 +73,8 @@ class CertificateGenerator:
             p = Paragraph('50%表示同年龄段孩子所具备运动能力的平均水平，百分比值越高代表孩子具备的运动能力越突出。百分比只是运动能力的参考值。', styles['Normal'])
             Story.append(p)
             
-            #正态分布图非常耗内存，因此只在单个证书中输出。
-            if len(studentEvaluations) == 1:
-                normChart = _gen_norm_chart(studentEvaluation)
-                Story.append(normChart)
+            normChart = _gen_norm_chart(studentEvaluation, fig)
+            Story.append(normChart)
             
             Story.append(Spacer(0,0.25*cm))
             
@@ -167,14 +166,21 @@ def _get_pr_items(studentEvaluation):
     
     return pr_items
 
-def _gen_norm_chart(studentEvaluation):
-    fig = plt.figure(figsize=(14, 3.5))
-
+def _gen_norm_chart(studentEvaluation, fig):
     mean = 457.3
     dev = 149.01
     lq_value = int(norm.ppf(0.2,loc=mean,scale=dev))
     uq_value = int(norm.ppf(0.8,loc=mean,scale=dev))
     self_value = studentEvaluation.overall_score
+    
+    filename = os.path.join(tempfile.tempdir, 'fms', 'norm_chart', str(mean)+'_'+str(dev)+'_'+str(lq_value)+'_'+str(uq_value)+'_'+str(self_value))
+    if os.path.exists(filename):
+        image = Image(filename, width=14*cm, height=3.5*cm, lazy=2)
+        return image
+    
+    directory = os.path.dirname(filename)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     
     x = np.arange(0, 900, 1)
     y = norm.pdf(x,loc=mean,scale=dev)#正态曲线的概率密度函数
@@ -216,11 +222,10 @@ def _gen_norm_chart(studentEvaluation):
     plt.text(800, -1*ylimmax*0.01, 'OPTIMAL',
         verticalalignment='top', horizontalalignment='center', fontsize=18)
     
-    fp = tempfile.NamedTemporaryFile()
-    fig.savefig(fp, format='jpg', dpi=300)
-    fp.seek(0)
+    fig.savefig(filename, format='jpg', dpi=300)
+    fig.clf()
 
-    image = Image(fp, width=14*cm, height=3.5*cm)
+    image = Image(filename, width=14*cm, height=3.5*cm, lazy=2)
     
     return image
     
