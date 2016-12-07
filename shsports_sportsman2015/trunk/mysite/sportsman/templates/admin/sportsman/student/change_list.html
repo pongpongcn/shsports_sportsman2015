@@ -2,9 +2,6 @@
 {% load i18n %}
 {% block object-tools-items %}
 	<li><a href="data_form_to_fill/{{ cl.get_query_string }}" class="historylink">获取成绩登记表</a></li>
-	{% if has_evaluate_permission %}
-		<li><a href="gen_certificate_list/{{ cl.get_query_string }}" class="historylink">获取评分表</a></li>
-	{% endif %}
 	{% if has_import_permission %}
 		<li><a href="import/" class="import_link">{% trans "Import" %}</a></li>
 	{% endif %}

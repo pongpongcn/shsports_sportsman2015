@@ -2,5 +2,6 @@
 {% load i18n %}
 {% block object-tools-items %}
 	<li><a href="certificate/{{ cl.get_query_string }}" class="historylink">获取证书</a></li>
+	<li><a href="gen_certificate_list/{{ cl.get_query_string }}" class="historylink">获取评分表</a></li>
 	{{ block.super }}
 {% endblock %}

@@ -8,7 +8,6 @@ from django.core.servers.basehttp import FileWrapper
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Q
 from django.http import HttpResponse, StreamingHttpResponse
-from django.utils.encoding import smart_str
 from import_export.admin import ImportExportModelAdmin, base_formats
 from import_export.formats.base_formats import TextFormat
 from statistics import mean
@@ -372,7 +371,6 @@ class StudentAdmin(ImportExportModelAdmin):
         my_urls = [
             url(r'^(.+)/data_form_to_fill/$', self.admin_site.admin_view(self.gen_data_form)),
             url(r'^data_form_to_fill/$', self.admin_site.admin_view(self.gen_data_forms)),
-            url(r'^gen_certificate_list/$', self.admin_site.admin_view(self.gen_certificate_list)),
         ]
         #New urls must appear before the exists ones.
         
@@ -677,136 +675,6 @@ class StudentAdmin(ImportExportModelAdmin):
             except Exception as e:
                 print(str(e))
 
-    def gen_certificate_list(self, request, *args, **kwargs):
-        students = self.get_student_queryset(request)
-        
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=CertificatesData.csv'
-        writer = csv.writer(response, csv.excel)
-        response.write(u'\ufeff'.encode('utf8')) # BOM (optional...Excel needs it to open UTF-8 file properly)
-        writer.writerow([
-            smart_str(u"姓"),
-            smart_str(u"名"),
-            smart_str(u"学校"),
-            smart_str(u"班级"),
-            smart_str(u"性别"),
-            smart_str(u"出生日期"),
-            smart_str(u"测试日期"),
-            smart_str(u"年龄"),
-            smart_str(u"月龄"),
-            smart_str(u"备注"),
-            smart_str(u"身高"),
-            smart_str(u"体重"),
-            smart_str(u"BMI"),
-            smart_str(u"平衡"),
-            smart_str(u"平衡评价"),
-            smart_str(u"侧向跳"),
-            smart_str(u"侧向跳评价"),
-            smart_str(u"跳远"),
-            smart_str(u"跳远评价"),
-            smart_str(u"20米冲刺跑"),
-            smart_str(u"20米冲刺跑评价"),
-            smart_str(u"仰卧起坐"),
-            smart_str(u"仰卧起坐评价"),
-            smart_str(u"俯卧撑"),
-            smart_str(u"俯卧撑评价"),
-            smart_str(u"直身前屈"),
-            smart_str(u"直身前屈评价"),
-            smart_str(u"六分跑"),
-            smart_str(u"六分跑评价"),
-            smart_str(u"投掷"),
-            smart_str(u"投掷评价"),
-            smart_str(u"评价总分")
-        ])
-        for student in students:
-            if check_student_error(student) != None:
-                continue
-
-            age = student.age
-
-            month_age = student.months_of_age
-
-            BMI = round(student.weight / (student.height * Decimal(0.01)) ** 2, 1)
-            
-            try:
-                scoreItems = self.getscoreItems(student)
-                remark = ''
-                stand_score_sum = 0
-                for scoreItem in scoreItems:
-                    stand_score_sum += scoreItem.percentage * 100
-
-                writer.writerow([
-                    smart_str(student.lastName),
-                    smart_str(student.firstName),
-                    smart_str(student.schoolClass.school.name),
-                    smart_str(str(student.schoolClass)),
-                    smart_str(student.get_gender_display()),
-                    smart_str(student.dateOfBirth),
-                    smart_str(student.dateOfTesting),
-                    smart_str(age),
-                    smart_str(month_age),
-                    smart_str(remark),
-                    smart_str(student.height),
-                    smart_str(student.weight),
-                    smart_str(BMI),
-                    smart_str(student.e_bal),
-                    smart_str(scoreItems[0].percentage),
-                    smart_str(student.e_shh),
-                    smart_str(scoreItems[1].percentage),
-                    smart_str(student.e_sws),
-                    smart_str(scoreItems[2].percentage),
-                    smart_str(student.e_20m),
-                    smart_str(scoreItems[3].percentage),
-                    smart_str(student.e_su),
-                    smart_str(scoreItems[4].percentage),
-                    smart_str(student.e_ls),
-                    smart_str(scoreItems[5].percentage),
-                    smart_str(student.e_rb),
-                    smart_str(scoreItems[6].percentage),
-                    smart_str(student.e_lauf),
-                    smart_str(scoreItems[7].percentage),
-                    smart_str(student.e_ball),
-                    smart_str(scoreItems[8].percentage),
-                    smart_str(stand_score_sum)
-                    ])
-            except Exception as e:
-                remark = str(e)
-                
-                writer.writerow([
-                    smart_str(student.lastName),
-                    smart_str(student.firstName),
-                    smart_str(student.schoolClass.school.name),
-                    smart_str(str(student.schoolClass)),
-                    smart_str(student.get_gender_display()),
-                    smart_str(student.dateOfBirth),
-                    smart_str(student.dateOfTesting),
-                    smart_str(age),
-                    smart_str(month_age),
-                    smart_str(remark),
-                    smart_str(student.height),
-                    smart_str(student.weight),
-                    smart_str(BMI),
-                    smart_str(student.e_bal),
-                    None,
-                    smart_str(student.e_shh),
-                    None,
-                    smart_str(student.e_sws),
-                    None,
-                    smart_str(student.e_20m),
-                    None,
-                    smart_str(student.e_su),
-                    None,
-                    smart_str(student.e_ls),
-                    None,
-                    smart_str(student.e_rb),
-                    None,
-                    smart_str(student.e_lauf),
-                    None,
-                    smart_str(student.e_ball),
-                    None
-                    ])
-        return response
-
     change_list_template = 'admin/sportsman/student/change_list.html'
 
 class StudentCertificateScoreItem:
@@ -836,6 +704,7 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
         my_urls = [
             url(r'^(.+)/certificate/$', self.admin_site.admin_view(self.gen_certificate)),
             url(r'^certificate/$', self.admin_site.admin_view(self.gen_certificates)),
+            url(r'^gen_certificate_list/$', self.admin_site.admin_view(self.gen_certificate_list)),
         ]
         return my_urls + urls 
     
@@ -888,6 +757,86 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
             else:
                 queryset=StudentEvaluation.objects.none()
         return queryset
+    
+    def gen_certificate_list(self, request, *args, **kwargs):
+        studentEvaluations = self.get_student_evaluation_queryset(request)
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=CertificatesData.csv'
+        writer = csv.writer(response, csv.excel)
+        response.write(u'\ufeff'.encode('utf8')) # BOM (optional...Excel needs it to open UTF-8 file properly)
+        writer.writerow([
+            '姓',
+            '名',
+            '学校',
+            '班级',
+            '性别',
+            '出生日期',
+            '测试日期',
+            '备注',
+            '年龄',
+            '月龄',
+            '身高',
+            '体重',
+            'BMI',
+            '平衡',
+            '平衡评价',
+            '侧向跳',
+            '侧向跳评价',
+            '跳远',
+            '跳远评价',
+            '20米冲刺跑',
+            '20米冲刺跑评价',
+            '仰卧起坐',
+            '仰卧起坐评价',
+            '俯卧撑',
+            '俯卧撑评价',
+            '直身前屈',
+            '直身前屈评价',
+            '六分跑',
+            '六分跑评价',
+            '投掷',
+            '投掷评价',
+            '评价总分'
+        ])
+        for studentEvaluation in studentEvaluations:
+            student = studentEvaluation.student
+            
+            writer.writerow([
+                student.lastName,
+                student.firstName,
+                student.schoolClass.school.name,
+                str(student.schoolClass),
+                student.get_gender_display(),
+                student.dateOfBirth,
+                student.dateOfTesting,
+                None,
+                student.age,
+                student.months_of_age,
+                student.height,
+                student.weight,
+                student.bmi,
+                student.e_bal,
+                studentEvaluation.p_bal,
+                student.e_shh,
+                studentEvaluation.p_shh,
+                student.e_sws,
+                studentEvaluation.p_sws,
+                student.e_20m,
+                studentEvaluation.p_20m,
+                student.e_su,
+                studentEvaluation.p_su,
+                student.e_ls,
+                studentEvaluation.p_ls,
+                student.e_rb,
+                studentEvaluation.p_rb,
+                student.e_lauf,
+                studentEvaluation.p_lauf,
+                student.e_ball,
+                studentEvaluation.p_ball,
+                studentEvaluation.overall_score
+                ])
+        return response
     
     def noOfStudentStatus(self, obj):
         return obj.student.noOfStudentStatus
