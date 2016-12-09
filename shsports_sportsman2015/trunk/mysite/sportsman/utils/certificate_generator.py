@@ -13,6 +13,7 @@ from reportlab.graphics.charts.textlabels import LabelOffset
 
 import os, json, tempfile
 from reportlab.lib import colors
+from django.conf import settings
 
 import matplotlib
 matplotlib.use('Agg')
@@ -167,8 +168,9 @@ def _get_pr_items(studentEvaluation):
     return pr_items
 
 def _gen_norm_chart(studentEvaluation, fig):
-    mean = 459.67
-    dev = 143.85
+    overallScoreNormParameters = settings.OVERALL_SCORE_NORM_PARAMETERS
+    mean = overallScoreNormParameters.mean
+    dev = overallScoreNormParameters.dev
     lq_value = int(norm.ppf(0.2,loc=mean,scale=dev))
     uq_value = int(norm.ppf(0.8,loc=mean,scale=dev))
     self_value = studentEvaluation.overall_score
