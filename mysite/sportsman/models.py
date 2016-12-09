@@ -10,6 +10,11 @@ Genders = (
      ('FEMALE', '女'),
     )
 
+class OverallScoreNormParameters(object):
+    def __init__(self, mean, dev):
+        self.mean = mean
+        self.dev = dev
+
 class SequenceNumber(models.Model):
     code = models.CharField('代码', max_length=100, unique=True)
     value = models.BigIntegerField('值（当前）')

@@ -126,3 +126,6 @@ REST_FRAMEWORK = {
 from .extras import import_export
 
 IMPORT_EXPORT_TMP_STORAGE_CLASS = import_export.TempFolderStorage
+
+from sportsman.models import OverallScoreNormParameters
+OVERALL_SCORE_NORM_PARAMETERS = OverallScoreNormParameters(459.67, 143.85)
