@@ -14,6 +14,8 @@ from statistics import mean
 from decimal import Decimal
 import csv, tempfile
 import scipy.stats
+from scipy.stats import norm
+from django.conf import settings
 
 from .models import Factor
 from .models import Student
@@ -692,7 +694,7 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
     list_display = ('testPlan','noOfStudentStatus','district','lastName','firstName','school','schoolClass','gender','is_talent','is_frail')
     list_filter = ('testPlan','student__schoolClass__school__district','student__gender','is_talent','is_frail')
     fields = ('testPlan','lastName', 'firstName', 'school', 'schoolClass', 'gender', 'dateOfBirth', 'dateOfTesting', 'age', 'months_of_age', 'days_of_age', 'height', 'weight', 'bmi', 'e_bal', 'p_bal', 'e_shh', 'p_shh', 'e_sws', 'p_sws', 'e_20m', 'p_20m', 'e_su', 'p_su', 'e_ls', 'p_ls', 'e_rb', 'p_rb', 'e_lauf', 'p_lauf', 'e_ball', 'p_ball', 'certificate_file')
-    ordering = ('student__schoolClass__school__district', 'student__schoolClass__school', 'student__schoolClass', 'student__lastName', 'student__firstName')
+    ordering = ('testPlan', 'student__schoolClass__school__district', 'student__schoolClass__school', 'student__schoolClass', 'student__lastName', 'student__firstName')
     
     temp_readonly_fields = list(fields)
     temp_readonly_fields.remove('certificate_file')
@@ -760,12 +762,14 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
     
     def gen_certificate_list(self, request, *args, **kwargs):
         studentEvaluations = self.get_student_evaluation_queryset(request)
+        overallScoreNormParameters = settings.OVERALL_SCORE_NORM_PARAMETERS
         
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=CertificatesData.csv'
         writer = csv.writer(response, csv.excel)
         response.write(u'\ufeff'.encode('utf8')) # BOM (optional...Excel needs it to open UTF-8 file properly)
         writer.writerow([
+            '批次',
             '姓',
             '名',
             '学校',
@@ -797,12 +801,15 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
             '六分跑评价',
             '投掷',
             '投掷评价',
-            '评价总分'
+            '评价总分',
+            '评价总分百分点'
         ])
         for studentEvaluation in studentEvaluations:
             student = studentEvaluation.student
+            overall_score_ppf = round(norm.cdf(studentEvaluation.overall_score,loc=overallScoreNormParameters.mean,scale=overallScoreNormParameters.dev), 4) * 100
             
             writer.writerow([
+                studentEvaluation.testPlan,
                 student.lastName,
                 student.firstName,
                 student.schoolClass.school.name,
@@ -834,7 +841,8 @@ class StudentEvaluationAdmin(admin.ModelAdmin):
                 studentEvaluation.p_lauf,
                 student.e_ball,
                 studentEvaluation.p_ball,
-                studentEvaluation.overall_score
+                studentEvaluation.overall_score,
+                overall_score_ppf
                 ])
         return response
     
