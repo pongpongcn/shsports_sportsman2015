@@ -1,6 +1,6 @@
 from sportsman.models import StudentEvaluation
-import statistics
 from scipy.stats import norm
+from sportsman.utils.misc import genOverallScoreNormParameters
 
 def run():
     overallScoreValuesList = StudentEvaluation.objects.filter(studentDataComplete=True).values_list('overall_score')
@@ -8,15 +8,14 @@ def run():
     for overallScoreValues in overallScoreValuesList:
         overallScore = overallScoreValues[0]
         overallScoreList.append(overallScore)
-        
-    overallScoreMean = round(statistics.mean(overallScoreList), 2)
-    overallScoreDev = round(statistics.pstdev(overallScoreList), 2)
     
-    lq_value = int(norm.ppf(0.2,loc=overallScoreMean,scale=overallScoreDev))
-    uq_value = int(norm.ppf(0.8,loc=overallScoreMean,scale=overallScoreDev))
+    overallScoreNormParameters = genOverallScoreNormParameters(overallScoreList) 
     
-    print('mean: %s' % overallScoreMean)
-    print('dev: %s' % overallScoreDev)
+    lq_value = int(norm.ppf(0.2,loc=overallScoreNormParameters.mean,scale=overallScoreNormParameters.dev))
+    uq_value = int(norm.ppf(0.8,loc=overallScoreNormParameters.mean,scale=overallScoreNormParameters.dev))
+    
+    print('mean: %s' % overallScoreNormParameters.mean)
+    print('dev: %s' % overallScoreNormParameters.dev)
     print('lq: %s' % lq_value)
     print('uq: %s' % uq_value)
 
