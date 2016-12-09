@@ -167,8 +167,8 @@ def _get_pr_items(studentEvaluation):
     return pr_items
 
 def _gen_norm_chart(studentEvaluation, fig):
-    mean = 457.3
-    dev = 149.01
+    mean = 459.67
+    dev = 143.85
     lq_value = int(norm.ppf(0.2,loc=mean,scale=dev))
     uq_value = int(norm.ppf(0.8,loc=mean,scale=dev))
     self_value = studentEvaluation.overall_score
