@@ -352,6 +352,7 @@ class Student(models.Model):
     x_jichudaixie = models.CharField('基础代谢', max_length=255, null=True, blank=True)
     
     dataVersion = models.IntegerField('数据版本, 从1开始, 每保存一次便增加1.', null=True, blank=True)
+    contains_e = models.IntegerField('表明是否有成绩数据, 以便更好的处理评价.', null=True, blank=True)
     
     def __str__(self):
         return self.lastName + ' ' + self.firstName
@@ -377,6 +378,12 @@ class Student(models.Model):
             self.dataVersion = self.dataVersion + 1;
         else:
             self.dataVersion = 1;
+        
+        e_all = (self.e_ball, self.e_shh, self.e_sws, self.e_20m, self.e_su, self.e_ls, self.e_rb, self.e_lauf, self.e_ball)
+        if any(value != None for value in e_all):
+            self.contains_e = True
+        else:
+            self.contains_e = False
 
         super(Student, self).save(*args, **kw)
     

@@ -21,7 +21,7 @@ def run():
 
         writer.writerow(['noOfStudentStatus', 'firstName', 'lastName', 'gender', 'dateOfTesting', 'number', 'badminton', 'basketball', 'soccer', 'gymnastics', 'canoe', 'athletics_running', 'athletics_sprinting_jumping_throwing', 'swimming', 'table_tennis', 'volleyball'])
         #for student in Student.objects.filter(dataVersion=None):
-        for student in Student.objects.filter(Q(studentevaluation=None) | Q(studentevaluation__correspondWithStudentDataVersion__lt=F('dataVersion')) | (~Q(dataVersion=None) & Q(studentevaluation__correspondWithStudentDataVersion=None))).order_by('testPlan', 'dateOfTesting', 'number'):            
+        for student in Student.objects.filter(Q(contains_e=True) & (Q(studentevaluation=None) | Q(studentevaluation__correspondWithStudentDataVersion__lt=F('dataVersion')) | (~Q(dataVersion=None) & Q(studentevaluation__correspondWithStudentDataVersion=None)))).order_by('testPlan', 'dateOfTesting', 'number'):            
             gender = student.gender
             months_of_age = student.months_of_age
             
