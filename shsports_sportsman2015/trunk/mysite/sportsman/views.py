@@ -1,23 +1,19 @@
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.shortcuts import render
 from django.http import StreamingHttpResponse
 from django.core.servers.basehttp import FileWrapper
 from rest_framework import viewsets
-from django.http import Http404
-from rest_framework import mixins
-from rest_framework import generics
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import tempfile, os
+from scipy.stats import norm
+from django.conf import settings
 
-from .models import District
 from .models import TestPlan
 from .models import StudentEvaluation
 from .models import Student
-from django.contrib.auth.models import User, Group
 from .serializers import StudentSerializer, StudentCreateSerializer, StudentEvaluationSerializer
 
 from .utils.certificate_generator import CertificateGenerator
@@ -120,16 +116,14 @@ class IndexView(TemplateView):
         lastNumber = 0
         lastSameCount = 1
         
+        overallScoreNormParameters = settings.OVERALL_SCORE_NORM_PARAMETERS
+        
         for studentEvaluation in studentEvaluationsOrdered:
             student = studentEvaluation.student
             name = '%s%s' % (student.lastName, student.firstName)
             
-            if category=='talent':
-                rank_number = studentEvaluation.talent_rank_number
-            elif category=='frail':
-                rank_number = studentEvaluation.frail_rank_number
-            else:
-                rank_number = None
+            overall_score_ppf = round(norm.cdf(studentEvaluation.overall_score,loc=overallScoreNormParameters.mean,scale=overallScoreNormParameters.dev), 4)
+            rank_number = "{0:.2f}%".format((1 - overall_score_ppf) * 100)
                 
             if studentEvaluation.overall_score == lastScore:
                 district_rank_number = lastNumber
@@ -171,7 +165,7 @@ class IndexView(TemplateView):
         else:
             studentEvaluations = StudentEvaluation.objects.filter(testPlan=test_plan)
             if district is not None:
-               studentEvaluations = studentEvaluations.filter(student__schoolClass__school__district=district)
+                studentEvaluations = studentEvaluations.filter(student__schoolClass__school__district=district)
         
         male_talent=studentEvaluations.filter(student__gender='MALE', is_talent=True).count()
         male_frail=studentEvaluations.filter(student__gender='MALE', is_frail=True).count()
@@ -266,16 +260,14 @@ class StudentEvaluationListView(TemplateView):
         lastNumber = 0
         lastSameCount = 1
         
+        overallScoreNormParameters = settings.OVERALL_SCORE_NORM_PARAMETERS
+        
         for studentEvaluation in studentEvaluationsOrdered:
             student = studentEvaluation.student
             name = '%s%s' % (student.lastName, student.firstName)
             
-            if studentEvaluation.talent_rank_number is not None:
-                rank_number = studentEvaluation.talent_rank_number
-            elif studentEvaluation.frail_rank_number is not None:
-                rank_number = -1 * studentEvaluation.frail_rank_number
-            else:
-                rank_number = None
+            overall_score_ppf = round(norm.cdf(studentEvaluation.overall_score,loc=overallScoreNormParameters.mean,scale=overallScoreNormParameters.dev), 4)
+            rank_number = "{0:.2f}%".format((1 - overall_score_ppf) * 100)
                 
             if studentEvaluation.overall_score == lastScore:
                 district_rank_number = lastNumber
