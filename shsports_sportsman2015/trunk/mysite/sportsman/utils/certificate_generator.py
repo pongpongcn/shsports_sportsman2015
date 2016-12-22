@@ -391,7 +391,10 @@ class PdfStudentComment(Flowable):
         if studentEvaluation.is_frail:
             c.drawString(0,aH-h,'基于本次测试的综合表现，您的孩子需要进行运动健康干预。')
         else:
-            c.drawString(0,aH-h,'基于本次测试的综合表现，您的孩子在以下这几个项目中具有较好的运动潜质：')
+            if studentEvaluation.is_talent:
+                c.drawString(0,aH-h,'基于本次测试的综合表现，您的孩子在以下这几个项目中具有较好的运动潜质：')
+            else:
+                c.drawString(0,aH-h,'基于本次测试的综合表现，建议您的孩子参加以下几个运动项目：')
             aH = aH-h
             
             c.setFont(self.style.fontName, self.style.fontSize)
