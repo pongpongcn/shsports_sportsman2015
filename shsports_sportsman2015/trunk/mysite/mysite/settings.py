@@ -129,3 +129,4 @@ IMPORT_EXPORT_TMP_STORAGE_CLASS = import_export.TempFolderStorage
 
 from sportsman.models import OverallScoreNormParameters
 OVERALL_SCORE_NORM_PARAMETERS = OverallScoreNormParameters(459.67, 143.85)
+EVALUATION_FACTOR_VRTSION = 'china_201604'
